@@ -213,6 +213,31 @@
     .cover h1{ font-size:52px; } .lec-divider h2{ font-size:30px; } .two-col{ grid-template-columns:1fr; }
   }
 </style>
+<style id="mobile-fix">
+/* phones: let wide tables / equations scroll sideways instead of being clipped by .page */
+@media (max-width:680px){
+  .katex-display{overflow-x:auto;overflow-y:hidden;max-width:100%;-webkit-overflow-scrolling:touch;padding:2px 0}
+  table.hand{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .eqn,.index-card{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .diagram svg,.illus svg{max-width:100%;height:auto}
+  .backtop,.toc a{display:inline-block;padding:8px 0}
+}
+</style>
+<script id="mobile-fix-js">
+/* phones: a long inline formula that cannot wrap makes its own line scroll sideways instead of being cut off */
+window.addEventListener("load",function(){
+  if(window.innerWidth>680) return;
+  setTimeout(function(){
+    document.querySelectorAll(".katex").forEach(function(k){
+      if(k.closest(".katex-display")||k.closest("table")) return;
+      var box=k.closest("p,li,.say,.small,.bubble,div");
+      if(box&&k.getBoundingClientRect().right>box.getBoundingClientRect().right+1){
+        box.style.overflowX="auto";box.style.webkitOverflowScrolling="touch";
+      }
+    });
+  },300);
+});
+</script>
 </head>
 <body>
 
