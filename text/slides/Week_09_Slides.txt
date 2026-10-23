@@ -1,0 +1,859 @@
+# Week 9 — lecture slides
+(source: NPTEL, 58 slides; text layer, plus OCR on 17 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Range Image Processing
+(Week-09: Lectures 41-45)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+
+### Slide 2
+Range data
+q Range data is a 2-1/2 D or 3-D representation of the
+scene.
+q An image d(i, j), which records the distance d to the
+corresponding scene point (X, Y, Z) for each image pixel
+(i, j).
+q It could be provided as a set of 3-D scene points (point
+cloud).
+
+### Slide 3
+Imaging techniques
+n Passive imaging.
+n Stereo imaging
+n Active range sensing
+o Time-of-flight sensors
+o Triangulation-based sensors
+o Structured Light
+
+### Slide 4
+Time-of-Flight Range
+Sensors
+Laser-based time-of-flight
+range sensors: light
+detection and ranging
+(LIDAR) or laser radar
+(LADAR) sensors.
+Limitation:
+o the minimum observation time
+thus limited by the minimum
+distance observable.
+t: Time taken to travel the
+forward and return path.
+v: speed of light in the
+given medium.
+Distance:
+d: (v x t)/2
+Source and
+detector
+collocated.
+Pulsed
+laser
+Use a moving
+mirror to scan
+the beam.
+
+### Slide 5
+Triangulation based
+Sensors
+Yi-Chih Hsieh, Decoding structured light patterns for three-dimensional imaging systems, Pattern Recognition 34 (2001) 343-349 .
+(u,v)
+(i,j)
+(X,Y,Z)
+A light
+source.
+Camera
+The camera
+and light
+source are
+calibrated.
+Apply triangulation
+to get the 3D point.
+Known for a predetermined
+scanning path of the beam.
+Observed
+in camera.
+
+### Slide 6
+Imaging principle
+Yi-Chih Hsieh, Decoding structured light patterns for three-dimensional imaging systems, Pattern Recognition 34 (2001) 343-349 .
+(u,v)
+(i,j)
+(X,Y,Z)
+A light
+source.
+Camera
+Scan the ray in a
+predetermined
+calibrated path.
+Encoding the 3-D
+position of
+projected ray.
+
+### Slide 7
+Structured Light
+Yi-Chih Hsieh, Decoding structured light patterns for three-dimensional imaging systems, Pattern Recognition 34 (2001) 343-349 .
+(u,v)
+(i,j)
+(X,Y,Z)
+Structured
+light
+Camera
+Project a strip or
+pattern.
+Get 3-D positions
+of all the scene
+points lying on the
+projected strip.
+Encoding the 3-D
+position of
+projected ray.
+
+### Slide 8
+Space Encoding
+n Projection of a sequence of m patterns
+to encode 2m stripes using a plain
+binary code.
+n Number of stripes get doubled at
+every new pattern.
+n Each light point (i,j) is associated with
+an m-bit binary code and its image is
+observed.
+
+### Slide 9
+Binary Coding
+Pattern 1
+Pattern 2
+Pattern 3
+Projected
+over time
+Codeword of this píxel: 101… à identifies
+the corresponding pattern stripe
+Courtesy: Prof. Guido Gerig
+http://www.cs.cmu.edu/afs/cs/academic/class/1
+5385-s06/lectures/ppts/lec-17.ppt
+
+### Slide 10
+Spatial Codification
+n Project a certain kind of spatial pattern uniquely
+appearing in the image as a set of neighborhood
+points.
+n Could be spatially arranged dots with varying in size and
+colors.
+n The pattern (providing a codeword)  is associated
+with a calibrated light point.
+does not require multiple projection over the object.
+The codeword obtained from a neighborhood of
+the point around it.
+Courtesy: Guido Gerig:
+http://www.cs.cmu.edu/afs/cs/academic/class/15385-
+s06/lectures/ppts/lec-17.ppt (adapted)
+
+### Slide 11
+RGBD images from
+Microsoft Kinect
+Uses infrared laser light with speckle pattern.
+
+### Slide 12
+Why lasers?
+n easily generate bright beams with lightweight
+sources.
+n infrared beams used unobtrusively.
+n focus well to give narrow beams.
+n single-frequency sources easier to detect.
+n do not disperse from refraction as much as full-
+spectrum sources.
+n semiconductor devices easily generate short
+pulses.
+Light Amplification by
+Stimulated Emission of
+Radiation (LASER)
+
+### Slide 13
+13
+Parametric curve (2D)
+• Parametric curve:      X : I Ì R ® R2
+•Curvature at a point:
+Determinant
+in 2D
+• Tangent  at a point:
+
+### Slide 14
+14
+Parametric curve (3D)
+• Parametric curve:      X : I Ì R ® R3
+•Curvature at a point:
+Cross Product of
+3-vectors
+• Tangent  at a point:
+
+### Slide 15 (OCR)
+X(t) = (u(t), vO), w())
+T(t) = (u'(t), v'(t), w'(t))
+gp arametric curve (3D), XxX"
+Rectifying Plane », binowmal
+» tangent Unit vectors
+Noving meee } la T'(t) = k(t)N(t)
+Frenet Frame <> , ee _
+yy © BD =-ONO
+normal y __ ___
+N'(t) = —k(t)T(t) + t(t)B(t)
+J \ Osculating Plane
+5 Normal Plane Formed by T(t) and a
+point near P=X(t).
+
+### Slide 16
+16
+Parametric surfaces
+• Parametric surface:      x : UÌ R2 ® R3
+• Surface Normal:
+Xu
+Xv
+
+### Slide 17 (OCR)
+; Parametric surfaces
+¢ Parametric surface: x »UcR?—> R3
+Xu) =u), yu pele)
+¢ Surface Normal: NV = AyXAy
+|X, xX, |
+¢ Parameterized curve on the surface: f(t) = (u(t), v(t))
+P(t) = (x(u@), vO), yu), vO), z(u@), vo)
+¢ Tangent vector to the curve f(t) : f = u'(t) Xx, +y'(t) X,
+
+### Slide 18 (OCR)
+a First Fundamental Form
+First fundamental form: The bilinear form that
+associates two vectors in the tangent plane in the
+form of dot product.
+IU. P= U. V
+w.rt. 6 (tC)
+I(¢.t) =t.€ =(u'X, + v'X,). (u'X, + v'Xy)
+= (X,,. X,)u'27+2(X,.Xp)u'v’ + (Xy.X,)v”
+= Eu'*+2Fv' + Gv”?
+Magnitude of the tangent vector EX, - Xy
+F=x,,.X,y
+G=x,,. x,
+
+### Slide 19 (OCR)
+: Second Fundamental Form
+X (u,v) =(x(u,v), y(u,),2(0,0)) yet
+II(u.B) = i. dN(v) Ax, |
+iil =0 ane
+<< N +t.dN@)=0 Y
+When they kn N +¢. dN(v) = 0 ,
+are unit y EN
+vectors IT(t.t) = —k. corte)
+Angle between curve normal and surface normal
+19 For normal section, p =zero.> II(¢.t) = ke nal Curvature
+
+### Slide 20 (OCR)
+pocond Fundamental Form
+X (u,v) = (xu,v), yU,v),2(U,V))
+f =u'()X, +X,
+II(t.t) = t.dN(t)
+¢ Second fundamental form: e=-N.x,,
+— =-N.X,,
+II(t.t) = eu’? + 2fu'v’ + gv" {7-8 x,,
+¢ Normal Curvature: Second fundamental form
+to be normalized by magnitude of tangent (first
+> normal form)
+
+### Slide 21 (OCR)
+pocond Fundamental Form
+i =u'()X, +v OX, o= Nex,
+1(é.t) =t.dN@® ‘ f=-N.x,
+¢ Second fundamental form: g=—-N.x,,
+II(t.t) = eu’? + 2fu'v! + gv”
+¢ Normal Curvature: Second fundamental form
+to be normalized by magnitude of tangent (first
+normal form)
+k, = (t,t) ew*+2fulv'+gvi?
+C 1(¢,t) Ew2+2Fu'v'+Gvr2
+21
+
+### Slide 22
+22
+Linear map, Gaussian and
+Mean curvatures
+Linear map:
+Gaussian curvature (K): Determinant of linear map.
+Mean curvature (H): Half of trace of linear map.
+Eigen values and eigen vectors of linear map provide
+principal curvatures (k1,k2)  associated with principal
+directions.
+EG
+Ff
+Ge
+Eg
+EG
+eg
+Hk
+Principal curvatures are roots of following equation:
+2,1
+e= – N . xuu
+f = – N . xuv
+g= – N . xvv
+E=xu . xu
+F=xu . xv
+G=xv . xv
+
+### Slide 23 (OCR)
+= = = Peak Surface H«O KO Fist Surface H=O0 K-0
+Eight visible
+Surface types
+of
+Pit Surface H2O K20 Minimal Surfaca H=0 K<O
+curvatures
+Ridge Surface H«O K=0 Saddle Ridge H«<O K<O
+EA
+Invariant Surface Characteristics for 3D Object
+Recognition in Range Images, PAUL J. BESL Velev Sorters Heb ie=0 Guna Valley HeO KeO
+AND RAMESH C. JAIN, COMPUTER VISION,
+GRAPHICS, AND IMAGE PROCESSING 33,
+33-80 (1986) 4
+
+### Slide 24
+Surface types from signs of
+curvatures
+peak
+ridge
+saddle
+ridge
+flat
+valley
+saddle
+valley
+pit
+k1
+k2
+peak
+ridge
+Saddle
+ridge
+none
+flat
+Minimal
+surface
+pit
+valley
+Saddle
+valley
+
+### Slide 25
+25
+Example: Monge Patches
+X ( u, v ) =  (u, v, h( u, v ))
+In this case
+• N=                           ( –hu , –hv , 1)T
+• E = 1+hu
+2;  F = huhv,; G = 1+hv
+• e =                          ;   f =                          ;  g =
+(1+hu
+2+hv
+2)1/2
+(1+hu
+2+hv
+2)1/2
+–huu
+(1+hu
+2+hv
+2)1/2
+–huv
+(1+hu
+2+hv
+2)1/2
+–hvv
+h(u,v)
+e= – N . xuu
+f = – N . xuv
+g= – N . xvv
+E=xu . xu
+F=xu . xv
+G=xv . xv
+
+### Slide 26
+Monge Patches:
+Mean and Gaussian Curvatures
+Mean Curvature
+Gaussian Curvature
+
+### Slide 27 (OCR)
+Ex. 1
+Consider the following representation of a surface
+(x(u,v), y(u,v), z(u,v)), 0 <= u,v <=1.
+fi(u) 3 2 4)[w 91) 4 3 2)[v’?
+f2(u) [+s 6 2 {fe g2(V) [3 7 ||
+f3(u) 1 4 =3lly g3(v)| |-5 6 3111
+x(uv)=fAwgav) yuv)=fw)g2(v) 2%) = fswas(r)
+Compute the surface normal, Gaussian and mean
+curvatures at (u,v)=(0.5,0.5).
+
+### Slide 28 (OCR)
+Ans. 1
+3.2 4] fw 4 3 2) [v"
+Fa =|- 6 2 |p| cte=| 1 7 lq
+1 4 -3!l4 “> 6 Bilt
+4 3 2)][2v
+3 2 4)f2u an
+reo=[s & IIAP O-[L 7 al
+1 4 -3h0
+At u=v=0.5,
+5.75 4.5 5 7
+F(0.5) = | 3.75 | G(0.5) = 75 F'(0.5) = fy G'(0.5) = a
+~0.75 4.75 5 1
+22.5 4.0.25
+X= FD Q6e) =|1175 = FADOG'O) =| 30 |
+Element wise multiplication 23.75 —0.75
+
+### Slide 29 (OCR)
+Ans.1 (contd. )
+a —0.587
+Surface normal as (u,v): A _ _AuX%y_ ar uve 0.792
+IXa%Xvll De
+E=X,.X, e@ =X 6 93
+F=X,.X, f =Xuy-t F"'(w) = Fad G"(v) =| 2
+Xyuu = F"(u) © Gv) Xw = F'(u) © G'(v) Xw = Flu) © G"(v)
+. _fe flrE F771 Principal Curvatures (k,, k,):
+Linear map: | | Eigen values of linear map.
+f gif G eg — f°
+Gaussian curvature: k,.k, ~ K ==——>
+EG —F
+Eg + Ge —2Ff
+Mean curvature: (k,+k,/2 ~ H= 2(EG —F2)
+
+### Slide 30
+Ans.1 (contd.)
+At u=v=0.5
+e=107.352
+f= 13.389
+g=19.832
+E=1208.375
+F= 1240.312
+g=2520.625
+Linear map (L):
+Mean Curvature: Trace (L) /2 =0.086
+Gaussian Curvature: Det.(L)=0.0013
+
+### Slide 31
+31
+Finding Step and Roof Edges
+in Range Images
+“Describing Surfaces,” by J.M. Brady, J. Ponce, A.
+Yuille and H. Asada, Proc. International Symposium
+on Robotics Research, H. Hanafusa and H. Inoue
+(eds.), MIT Press (1985)
+Courtesy : www.cs.unc.edu/Research/vision/comp256/vision23.ppt
+
+### Slide 32
+Edge Models
+k1x+h when x<0,
+k2x+c+h when x>0.
+Step edge:
+k1x+h when x<0,
+k2x+h when x>0.
+Roof edge:
+Adapted from:
+www.cs.unc.edu/Research/vision/comp256/vision23.ppt
+
+### Slide 33 (OCR)
+Characterizing fea Bee
+pgs , [= ~.,
+Step edge ~— Roof edge
+G(x; o )=Gaussian mask of scale o.
+«  0°G(x; 0)
+ta) = —Gqz* 2) :
+Curvature at Gaussian smoothened z(x): &,(x) =——*
+l+z p
+Ratios of 2" and 1° derivatives of curvatures: ( z,)
+Step edges: ki (x) zl"(x) Roof edges:
+Roughly remains 7 7-y = Sacyy Inversely
+constant across a(x)  Zg'(x) proportional to
+scales. scale.
+Adapted from:
+www.cs.unc.edu/Research/vision/comp256/vision23. ppt
+
+### Slide 34
+Characterization of edges
+Step edges are zero crossings of one of principal
+curvatures (or Gaussian curvature), whose position
+changes with scale.
+Roof edge is characterized by local maxima of curvature
+and to be sought in the direction of dominant principal
+curvature.
+s k
+roughly remains constant
+across scales.
+roughly remains constant
+across scales.
+
+### Slide 35
+The Algorithm
+Compute a set of Gaussian smoothed images at
+multiple scales.
+Compute the principal directions and curvatures
+at each point of the smoothed images.
+Compute zero crossings of the Gaussian
+curvature and the extrema of the dominant
+principal curvature in the corresponding
+principal direction.
+Zero-crossings: Candidate step edge points.
+Extrema: Candidate roof edge points.
+Use the analytical models across scales to select
+candidate points for respective edges.
+“Describing Surfaces,” by J.M. Brady, J. Ponce, A. Yuille and
+H. Asada, Proc. International Symposium on Robotics
+Research, H. Hanafusa and H. Inoue (eds.), MIT Press (1985)
+
+### Slide 36
+Multi-scale edge tracking
+•Features are tracked from course to fine
+scales.
+•All features at a given scale having no
+ancestor in coarse scale are eliminated.
+•If      remains roughly constant across scales
+output step edge point.
+•If        remains roughly constant across scales
+output roof edge point.
+•Retain the points at finest scale as shift from
+the point is more for larger scale.
+
+### Slide 37
+37
+Scale-
+Space
+Matching
+Reprinted from “Toward a Surface Primal Sketch,”
+By J. Ponce and J.M. Brady, in Three-Dimensional
+Machine Vision, T. Kanade (ed.), Kluwer Academic
+Publishers (1987). Ó 1987 Kluwer Academic
+Publishers.
+Courtesy:
+www.cs.unc.edu/Research/vision/
+comp256/vision23.ppt
+
+### Slide 38
+38
+Segmentation into Planes via
+Region Growing
+Idea: Iteratively merge the pair
+of planar regions minimizing
+the average distance to the
+plane best fitting them.
+Reprinted from “The Representation, Recognition and Locating of 3D Objects,” by O.D. Faugeras and M. Hebert, the International Journal of
+Robotics Research, 5(3):27-52 (1986). Ó 1986 Sage Publications. Reprinted by permission of Sage Publications.
+Nodes: Planar Patches
+Edges: Between adjacent patches.
+Arc cost: Avg. distance to the
+plane best fitting them.
+Greedy
+approach:
+Select the best
+(minimum cost)
+arc,
+and merge the
+nodes.
+Courtesy: www.cs.unc.edu/Research/vision/comp256/vision23.ppt
+
+### Slide 39
+Range image segmentation:
+Morphological approach
+q Uses information of local orientation at a point.
+q Introduces concepts of digital neighborhood plane
+(DNP) and neighborhood plane set (NPS).
+q Fast and easy computation on checking the
+arrangement of neighboring points in the 3D
+discrete space.
+q The NPS at each point computed, which induces a
+unique  partition under the equivalence relation on
+equality  of NPS.
+q Approximate planar segments formed by region
+growing.
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+
+### Slide 40 (OCR)
+3-D Neighborhood of a point p
+a fa fe i
+Vs V2
+Coe
+alata Oh
+0,0,-1)_ | (1.0,-1)
+Rana)
+{0,—1,-1) }(1,=f=1)
+AT TD ME
+| ta NG |
+Q (~1,1.0) (hyo)
+ote |
+(0,09) | (1.0.0)
+al alta)
+(-1,-1,0)] (0,-1,0) | (1,-1.0)
+TT TT 4
+ul Pa fets}
+(111) | (0.1.1)
+(-1,0,1) (1,0,1)
+ul talk)
+(-1,-1,1)]} (0,-1.1) (1,-1.1)
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+
+### Slide 41 (OCR)
+4 Digital Neighborhood planes
+Assume the
+lo a 5 point lies on a
+6.4 AWN sez surface
+T r To .
+\4 A 17 4) |7 ——
+4 5 6 7 8 9
+1 LE EI AA, tee AP
+17_ Yo % We iv LZ 7 \47 Nz
+Digital Neighborhood planes
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+
+### Slide 42
+Digital neighborhood planes
+Set of points
+defining DNP’s.
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+u2 n2 v2
+u8 p
+v8
+u6 n6 v6
+v4 v8 v0
+n4 p
+n0
+u4 u8 u0
+n3 n2 n1
+n4 p
+n0
+n5 n6 n7
+
+### Slide 43
+Digital neighborhood planes
+Set of points
+defining DNP’s.
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+u3 n3 v3
+u8 p
+v8
+u7 n7 v7
+u1 n1 v1
+u8 p
+v8
+u5 n5 v5
+u3 n4 v5
+u2 p
+v6
+u1 n0 v7
+
+### Slide 44
+Digital neighborhood planes
+Set of points
+defining DNP’s.
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+u5 n4 v3
+u6 p
+v2
+u7 n0 v1
+u1 n2 v3
+u0 p
+v4
+u7 n6 v5
+u3 n2 v1
+u4 p
+v0
+u5 n6 v7
+
+### Slide 45
+DNPs: Voxel Sets
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+
+### Slide 46
+Neighborhood Plane Set
+(NPS)
+o Let Pi be the set of points assigned to the ith
+DNP.
+o Neighborhood plane set (NPS) of a point p in an
+image A in Z3 :
+k is a parameter
+threshold number of points required
+for accepting  a DNP in the
+neighborhood.
+
+### Slide 47
+Handling noise in range
+image
+Range image: D(x,y)
+3D point: p (x,y, D(x,y))
+Nabc(p): An extended neighborhood around p of size
+axbxc.
+Map points from Nabc(p) to N(p), and use the same
+definitions of DNP and NPS.
+NPS at p
+
+### Slide 48
+Neighborhood mapping
+function (NMF)
+F: Nabc(p) à N(p).
+1. The NMF F should be total and onto.
+For every point in Nabc(p) there exists a unique point in
+N(p).
+ii.
+For every point in N(p) at least there exists a point in
+Nabc(p) mapped to it.
+2. The NMF F should induce connected partition in
+Nabc(p).
+3. Induced DNP’s should be connected.
+4. Induced DNP’s should have strong structural
+similarity with the respective DNP defined in N(p).
+
+### Slide 49 (OCR)
+Neighborhood mapping function
++ (NMF): An example
+ra lea)
+Vg “%
+ES Saf af
+(Sale [cal
+I x24 (0,1,0) | (5.1.0)
+y\ ee alee | ay
+x IN al ahaa)
+(=1,-1,9)] (0,-1,0) [ (1,-1.0)
+eT aT
+(al ea [eca|
+els]
+to) J. Mukherjee et al., Segmentation of range images,
+cy wy | Pattern Recognition, 25(10), 1141-1156, 1992.
+
+### Slide 50
+Modified DNPs induced by F1
+DNPs in base
+configuration
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+J. Mukherjee et al., Segmentation of 3D surfaces,
+Pattern Recognition Letters, 11, 215-223, 1990.
+o Induced DNPs are
+connected.
+o Structurally similar.
+
+### Slide 51
+The algorithm
+1. Compute NPS at each
+pixel.
+2. Compute connected
+components having the
+same NPS.
+3. Remove small connected
+components.
+4. Smooth a region by
+assigning its label to
+spurious unlabeled pixels
+within it.
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+
+### Slide 52
+Registration of range data
+n Assumptions
+n Surface belongs to the same object.
+n Captured from different viewing direction.
+n Coordinates of corresponding points are
+related by rigid body transformation.
+n Assume same scales for the coordinate axes.
+n Computational problem
+n Estimation of rotation and translation
+parameters.
+
+### Slide 53 (OCR)
+Estimation of rigid body
++ transformation
+=» Two corresponding point sets {m,} and {d,}, i=1,..N
+d; = Rm,4+ F + v; *——— noise
+Solve for R and T “ . 2
+to minimize E= > Ile — Rm; -1||
+i=1
+OE - A
+—_ = — d; —R i T)=0
+== 0S) x mj — 7)
+Means of d,; and m,'s
+
+### Slide 54 (OCR)
+A solution for 2 and 7
+de, = Gi~ A Mey SIM ™ Minimize
+N ee
+E= » Mle, — Rmz,||_ A Y (dBc, +m m_-, — 2d2.Rm,,)
+i=1 i= J
+Maximize
+Solution of R and T SVD in
+H =UDV'*— ofH /
+R =vutT Maximize trace of RH
+T=d—Rm _ Where, H = >, med,
+Correlation matrix 7 #1
+
+### Slide 55
+The Iterative Closest Point (ICP)
+Registration Algorithm
+1. Compute initial registration parameters R0 and T0.
+Initialize error E to E0 (error of model fitting).
+2. Repeat following steps till error converges or
+becomes small.
+Apply transformation to the source scene (or
+point clouds).
+ii.
+Compute closest pairs between source and
+target scenes.
+iii. Re-compute registration parameters and error
+of fitting.
+“A Method for Registration of 3D Shapes,” by P.J. Besl and N.D. McKay, IEEE
+Trans. on Pattern Analysis and Machine Intelligence, 14(2):238-256
+
+### Slide 56 (OCR)
+ICP Registrati
+gistration Results
+Ls aa NN, WI AW
+NS y i.
+ATARAX Wl i) J
+— Se 7) z
+ell DNNANY iy Hl \ NI i YANN
+NN HOA i ‘i i"
+GHA (iA
+Reprinted from “A Method for Registration Hl i [' ) \\ \
+of 3D Shapes,” by P.J. Besl and N.D. McKay, i fh) | iH Hy
+IEEE Trans. on Pattern Analysis and Machine Ih li) !)) | | ( ANY
+Intelligence, 14(2):238-256 (1992), © 1992 IEEE ii I ie 1) \
+Wey
+
+### Slide 57
+Summary
+1. Different types of range sensors.
+Stereo imaging
+Time of flight
+Triangulation through scanning beams
+Structured light
+2. Use of differential geometry in extracting local
+features of a pixel (point) in a range image.
+Surface normal, Principal Curvatures, Gaussian curvature, mean
+curvature.
+Signs of curvatures characterize the local topology of surface.
+3. Characterization of step and roof edges.
+Step edge: Zero crossings of Gaussian curvature.
+Roof edge: Extrema of dominant curvature along its direction.
+Multiscale tracking of edge points.
+
+### Slide 58
+Summary (contd.)
+4. Segmenting range images into planar patches.
+A greedy approach by fitting local surface patches and
+merging them.
+A morphological processing based approach by
+computing neighborhood planes and local orientation.
+5. Registration of range images.
+Rigid body registration.
+Least square error estimation for rotation and translation
+transformation matrices.
+Iterative refinement from initial estimates by computing
+nearest neighboring pairs in two images.

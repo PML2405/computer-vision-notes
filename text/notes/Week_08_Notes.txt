@@ -1,0 +1,717 @@
+# Week 8 — Color Fundamentals and Processing — study notes
+(Color Fundamentals & Processing; Prof. Jayanta Mukhopadhyay · Lectures 34–40. Re-taught-from-scratch notes written from the slides + transcript; math is LaTeX between $...$ / $$...$$. Pretty version: https://pml2405.github.io/computer-vision-notes/notes/week8_notes.html)
+
+COMPUTER VISION · NPTEL · IIT KHARAGPUR
+
+Week 8
+
+**Color Fundamentals** & **Processing**
+
+Prof. Jayanta Mukhopadhyay · Lectures 34–40
+
+### 📒 what's inside this week
+
+1. Lecture 34 — Color Fundamentals · Part I
+what colour is, the visible spectrum, blackbody & colour temperature, the eye, rods & cones, trichromatic theory, metamers
+
+2. Lecture 35 — Color Fundamentals · Part II
+colour matching, Grassmann's laws, RGB & CMY, additive vs subtractive, CIE XYZ
+
+3. Lecture 36 — Color Fundamentals · Part III
+the xy chromaticity chart, hue & saturation, gamut, saturate/desaturate, max-saturation by projective cross-product
+
+4. Lecture 37 — Color Fundamentals · Part IV
+JND ellipses → uniform u′v′ & Lab, YIQ & YCbCr, HSI/HSV, opponent colour, colour constancy & von Kries
+
+5. Lecture 38 — Color Fundamentals · Part V
+estimating the illuminant, colour transfer, single-chip cameras, the CFA & Bayer pattern
+
+6. Lecture 39 — Color Fundamentals · Part VI
+demosaicing: bilinear, averaging red & blue hues (ARBH), Laplacian-corrected edge-correlated (LCEC)
+
+7. Lecture 40 — Color Fundamentals · Part VII
+MSE & PSNR, artifacts & the median-filter fix, the whole colour unit recap
+
+# LECTURE 34 — Color Fundamentals & Processing — Part I
+
+what colour is · the visible spectrum · spectral power & reflectance · blackbody & colour temperature · the eye, rods & cones · trichromatic theory · metamers
+
+🧠 the big picture, first
+
+**Colour is not a physical property of objects or light** — it's a **psychological sensation** your visual system produces when physical light meets the eye. This lecture builds from the electromagnetic spectrum, through the physiology of the eye, to the trichromatic model that collapses a whole continuous spectrum into just **three numbers** — the foundation of every colour space we use later.
+
+## 1.  what is colour?
+
+**Colour** is the result of an **interaction** between (a) physical light in the environment and (b) your visual system. Change either side — the light, or the observer — and the perceived colour can change. Same photons, different eye/brain ⇒ possibly a different sensation.
+
+**why this matters:** because the eye already **reduces** a spectrum to a few numbers, we can encode colour with a small set of values instead of a full curve.
+
+## 2.  the visible spectrum
+
+The electromagnetic spectrum runs from long-wavelength **radio waves** to **gamma rays**. A **narrow** band near the high-frequency end is the **visible spectrum**, **≈ 400–700 nm** — remembered as **VIBGYOR** (violet→red, short→long wavelength).
+
+#### the visible band + luminance sensitivity
+
+[diagram text: 400nm | 700nm | VIBGYOR | peak ≈ green | luminance sensitivity ↑]
+
+The eye's **luminance sensitivity function** peaks in the **green** zone and decays toward violet and infrared.
+
+## 3.  describing a light source — spectral power & colour temperature
+
+A light's energy is **not** uniform across wavelengths. Its **relative spectral power distribution** = power (energy/time) at each wavelength — the source's signature. (Ruby laser ≈ pure spike at 700 nm → red; daylight ≈ flat.)
+
+**🔥 blackbody radiators & colour temperature**
+A **blackbody** is an ideal emitter with near-zero **albedo** (it doesn't reflect, so it's "black"); think a hollow metal box with a tiny hole. Its spectrum depends on **temperature alone** — **Planck's law**:
+
+$$ M(\lambda,T)=\frac{2\pi h c^{2}}{\lambda^{5}}\cdot\frac{1}{\exp\!\big(\tfrac{hc}{\lambda k T}\big)-1} $$
+
+$h$ = Planck's constant, $k$ = Boltzmann constant. **Colour temperature** of a real source = the temperature of the blackbody whose spectrum most closely resembles it (higher $T$ ⇒ bluer).
+
+## 4.  reflection — the received signal = illumination × reflectance
+
+We see by **reflected** light. Every surface absorbs some incident energy and reflects the rest, differently per wavelength — its **reflectance spectrum** $R(\lambda)$ is a material property (tomato reflects reds; blueberry reflects blues; purple reflects both red & blue). The energy actually reaching the retina at each wavelength is the product:
+
+received (exciting) signal
+
+$$ E(\lambda)=I(\lambda)\,\cdot\,R(\lambda) $$
+
+illumination $I(\lambda)$ × reflectance $R(\lambda)$. Change the illuminant and the perceived colour changes — the seed of the **colour-constancy** problem (L38).
+
+## 5.  the eye — rods & cones
+
+The eye is a camera: the **lens** projects onto the **retina** (image plane) whose **photoreceptor cells** turn light into electrical signals; the **iris** controls the **pupil** (aperture). Two receptor types, named by shape:
+|  | Cones 🔺 | Rods ▮ |
+| **senses** | **colour** | **intensity** (brightness) |
+| **works in** | bright light | low light |
+| **retina location** | packed in the **fovea** (centre, 1–2°) | the periphery |
+| **acuity** | high (fine detail) | low (can't read in the dark) |
+
+**three kinds of cones:S**hort→blue, **M**edium→green, **L**ong→red, in population ratio **L:M:S ≈ 10:5:1**. There are almost **no blue (S) cones at the very centre** of the fovea.
+
+## 6.  the trichromatic model — a spectrum → three numbers
+
+Each cone type is a **wavelength filter** $L(\lambda),M(\lambda),S(\lambda)$. Its output is the **integral of the product** of the incoming energy and its response:
+
+cone (tri-stimulus) responses
+
+$$ L=\!\int\! E(\lambda)L(\lambda)\,d\lambda,\quad M=\!\int\! E(\lambda)M(\lambda)\,d\lambda,\quad S=\!\int\! E(\lambda)S(\lambda)\,d\lambda $$
+
+#### three overlapping cone responses
+
+[diagram text: S | M | L | 400nm | 700nm]
+
+A whole spectrum $E(\lambda)$ collapses to the triplet $(L,M,S)$ — the brain reads it as one colour. This is **trichromatic theory** (Thomas Young, 18th c.), the basis of the **tri-stimulus** model behind the CIE chart (L37).
+
+## 7.  metamers
+
+**👯 metamers**
+Two **different** spectra $E_1(\lambda)\neq E_2(\lambda)$ that integrate to the **same** $(L,M,S)$ triplet look **identical** — they are **metamers**. Because colour is only that integral-summary, many spectra map to the same three numbers (e.g. a jagged "white" and a smooth "white").
+
+This is why displays/printers/cameras can match a perceived colour without reproducing the original physical spectrum.
+
+### the eye codes an entire spectrum into three cone numbers (L,M,S) — colour is that triplet, not the spectrum.
+
+$E(\lambda)=I(\lambda)R(\lambda)$ hits three cone filters → $(L,M,S)$; equal triplets from different spectra = metamers; this tri-stimulus idea powers every colour space ahead.
+
+### Self-check quiz
+
+1. Is colour a physical property of objects/light?
+
+→ Answer: No — it's a psychological sensation from the interaction of physical light with the visual system
+
+2. Name the three cone types, their L:M:S ratio, and which is nearly absent at the foveal centre.
+
+→ Answer: S(blue), M(green), L(red); ratio ≈ 10:5:1; blue (S) cones are almost absent at the foveal centre
+
+3. Which receptor senses colour in bright light, which senses intensity in dim light?
+
+→ Answer: cones → colour (bright); rods → intensity (dim, low acuity — why you can't read in the dark)
+
+4. What are metamers?
+
+→ Answer: two different spectra that produce the same (L,M,S) triplet and are therefore perceived as the same colour
+
+5. What is a source's colour temperature?
+
+→ Answer: the temperature of the blackbody whose spectral power distribution most closely matches the source
+
+— end of Lecture 34 notes ✏️
+
+# LECTURE 35 — Color Fundamentals & Processing — Part II
+
+colour matching · Grassmann's laws · colour as a linear space · RGB & CMY · additive vs subtractive · CIE XYZ
+
+🧠 the big picture, first
+
+L34 said a spectrum reduces to three cone numbers. Now we make that **quantitative and standard**: a **colour-matching experiment** shows any colour can be matched by **three primaries**, so colour lives in a **3-D linear space** (Grassmann). We then meet the working spaces — **RGB** (additive), **CMY** (subtractive), and the standard **CIE XYZ**.
+
+## 1.  the colour-matching experiment
+
+Split a screen: on one side a **test light** $T$ (a pure wavelength); on the other, a mix of three **primary** sources (red, green, blue). The observer adjusts the three primary amounts until **the two halves are indistinguishable**. Those amounts $(u_1,u_2,u_3)$ then **represent** $T$.
+
+**➖ sometimes you need a negative amount**
+For some test wavelengths no positive mix matches. The trick: add a primary to the **test** side instead — equivalent to **subtracting** it from the mix. So a match may read like $T = u_1p_1 - u_2p_2 + u_3p_3$. Recording these amounts for every wavelength gives the **colour-matching functions**.
+
+## 2.  trichromacy & Grassmann's laws
+
+**Trichromacy**: most people can match any light with **three independent primaries** (independent = none is a combination of the other two — the linear-independence analogy). Same light + same primaries ⇒ same weights, across observers. A colour is thus a point in a 3-D space:
+
+$$ A \;=\; u_1 p_1 + u_2 p_2 + u_3 p_3 $$
+
+**📐 Grassmann's three laws (colour is linear)**
+
+1. **Matching:** two lights matched by the same weights match each other.
+
+2. **Additivity:** if $A$ matches $A'$ and $B$ matches $B'$, then $A+B$ matches $A'+B'$ (superposition).
+
+3. **Scaling:** scale the test light by $k$ and the match scales by $k$ (same colour, brightness scaled).
+
+**geometry:** positive mixes of 3 primaries with weights summing to 1 (a **convex combination**) fill a **triangle** — every reproducible colour sits inside it.
+
+## 3.  a whole colour signal → three numbers
+
+A real light is a spectrum, not one wavelength. Discretize it into $N$ wavelength samples as a **spectral power distribution** vector $\mathbf t\,(N\times1)$. Store the three colour-matching functions as the columns of $C\,(N\times3)$. By Grassmann's superposition, the **tri-stimulus** vector is:
+
+tri-stimulus of a colour signal
+
+$$ \begin{bmatrix}c_1\\c_2\\c_3\end{bmatrix}=C^{T}\,\mathbf t $$
+
+## 4.  two technologies — additive (RGB) vs subtractive (CMY)
+|  | Additive — RGB | Subtractive — CMY |
+| **primaries** | Red, Green, Blue | Cyan, Magenta, Yellow |
+| **mechanism** | emit & **add** light | pigments **absorb** (subtract) light |
+| **used by** | monitors, CRT, displays | printing on paper |
+| **captured by** | camera R/G/B filters | — |
+
+CMY are the **complements** of RGB: cyan pigment absorbs red, magenta absorbs green, yellow absorbs blue. Normalized (0–1) or 8-bit (0–255):
+
+RGB ↔ CMY
+
+$$ \begin{bmatrix}C\\M\\Y\end{bmatrix}=\begin{bmatrix}1\\1\\1\end{bmatrix}-\begin{bmatrix}R\\G\\B\end{bmatrix}\ \ \text{(8-bit: }255-\text{RGB)} $$
+
+**✍️ worked example — RGB → CMY**
+Pixel $\text{RGB}=(40,50,30)$ ⇒ $\text{CMY}=(255-40,\,255-50,\,255-30)=(\mathbf{215,205,225})$. (Assignment Q2, option d.)
+
+## 5.  CIE XYZ — the standard space
+
+RGB matching functions go **negative** for some wavelengths (so RGB can't display every colour). In **1931** the **CIE** defined three **hypothetical** primaries $X,Y,Z$ (not physically realizable) chosen so that **all matching functions become positive** and $Y$ carries luminance. It's an invertible linear map from RGB:
+
+RGB → CIE XYZ
+
+$$ \begin{bmatrix}X\\Y\\Z\end{bmatrix}=\begin{bmatrix}0.607&0.174&0.200\\0.299&0.587&0.114\\0.000&0.066&1.116\end{bmatrix}\!\begin{bmatrix}R\\G\\B\end{bmatrix} $$
+
+and back (invertible)
+
+$$ \begin{bmatrix}R\\G\\B\end{bmatrix}=\begin{bmatrix}1.911&-0.533&-0.288\\-0.984&1.998&-0.028\\0.058&-0.118&0.898\end{bmatrix}\!\begin{bmatrix}X\\Y\\Z\end{bmatrix} $$
+
+Note the $X,Y,Z$ primaries need coefficients $>1$, confirming they're not physically producible — but mathematically the transform is clean and reversible. (The middle row is the familiar luminance $Y=0.299R+0.587G+0.114B$.)
+
+### colour is a 3-D linear space: match any light with 3 primaries (Grassmann) — RGB adds light, CMY subtracts it, CIE XYZ standardizes it.
+
+tri-stimulus $C^{T}\mathbf t$; CMY $=1-$RGB; CIE XYZ (1931) = invertible RGB map with all-positive matching functions, $Y$ = luminance.
+
+### Self-check quiz
+
+1. Why does a colour-matching experiment sometimes require a negative primary amount?
+
+→ Answer: no positive mix of the three primaries matches that wavelength; adding a primary to the test side = subtracting it from the mix
+
+2. State Grassmann's additivity & scaling laws.
+
+→ Answer: additivity: if A↔A′ and B↔B′ then A+B ↔ A′+B′; scaling: scaling the light by k scales the match by k
+
+3. Convert RGB $(40,50,30)$ to CMY (8-bit).
+
+→ Answer: $255-\text{RGB}=(215,205,225)$
+
+4. Why did CIE define the hypothetical XYZ primaries?
+
+→ Answer: so all colour-matching functions are positive (RGB's go negative); XYZ can represent every colour and $Y$ carries luminance — invertible with RGB
+
+— end of Lecture 35 notes ✏️
+
+# LECTURE 36 — Color Fundamentals & Processing — Part III
+
+the xy chromaticity chart · white point · hue & saturation · colour gamut · saturate/desaturate · maximally-saturated colour by projective cross-product
+
+🧠 the big picture, first
+
+CIE XYZ (L35) fixed RGB's negative-component problem. Now we **drop intensity** to get a **2-D map of colour** — the chromaticity chart — where **hue** and **saturation** are simple geometry, a set of primaries carves out a **gamut triangle**, and (the exam-critical bit) we compute a pixel's **maximally-saturated colour** using the **projective cross-product** from Week 2.
+
+## 1.  from XYZ to the 2-D chromaticity chart
+
+By Grassmann, **scaling a colour changes only its intensity, not its hue**. So factor intensity out: normalize each tri-stimulus value by the total.
+
+chromaticity coordinates
+
+$$ x=\frac{X}{X+Y+Z},\ \ y=\frac{Y}{X+Y+Z},\ \ z=\frac{Z}{X+Y+Z} $$
+
+Since $x+y+z=1$, only **$(x,y)$** are needed — the third is redundant. This is the **CIE xy chromaticity space**: intensity dropped, relative colour kept.
+
+**✍️ worked example — RGB → (x,y)**
+With the CIE matrix $M=\big[\begin{smallmatrix}0.49&0.31&0.20\\0.177&0.812&0.011\\0&0.01&0.99\end{smallmatrix}\big]$ and RGB $=(100,80,200)$: $X=113.8,\ Y=84.8,\ Z=198.8$, sum $=397.4$. So $x=113.8/397.4=\mathbf{0.286}$, $y=84.8/397.4=\mathbf{0.213}$.
+
+## 2.  reading the chart — white point, hue & saturation
+
+#### chromaticity chart
+
+[diagram text: W | p | a | b | pure | spectral locus]
+
+boundary = pure spectral colours; interior toward W = whiter.
+
+**White point** $W=(\tfrac13,\tfrac13)$ (all components equal ⇒ **achromatic**). Draw a radial line $W\!\to\!$ boundary:
+
+- **Hue** = the **direction** of the line (which spectral wavelength) — an angle from a reference.
+
+- **Saturation** = how far out toward the pure colour: $S=\tfrac{a}{b}$ ($a=\lVert Wp\rVert$, $b=\lVert W\text{→edge}\rVert$). $S=0$ at $W$, $S=1$ at the boundary.
+
+The curved boundary is the **spectral locus** (~360 nm blue end → ~700 nm red end). Noon daylight ≈ blackbody at ~4870 K (near white); sunset drifts reddish across the chart.
+
+## 3.  colour gamut
+
+**🔺 gamut = reproducible colours of a set of primaries**
+Three primaries plot as 3 points; every positive (additive) mix lands **inside their triangle**. So the triangle is the **set of colours those primaries can reproduce**. **More saturated primaries** sit nearer the boundary ⇒ **bigger triangle ⇒ wider gamut**. Multi-primary displays (e.g. multi-laser DLP) add vertices to extend it.
+
+## 4.  saturation & desaturation as image operations
+
+Plot a pixel's colour as point $p$. **Saturate:** draw $W\!\to\!p$ and **extend to the gamut edge** — the intersection is the **maximally-saturated colour of the same hue**; convert back to RGB. **Desaturate:** move $p$ inward toward $W$ along the same line. Both **skip pixels inside a small threshold circle around $W$** (near-white pixels look bad if disturbed).
+
+**⚖️ desaturation by the center-of-gravity law**
+A mixture's chromaticity is the **centre of gravity** of its parts, each weighted by **mass** $m=\tfrac{Y}{y}\,(=X{+}Y{+}Z)$:
+
+$$ x_d=\frac{m_w x_w+m_s x_s}{m_w+m_s},\quad y_d=\frac{m_w y_w+m_s y_s}{m_w+m_s},\quad Y_d=Y_w+Y_s $$
+
+White intensity $Y_w=k\,\bar Y_{avg}$ ($k$ empirical, $k{=}1$ typical; $k<0$ subtracts white). Shifting $W$ off $(\tfrac13,\tfrac13)$ tints the whole image (e.g. $W{=}(0.5,0.2)$ → reddish).
+
+## 5.  ⭐ maximally-saturated colour via the projective cross-product
+
+Finding where line $W\!\to\!q$ hits a gamut edge is a **line-intersection** problem — exactly the **projective geometry of Week 2**. Work in homogeneous coords $(x,y)\to(x,y,1)$:
+
+line through 2 points
+
+$$ \boldsymbol\ell=\mathbf p_1\times\mathbf p_2 $$
+
+intersection of 2 lines
+
+$$ \mathbf p=\boldsymbol\ell_1\times\boldsymbol\ell_2 $$
+
+back to Cartesian
+
+$$ (a,b,c)\to\big(\tfrac{a}{c},\tfrac{b}{c}\big) $$
+
+**🧭 procedure**
+
+1. Ray line $\boldsymbol\ell_{wq}=W\times q$.
+
+2. Each gamut edge = cross product of its two primary vertices (RG, GB, BR).
+
+3. Intersect $\boldsymbol\ell_{wq}$ with each edge line.
+
+4. **Keep the intersection that is a valid chromaticity** (all coords positive/in range) **and on the correct side of $W$** (same hue direction as $q$); reject the rest.
+
+**✍️ worked example — Assignment Q9**
+Primaries $R{=}(\tfrac23,\tfrac13),G{=}(\tfrac15,\tfrac34),B{=}(\tfrac16,\tfrac1{10})$; $W{=}(\tfrac13,\tfrac13)$; point $q{=}(0.31,0.27)$.
+
+1. $\boldsymbol\ell_{wq}=W\times q=(0.063,-0.023,-0.013)$.
+
+2. Edges: $BG=B\times G=(-0.65,0.033,0.105)$; $BR=B\times R=(-0.233,0.5,-0.011)$; $RG=R\times G=(-0.417,-0.467,0.433)$.
+
+3. Intersections: $BG\cap wq\to(0.154,-0.154)$ — **negative** ⇒ reject; $RG\cap wq\to(0.416,0.557)$ — **wrong side** of $W$ ⇒ reject; $BR\cap wq\to(\mathbf{0.269,0.154})$ — valid & correct direction ✓.
+
+**⇒ maximally-saturated colour $=(0.269,0.154)$** (option c). Convert back to RGB for the saturated pixel.
+
+### drop intensity → the xy chart: hue = radial direction from white, saturation = radial fraction; a pixel's max-saturated colour = where W→q meets the gamut edge (a Week-2 cross-product).
+
+$x=X/(X{+}Y{+}Z)$; $S=a/b$; gamut = primaries' triangle; line/intersection $=$ cross products; Q9 answer $(0.269,0.154)$ on edge BR.
+
+### Self-check quiz
+
+1. Given XYZ, how do you get $(x,y)$ and why is $z$ redundant?
+
+→ Answer: $x=X/(X{+}Y{+}Z)$, $y=Y/(X{+}Y{+}Z)$; since $x{+}y{+}z=1$, $z$ is determined, so $(x,y)$ suffice (intensity dropped)
+
+2. Geometrically define hue and saturation on the chart.
+
+→ Answer: hue = direction of the radial line from white $W$ to a spectral boundary colour; saturation $S=a/b$ = fractional distance out along it (0 at W, 1 at boundary)
+
+3. What is a colour gamut, and how does primary saturation affect it?
+
+→ Answer: the triangle of colours reproducible from a set of primaries; more saturated primaries sit nearer the boundary → larger triangle → wider gamut
+
+4. How do you compute a pixel's maximally-saturated colour of the same hue?
+
+→ Answer: homogenize; line $\ell_{wq}=W\times q$; intersect with each gamut-edge line (edge = cross product of its 2 primaries); keep the valid chromaticity on the correct side; convert to RGB
+
+— end of Lecture 36 notes ✏️
+
+# LECTURE 37 — Color Fundamentals & Processing — Part IV
+
+JND ellipses → uniform u′v′ & Lab · YIQ & YCbCr · HSI/HSV · opponent colour · colour constancy & von Kries diagonal correction
+
+🧠 the big picture, first
+
+RGB numbers alone don't tell you a pixel's **true** colour: RGB isn't perceptually organized, and the same surface gives different RGB under different lights. This lecture surveys the colour spaces that fix each problem, then solves colour constancy — recovering illumination-invariant colour by **von Kries diagonal correction**.
+
+## 1.  why $(x,y)$ isn't enough — JND ellipses
+
+Around any chromaticity point is a region of **indistinguishable** colours — a **McAdam / Just-Noticeable-Difference (JND) ellipse**. In $(x,y)$ these ellipses are **wildly non-uniform** (huge in green, tiny in red), so **Euclidean distance ≠ perceived difference**. Two fixes:
+
+uniform u′v′ (projective transform of x,y)
+
+$$ u'=\frac{4X}{X+15Y+3Z},\quad v'=\frac{9Y}{X+15Y+3Z} $$
+
+**CIE L*a*b*** goes further: one luminance $L$ + two chroma axes ($a$: green−↔red+, $b$: blue−↔yellow+), a **non-linear** map (normalized by a reference white — a white-balancing step) where JND regions become nearly **circular**, so **Euclidean distance in Lab ≈ perceived colour difference**.
+
+## 2.  transmission & compression spaces — YIQ, YCbCr
+| space | type | used for | note |
+| **YIQ** | linear | colour TV broadcast | $Y$ (luminance) gets **more** bits, chroma $I,Q$ fewer; B&W TV uses only $Y$ |
+| **YCbCr** | **affine** (+128) | JPEG compression | $C_b,C_r$ = complementary blue/red; +128 shifts chroma non-negative for storage |
+
+$$ \begin{bmatrix}Y\\C_b\\C_r\end{bmatrix}=\begin{bmatrix}0.299&0.587&0.114\\-0.169&-0.331&0.5\\0.5&-0.419&-0.081\end{bmatrix}\!\begin{bmatrix}R\\G\\B\end{bmatrix}+\begin{bmatrix}0\\128\\128\end{bmatrix} $$
+
+**assignment note (Q3d):** "luminance $Y$ is encoded with **fewer** bits than chroma $I,Q$" is **FALSE** — it's the opposite ($Y$ gets more bits; we're most sensitive to intensity).
+
+## 3.  HSI / HSV — intuitive hue, saturation, intensity ★
+
+A **non-linear** space (a hexcone): **Value/Intensity** = vertical axis, **Saturation** = radial distance (0–1), **Hue** = angle (0–2π, red at 0 → yellow → green → cyan → blue → magenta).
+
+intensity
+
+$$ I=\frac{R+G+B}{3} $$
+
+saturation
+
+$$ S=1-\frac{\min(R,G,B)}{I}=1-\frac{3\min(R,G,B)}{R+G+B} $$
+
+hue
+
+$$ H=\cos^{-1}\!\frac{\tfrac12[(R-G)+(R-B)]}{\sqrt{(R-G)^2+(R-B)(G-B)}} $$
+
+(hue: use $H$ if $B\le G$, else $360^\circ-H$.)
+
+**✍️ worked example — HSI/HSV saturation (Assignment Q1)**
+$\text{RGB}=(40,50,30)$: $I=\tfrac{40+50+30}{3}=40$, $\min=30$, so $S=1-\tfrac{30}{40}=1-0.75=\mathbf{0.25}$ (option b).
+
+## 4.  the opponent-colour process
+
+The brain doesn't use L,M,S cone signals directly — it uses their **differences** (we never see "reddish-green" or "bluish-yellow"). Three **opponent channels**:
+
+$$ \underbrace{R-G}_{\text{red–green}}\qquad \underbrace{B-(R+G)}_{\text{blue–yellow},\ Y=R+G}\qquad \underbrace{\tfrac{R+G+B}{3}}_{\text{achromatic}} $$
+
+The linear part of YCbCr is essentially this opponent coding engineered for compression.
+
+## 5.  colour constancy — removing the illuminant ★
+
+The same scene under a flash vs a tungsten lamp records very different RGB, yet humans still see the **true** colour — we adapt. **Colour constancy** algorithms do this in software. Recorded light = **diffuse** (∝ illuminant × surface reflectance → **surface** colour) + **specular** (mirror-like → **illuminant** colour), giving the "dog-leg" scatter in RGB. The sensor response integrates over wavelength:
+
+$$ I(x)=\int_\lambda E(\lambda)\,R_x(\lambda)\,S(\lambda)\,d\lambda $$
+
+$E$ = illuminant SPD, $R_x$ = surface reflectance, $S$ = sensor response. Two tasks: **(1) estimate the illuminant colour** $(R_s,G_s,B_s)$, then **(2) colour-correct** against it.
+
+### von Kries diagonal correction
+
+Re-light every pixel as if under a **target** illuminant $(R_d,G_d,B_d)$ instead of the **source** $(R_s,G_s,B_s)$ — scale each channel by the illuminant ratio (a **diagonal** matrix), with $f$ preserving total intensity:
+
+diagonal (von Kries) correction
+
+$$ k_r=\tfrac{R_d}{R_s},\ k_g=\tfrac{G_d}{G_s},\ k_b=\tfrac{B_d}{B_s};\quad f=\tfrac{R+G+B}{k_rR+k_gG+k_bB} $$
+
+$$ R'=f k_r R,\quad G'=f k_g G,\quad B'=f k_b B $$
+
+**✍️ worked example — diagonal correction (Assignment Q5)**
+Source illuminant $(120,160,200)$, target $(60,120,150)$, pixel $(120,80,160)$.
+
+1. $k_r=\tfrac{60}{120}=0.5,\ k_g=\tfrac{120}{160}=0.75,\ k_b=\tfrac{150}{200}=0.75$.
+
+2. $k_rR+k_gG+k_bB=60+60+120=240$; $R{+}G{+}B=360$; $f=\tfrac{360}{240}=1.5$.
+
+3. $R'=1.5(60)=90,\ G'=1.5(60)=90,\ B'=1.5(120)=180$.
+
+**⇒ corrected $=(90,90,180)$** (option a).
+
+### pick the space for the job — Lab for perceptual distance, YIQ/YCbCr for transmit/compress, HSV to edit — then kill the illuminant with von Kries diagonal correction.
+
+$S=1-\tfrac{3\min}{R+G+B}$; YCbCr affine (+128); opponent $R{-}G,\ B{-}(R{+}G)$; $R'=f k_r R$ with $k_r=R_d/R_s$.
+
+### Self-check quiz
+
+1. Compute the HSI/HSV saturation of $(40,50,30)$.
+
+→ Answer: $I=40$, $\min=30$, $S=1-30/40=0.25$
+
+2. Transfer pixel $(120,80,160)$ from illuminant $(120,160,200)$ to $(60,120,150)$ by diagonal correction.
+
+→ Answer: $k=(0.5,0.75,0.75)$; $f=360/240=1.5$; result $(90,90,180)$
+
+3. Why is RGB→YCbCr affine (not linear), and what's the +128 for?
+
+→ Answer: it has a linear part plus a translation; +128 shifts otherwise-negative chroma into a non-negative range for unsigned storage
+
+4. What do McAdam/JND ellipses reveal about $(x,y)$, and how is it fixed?
+
+→ Answer: their non-uniform sizes mean Euclidean distance ≠ perceived difference; fixed by the projective u′v′ space and by CIE Lab (Euclidean ≈ perceptual)
+
+— end of Lecture 37 notes ✏️
+
+# LECTURE 38 — Color Fundamentals & Processing — Part V
+
+estimating the illuminant (gray-world, max-world, gray-edge) · colour transfer (Reinhard) · single-chip cameras, the CFA & Bayer pattern · the demosaicing problem
+
+🧠 the big picture, first
+
+L37 gave the **correction** (von Kries) — but it needs the illuminant's colour, which we don't know. This lecture **estimates the illuminant** from the image (gray-world → gray-edge), generalizes correction to full **colour transfer**, then flips to **how colour is captured cheaply**: one sensor with a colour filter array records one channel per pixel — so the rest must be reconstructed (demosaicing).
+
+## 1.  estimating the colour of the illuminant
+
+Von Kries needs the source-illuminant colour $(R_s,G_s,B_s)$. Estimate it from the image itself:
+
+Gray-World — "the world averages to gray"
+
+$$ \hat{\mathbf e}=\big(\tfrac1N\textstyle\sum R_i,\ \tfrac1N\textstyle\sum G_i,\ \tfrac1N\textstyle\sum B_i\big) $$
+
+White/Max-World — brightest patch ≈ white
+
+$$ \hat{\mathbf e}=\big(\max_i R_i,\ \max_i G_i,\ \max_i B_i\big) $$
+
+**📈 Gray-Edge — one framework for all of them**
+Edges carry illuminant info (specular reflection = the light's colour). Smooth by a Gaussian at scale $\sigma$, take the $n$-th derivative, aggregate with an $L_p$ (**Minkowski**) norm:
+
+$$ e_c^{\,n,p,\sigma}=k\Big(\!\int\Big|\tfrac{\partial^{n} f_{c,\sigma}}{\partial x^{n}}\Big|^{p}dx\Big)^{1/p} $$
+
+- $n{=}0,p{=}1$ → **Gray-World**; $n{=}0,p{\to}\infty$ → **Max-World**; general $p$ → **Shades of Gray**; $n{\ge}1$ → **Gray-Edge**.
+
+- **Gamut mapping / colour-by-correlation:** match the scene's colour distribution to canonical illuminants (e.g. Mahalanobis distance to each illuminant's mean/covariance).
+
+**then correct:** feed $\hat{\mathbf e}$ (source) and a chosen target (often white $(255,255,255)$) into the **von Kries diagonal rule** from L37 → the constancy-corrected image.
+
+## 2.  colour transfer (Reinhard) — match a whole distribution
+
+More general than illuminant correction: make a source image borrow a target image's whole colour **distribution** (e.g. a sunset palette). Work in a decorrelated opponent space $l\alpha\beta$ (RGB → LMS → $\log$ → $l\alpha\beta$), then per channel shift+scale by the statistics:
+
+statistics transfer (per channel $c\in\{l,\alpha,\beta\}$)
+
+$$ c'=\frac{\sigma_t^{c}}{\sigma_s^{c}}\big(c_s-\langle c_s\rangle\big)+\langle c_t\rangle $$
+
+Forces the source channel to take the target's **mean and standard deviation**; then invert ($l\alpha\beta\!\to\!\log$-LMS $\to$ exp $\to$ LMS $\to$ RGB). $l$ = luminance, $\alpha$ = yellow–blue, $\beta$ = red–green (an opponent space, so channels are ~independent).
+
+## 3.  capturing colour cheaply — the CFA & Bayer pattern
+|  | Three-chip camera | Single-chip camera |
+| **sensors** | 3 (prism splits R/G/B) | 1, behind a colour filter array |
+| **per pixel** | full RGB | **one** channel only |
+| **cost / result** | costly, no post-processing | cheap, needs **demosaicing** |
+
+#### Bayer mosaic (GRGR / BGBG)
+
+green in every row; **2× as many greens** as red or blue.
+
+The **Bayer pattern**: a **red row** (G R G R…) alternates with a **blue row** (B G B G…). Columns are green or non-green. From the fixed pattern + the starting state, we know **exactly which channel each pixel measured**.
+
+**Why 2× green?** the eye is most sensitive to green (≈luminance), so green carries detail, is **less likely to be aliased**, and reconstructs better.
+
+**⚠️ two facts demosaicing relies on (Assignment Q6)**
+
+- **High R–G–B correlation**: channels share texture & edge locations, so a missing channel can be inferred from the others (cross-channel gradients).
+
+- **Green is sampled 2× and less aliased**; demosaicing tends to **blur edges** (not sharpen them) — false statement traps on the exam.
+
+### estimate the light (gray-world → gray-edge), correct or transfer colour, and reconstruct one-channel-per-pixel CFA data by demosaicing.
+
+Gray-World = channel means; Max-World = channel maxes; Bayer = GRGR/BGBG with green 2×; single sensor ⇒ demosaicing (next lecture).
+
+### Self-check quiz
+
+1. Under the gray-world assumption, how is the illuminant estimated?
+
+→ Answer: the per-channel average of R, G, B over all pixels (scene assumed to average to gray under white light)
+
+2. How do Gray-World and Max-World fall out of the Gray-Edge framework?
+
+→ Answer: Gray-Edge $e_c^{n,p,\sigma}$ with $n{=}0,p{=}1$ → Gray-World (average); $n{=}0,p{\to}\infty$ → Max-World (per-channel max)
+
+3. Why does the Bayer pattern sample green twice as often as red/blue?
+
+→ Answer: the eye is most sensitive to green (luminance); green carries more detail, is less likely to be aliased, reconstructs better
+
+4. Three-chip vs single-chip camera?
+
+→ Answer: three-chip splits light to 3 sensors → full RGB per pixel (costly); single-chip records one channel per pixel via a CFA and demosaics the rest (cheap, lower spatial resolution)
+
+— end of Lecture 38 notes ✏️
+
+# LECTURE 39 — Color Fundamentals & Processing — Part VI
+
+colour demosaicing — **bilinear**, **averaging red & blue hues (ARBH)**, and **Laplacian-corrected edge-correlated (LCEC)** interpolation
+
+🧠 the big picture, first
+
+A Bayer sensor gives **one** channel per pixel; demosaicing fills in the missing two. Three methods, increasingly clever: **bilinear** (just average neighbours) → **ARBH** (average colour ratios, using channel correlation) → **LCEC** (interpolate **along edges**, not across them, with a Laplacian correction). This is the most numerically exam-tested lecture of the week.
+
+Positions are numbered row-major on the Bayer grid; $G_i,R_i,B_i$ = the value at position $i$ when that channel was actually sensed there. In every case: fill a missing channel from neighbours that did sense it.
+
+## 1.  bilinear interpolation
+
+Linear interpolation in both directions — just average the available same-channel neighbours.
+
+**🟩 green (every non-green pixel has 4 green neighbours)**
+$$ \hat G_i=\tfrac14\big(G_{\text{N}}+G_{\text{S}}+G_{\text{E}}+G_{\text{W}}\big)\quad\text{e.g. }\hat G_8=\tfrac{G_3+G_7+G_9+G_{13}}{4} $$
+
+For **red/blue**, average only the neighbours that hold that channel — which depends on the pixel type:
+| missing R at… | available red neighbours | formula |
+| green pixel, **blue row** | top & bottom | $\hat R_7=\tfrac{R_2+R_{12}}{2}$ |
+| green pixel, **red row** | left & right | $\hat R_{13}=\tfrac{R_{12}+R_{14}}{2}$ |
+| blue pixel (diagonal) | 4 diagonals | $\hat R_8=\tfrac{R_2+R_4+R_{12}+R_{14}}{4}$ |
+
+**✍️ worked — green (Assignment Q7) & bilinear R,G (Q10)Q7:** $\hat G_8=\tfrac{G_3+G_7+G_9+G_{13}}{4}=\tfrac{18+25+45+150}{4}=\mathbf{59.5}$.
+
+**Q10:** $\hat R_{19}=\tfrac{R_{14}+R_{24}}{2}$, $\hat G_7=\tfrac{G_2+G_{12}}{2}$; here $\hat R_{19}{+}\hat G_7=\mathbf{250.0}$.
+
+## 2.  averaging red & blue hues (ARBH)
+
+Bilinear ignores that channels are correlated. ARBH exploits it: interpolate **green everywhere first** (bilinear), then interpolate the **hue** = colour/green ratio, and multiply back by the local green:
+
+blue at a pixel with green $G_i$
+
+$$ \hat B_i=G_i\cdot\frac1{k}\sum_{j\in\text{blue nbrs}}\frac{B_j}{G_j} $$
+
+$k$ = number of blue neighbours (2 for a green pixel with side blue neighbours, 4 for a red-pixel location with diagonal blue neighbours). Same for red hue $R/G$. Interpolating the **ratio** keeps colours consistent where the green channel already captured the detail.
+
+**✍️ worked — red hue (Assignment Q8)**
+At red-missing location 12 (diagonal red neighbours 6,8,16,18):
+
+$$ \hat R_{12}=\frac{G_{12}}{4}\Big(\tfrac{R_6}{G_6}+\tfrac{R_8}{G_8}+\tfrac{R_{16}}{G_{16}}+\tfrac{R_{18}}{G_{18}}\Big)=\mathbf{64.7} $$
+
+## 3.  ⭐ Laplacian-corrected edge-correlated (LCEC)
+
+**Interpolate along the direction of least gradient** — never across an edge (that blurs it). Estimate horizontal vs vertical gradient (first-order in green + a second-order/Laplacian term borrowed from the other channel, since higher-order derivatives correlate across channels), then interpolate along the smaller one and add the Laplacian correction.
+
+gradient estimates at centre 5 (neighbours labelled by position)
+
+$$ \Delta_H=|c_4-c_6|+|2c_5-c_3-c_7|,\qquad \Delta_V=|c_2-c_8|+|2c_5-c_1-c_9| $$
+
+green estimate (interpolate along smaller gradient + Laplacian correction)
+
+$$ \hat G_5=\begin{cases}\dfrac{c_4+c_6}{2}+\dfrac{2c_5-c_3-c_7}{4}, & \Delta_H<\Delta_V\\[8pt]\dfrac{c_2+c_8}{2}+\dfrac{2c_5-c_1-c_9}{4}, & \Delta_H>\Delta_V\\[6pt]\text{use all 4 + both corrections}, & \Delta_H=\Delta_V\end{cases} $$
+
+**✍️ worked — LCEC green (Assignment Q4)**
+$3\times3$ CFA $=\begin{smallmatrix}32&90&32\\72&90&130\\136&94&26\end{smallmatrix}$ (positions 1–9).
+
+1. $\Delta_H=|c_4-c_6|+|2c_5-c_3-c_7|=|72-130|+|180-32-136|=58+12=70$.
+
+2. $\Delta_V=|c_2-c_8|+|2c_5-c_1-c_9|=|90-94|+|180-32-26|=4+122=126$.
+
+3. $\Delta_H<\Delta_V$ ⇒ interpolate horizontally: $\hat G_5=\tfrac{c_4+c_6}{2}+\tfrac{2c_5-c_3-c_7}{4}=\tfrac{72+130}{2}+\tfrac{12}{4}=101+3=\mathbf{104}$.
+
+Red/blue are then interpolated the same way (now green is known everywhere, so the Laplacian correction uses green). Along a diagonal, use the two perpendicular diagonal directions $N,P$ instead of $H,V$. (Taylor series says add the Laplacian — subtracting, as here, empirically works better.)
+| method | idea | edges |
+| **Bilinear** | average same-channel neighbours | blurs (interpolates across edges) |
+| **ARBH** | average colour ratios (hue) × local green | better colour, uses R–G–B correlation |
+| **LCEC** | interpolate along least gradient + cross-channel Laplacian | **preserves edges** — highest quality |
+
+### fill the CFA: average neighbours (bilinear) → average hue-ratios (ARBH) → interpolate along the edge with a Laplacian fix (LCEC).
+
+green $=\tfrac14\sum$ green nbrs; ARBH $\hat B_i=G_i\,\overline{(B/G)}$; LCEC picks $\min(\Delta_H,\Delta_V)$ then adds $\tfrac{2c_5-c_a-c_b}{4}$ — Q4 gives $\hat G_5=104$.
+
+### Self-check quiz
+
+1. Bilinear-interpolate the green at a non-green pixel with green neighbours $18,25,45,150$.
+
+→ Answer: $\tfrac{18+25+45+150}{4}=59.5$ (Assignment Q7)
+
+2. What does ARBH interpolate instead of the raw channel, and why?
+
+→ Answer: the hue = colour/green ratio (then ×local green); channels are correlated, so the ratio is smoother and preserves colour where green already has the detail
+
+3. In LCEC, along which direction do you interpolate, and what's added?
+
+→ Answer: along the smaller gradient (never across an edge), plus a second-order Laplacian correction borrowed from the other channel
+
+4. Compute the LCEC green for the $\begin{smallmatrix}32&90&32\\72&90&130\\136&94&26\end{smallmatrix}$ patch.
+
+→ Answer: $\Delta_H=70<\Delta_V=126$ ⇒ $\hat G_5=\tfrac{72+130}{2}+\tfrac{2(90)-32-136}{4}=101+3=104$ (Assignment Q4)
+
+— end of Lecture 39 notes ✏️
+
+# LECTURE 40 — Color Fundamentals & Processing — Part VII
+
+scoring a reconstruction (MSE & PSNR) · the hardest worked demosaic · artifacts (blur, false colour) & the median-filter fix · the whole colour unit on one page
+
+🧠 the big picture, first
+
+The colour unit closes here: **how good is a demosaic?** (MSE/PSNR — LCEC wins), one **fully worked** ARBH exercise (the assignment's hardest), the two **artifacts** (blur, false colour) and a cheap fix (**median filter in chroma**), and a one-page recap of everything colour.
+
+## 1.  scoring a reconstruction — MSE & PSNR
+
+Compare the reconstruction $\hat I_C$ against the original $I_C$ over all pixels and all three channels ($3N$ samples):
+
+mean square error
+
+$$ E=\frac{1}{3N}\!\!\sum_{C\in\{R,G,B\}}\sum_{x,y}\big(I_C-\hat I_C\big)^2 $$
+
+peak signal-to-noise ratio (8-bit)
+
+$$ \mathrm{PSNR_{dB}}=10\log_{10}\frac{255^2}{E}=20\log_{10}\frac{255}{\sqrt E} $$
+
+Higher PSNR = better. Across the three methods, **LCEC gives the highest PSNR** (bilinear the lowest) — the "interpolate along the edge" idea pays off.
+
+## 2.  ⭐ the hardest one, fully worked — ARBH chroma (Assignment Q8)
+
+ARBH needs the **estimated green at every neighbour** first. At red-missing location 12 with diagonal red neighbours $\{6,8,16,18\}$ on the 5×5 grid:
+
+**✍️ step-by-step**
+
+1. Estimate greens (edge pixels use the 3 neighbours that exist): $\hat g_{12}=\tfrac{25+87+24+150}{4}=71.5$, $\hat g_6=\tfrac{10+24+25}{3}=19.67$, $\hat g_8=59.5$, $\hat g_{16}=\tfrac{24+34+87}{3}=48.33$, $\hat g_{18}=\tfrac{150+200+87+100}{4}=134.25$.
+
+2. Average the red hues ($R/G$) and scale by the local green: with $R_6{=}15,R_8{=}35,R_{16}{=}65,R_{18}{=}124$,
+$$ \hat R_{12}=\tfrac{71.5}{4}\Big(\tfrac{15}{19.67}+\tfrac{35}{59.5}+\tfrac{65}{48.33}+\tfrac{124}{134.25}\Big)=17.875\times3.620=\mathbf{64.7} $$
+
+**the lesson:** ARBH interpolates the **colour-to-green ratio**, not the raw colour — so it needs an estimated green everywhere first, and it stays faithful where green already carries the detail.
+
+## 3.  two artifacts & a cheap fix
+| artifact | cause | fix |
+| **Blurred edges** | interpolating across an edge (softens it — worst for bilinear) | more complex filtering / better direction picking |
+| **False colours** | tiny R/G/B estimation errors on high-frequency **white** regions paint spurious colour (the "lighthouse" test) | **median-filter the chroma** (below) |
+
+**🩹 false-colour fix — median filter in chroma**
+
+1. Convert RGB → luminance + **chroma (U,V)** (a YUV/YCbCr transform).
+
+2. **Median-filter** each chroma channel (3×3 reduces artifacts; 5×5 more but blurs — a size trade-off).
+
+3. Convert back to RGB and **re-insert the true measured CFA samples** (the median also alters genuine pixels).
+
+≈ **3–4 dB** chroma PSNR improvement — chroma is smooth, so a median cleans stray colours without hurting luminance detail.
+
+## 4.  the whole colour unit on one page
+
+**📌 four colour-processing problems (L34–L40)**
+| problem | key tool |
+| **1. Colour enhancement** (saturate/desaturate) | on the CIE chart: RGB→XYZ→$(x,y)$, move toward/away from white; max-saturation = W→p meets gamut edge (projective cross-product) |
+| **2. Colour constancy** | estimate illuminant (gray-world / gray-edge) → **von Kries diagonal** correction $R'=f k_r R$ |
+| **3. Colour transfer** | match a target image's mean+std in $l\alpha\beta$ space |
+| **4. Demosaicing** | Bayer CFA → bilinear / ARBH / LCEC; score with PSNR |
+
+Colour models to know: **RGB** (capture, not for interpretation), **CMY**$=255-$RGB (print), **CIE XYZ/xy** (tri-stimulus, gamut), **HSI/HSV** ($S=1-\tfrac{3\min}{R+G+B}$), **YIQ/YCbCr** (transmit/compress), **Lab** (perceptual distance).
+
+### LCEC wins on PSNR; ARBH interpolates hue-ratios; false colours die under a chroma median filter — and colour work is enhancement, constancy, transfer & demosaicing.
+
+$\mathrm{PSNR_{dB}}=20\log_{10}\tfrac{255}{\sqrt E}$; ARBH $\hat R_{12}=64.7$; median-filter U,V for ~3–4 dB; four colour problems, one chart.
+
+### Self-check quiz
+
+1. Write PSNR in dB in terms of the MSE $E$; which demosaic method scores highest?
+
+→ Answer: $\mathrm{PSNR_{dB}}=10\log_{10}(255^2/E)=20\log_{10}(255/\sqrt E)$; LCEC gives the highest PSNR
+
+2. How does ARBH fill a missing red/blue using green?
+
+→ Answer: estimate green everywhere; form hue $=$ colour/green at each neighbour; average the hues and multiply by local green: $\hat c=\tfrac{\hat g}{k}\sum c_k/\hat g_k$
+
+3. Name the two demosaicing artifacts and the fix for the colour one.
+
+→ Answer: blurred edges & false colours; median-filter the chroma (U,V), convert back to RGB, restore the true CFA samples (~3–4 dB chroma gain)
+
+4. List the four colour-processing problems of the unit.
+
+→ Answer: enhancement (saturate/desaturate), colour constancy, colour transfer, demosaicing
+
+— end of Lecture 40 · end of Week 8 ✏️

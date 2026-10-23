@@ -1,0 +1,1886 @@
+Computer Vision (NPTEL 106105216, IIT Kharagpur, Prof. Jayanta Mukhopadhyay)
+WEEK 9: Range Image Processing
+Lectures:
+  - Lecture 41: Range Image Processing – Part I (transcript p.5)
+  - Lecture 42: Range Image Processing – Part II (transcript p.19)
+  - Lecture 43: Range Image Processing – Part III (transcript p.33)
+  - Lecture 44: Range Image Processing – Part IV (transcript p.46)
+  - Lecture 45: Range Image Processing – Part V (transcript p.61)
+
+This file concatenates, in order: study notes, assignment solution, slides, transcript.
+Hub: https://pml2405.github.io/computer-vision-notes/
+
+==============================================================================
+PART: STUDY NOTES
+==============================================================================
+
+# Week 9 — Range Image Processing — study notes
+(Range Image Processing; Prof. Jayanta Mukhopadhyay · Lectures 41–45. Re-taught-from-scratch notes written from the slides + transcript; math is LaTeX between $...$ / $$...$$. Pretty version: https://pml2405.github.io/computer-vision-notes/notes/week9_notes.html)
+
+COMPUTER VISION · NPTEL · IIT KHARAGPUR
+
+Week 9
+
+**Range Image Processing**
+
+Prof. Jayanta Mukhopadhyay · Lectures 41–45
+
+### 📒 what's inside this week
+
+1. Lecture 41 — Range Image Processing · Part I
+range/depth images & point clouds, active vs passive, time-of-flight (LIDAR), triangulation, structured light, Kinect RGB-D
+
+2. Lecture 42 — Range Image Processing · Part II
+differential geometry: parametric curves, tangent, curvature & torsion, the Frenet frame, surfaces, the two fundamental forms
+
+3. Lecture 43 — Range Image Processing · Part III
+normal curvature, the shape operator, Gaussian & mean curvature, Besl–Jain classification, curvature of a range image
+
+4. Lecture 44 — Range Image Processing · Part IV
+worked curvature example, step vs roof edges, multi-scale curvature edge detection, planar-patch segmentation
+
+5. Lecture 45 — Range Image Processing · Part V
+morphological segmentation (NPS), registration via SVD & ICP, whole-topic summary
+
+# LECTURE 41 — Range Image Processing — Part I
+
+range/depth images & point clouds · passive vs active · time-of-flight (LIDAR) · triangulation · structured light (stripe, binary-coded, spatial) · Kinect RGB-D · why lasers
+
+🧠 the big picture, first
+
+An ordinary image stores **intensity** per pixel; a **range image** stores **distance** — a 2.5-D picture of the visible surface. This lecture is **how that depth is physically captured**: one passive way (stereo, done) and three active illumination principles — **time-of-flight**, **triangulation**, and **structured light**.
+
+## 1.  range images, depth data & point clouds
+
+**Range data** is **2.5-D**: only the front surface seen by the sensor, one distance per pixel. Model it as $d(i,j)$ = distance to the scene point imaged at $(i,j)$ (not intensity). Reading the depth as a coordinate gives a **point cloud**:
+
+range image → point cloud
+
+$$ (i,j)\ \mapsto\ (x,y,z)=\big(i,\,j,\,f(i,j)\big) $$
+
+**Passive** sensing = stereo (no energy projected, lower resolution). **Active** sensing projects energy onto the scene for high-resolution depth — three principles follow.
+
+## 2.  time-of-flight (ToF) — LIDAR
+
+A pulsed laser fires; the pulse reflects and returns; measure the round-trip time $t$. Since source and detector are co-located, $c\,t$ is the **out-and-back** path, so depth is half:
+
+time-of-flight depth
+
+$$ d=\frac{c\,t}{2},\qquad c\approx 3\times10^{8}\ \text{m/s} $$
+
+**✍️ worked example (illustrative)**
+Round-trip $t=10\,\text{ns}$: path $=c t=(3{\times}10^8)(10{\times}10^{-9})=3$ m, so $d=\tfrac{3}{2}=\mathbf{1.5\ m}$.
+
+One shot = one direction, so a **moving mirror scans** the beam. Variants: **LIDAR** (Light Detection And Ranging), **LADAR**. The **minimum observation time** (pulse width + sampling interval) bounds the closest measurable distance.
+
+## 3.  triangulation — intersect two rays
+
+#### source ray ∩ camera ray
+
+[diagram text: laser | camera | P]
+
+two calibrated rays meet at the surface point.
+
+A laser lights a point; a camera (elsewhere) images it. Calibration gives **two 3-D rays** — the known laser direction and the camera pixel's back-projected ray — whose **intersection** is the point:
+
+$$ \mathbf P=\mathbf o_L+s\,\mathbf r_L=\mathbf o_C+u\,\mathbf r_C $$
+
+Solve for $s,u$ → $\mathbf P=(x,y,z)$. Scan the beam along a calibrated path for the whole surface.
+
+## 4.  structured light — pattern instead of one ray
+
+One ray per point is slow. **Structured light** projects a **pattern** whose geometry encodes each projected direction; a non-flat surface bends it, and each observed point maps back (by calibration) to its projected ray → triangulate. Three variants:
+| variant | how a ray is identified | projections |
+| **Single vertical stripe** | calibrated stripe correspondence + interpolation | scan the stripe (many) |
+| **Binary-coded** | $m$ patterns → each point gets an $m$-bit code (illuminated=1/dark=0), e.g. 101 | $m$ (resolves $2^m$ stripes) |
+| **Spatial pattern** | unique **local neighbourhood** (dots/speckle) names each point | **one** (fast, lower-res) |
+
+binary-coded: patterns → stripes
+
+$$ N=2^{m}\quad(\text{stripes from } m \text{ patterns}) $$
+
+**e.g.** $m=3$ patterns distinguish $2^3=8$ stripes; a point lit-dark-lit gets code 101 = stripe 5. Each new pattern **doubles** the stripes.
+
+## 5.  Kinect (RGB-D) & why lasers
+
+**🎮 Microsoft Kinect → RGB-D**
+Uses an **infrared laser speckle** (single-projection **spatial** pattern) plus a colour camera, so its output is an **RGB-D image**: **RGB** (colour) + **D** (depth), aligned.
+
+**Why lasers?** ToF requires a **coherent** source; and lasers give bright compact beams, **invisible infrared** (undisturbing — good for gaming), narrow focus, single frequency (easy to detect), low dispersion, and short semiconductor pulses. (LASER = Light Amplification by Stimulated Emission of Radiation.)
+
+### range = distance per pixel (2.5-D); capture it by timing light (ToF, d=ct/2), intersecting two rays (triangulation), or reading a projected pattern (structured light).
+
+point cloud $(i,j,f(i,j))$; ToF $d=ct/2$; triangulation = ray∩ray; binary-coded $2^m$ stripes; Kinect = IR-speckle spatial pattern → RGB-D.
+
+### Self-check quiz
+
+1. Why is range data called 2.5-D, not full 3-D?
+
+→ Answer: it records only the visible surface's depth (one distance per pixel), not the full volumetric/interior structure
+
+2. In time-of-flight, why divide by two?
+
+→ Answer: $c\,t$ is the round-trip out-and-back path; depth is half: $d=ct/2$ (source & detector co-located)
+
+3. How many stripes do $m$ binary-coded patterns resolve, and why?
+
+→ Answer: $2^m$ — each pattern adds one lit/dark bit, doubling the distinguishable $m$-bit code words (e.g. 101)
+
+4. Advantage & limitation of single-projection spatial-pattern structured light?
+
+→ Answer: advantage: one projection encodes all rays → fast/cheap; limitation: bounded by spatial resolution → lower-resolution range image
+
+— end of Lecture 41 notes ✏️
+
+# LECTURE 42 — Range Image Processing — Part II
+
+differential geometry — parametric curves, tangent, curvature & torsion · the Frenet frame · parametric surfaces, surface normal · first & second fundamental forms · normal curvature
+
+🧠 the big picture, first
+
+Range data is **surface data**, so to characterize it we need the language of differential geometry: how curves **bend** (curvature, torsion) and how surfaces are described locally (tangent plane, normal, the two **fundamental forms**). This toolkit is what the next lectures use to **classify surface points**.
+
+## 1.  parametric curves — tangent & curvature
+
+Trace a curve by a parameter $t$ (think "time"): $\mathbf X(t)=(u(t),v(t))$ in 2-D. The **tangent** is the first derivative (velocity); **curvature** $\kappa$ (needs the 2nd derivative) is how sharply it bends:
+
+2-D curvature
+
+$$ \kappa=\frac{|u'v''-u''v'|}{(u'^2+v'^2)^{3/2}} $$
+
+3-D curvature (determinant → cross product)
+
+$$ \kappa=\frac{\lVert\mathbf X'\times\mathbf X''\rVert}{\lVert\mathbf X'\rVert^{3}} $$
+
+**✍️ worked example (illustrative) — circle of radius $R$**
+$\mathbf X(t)=(R\cos t,R\sin t)$: $u'{=}{-}R\sin t,v'{=}R\cos t,u''{=}{-}R\cos t,v''{=}{-}R\sin t$. Numerator $=|R^2\sin^2t+R^2\cos^2t|=R^2$; denominator $=(R^2)^{3/2}=R^3$; so $\kappa=\tfrac{R^2}{R^3}=\tfrac1R$ — matching $\kappa=1/r$ (radius of the osculating circle).
+
+## 2.  the Frenet frame — a moving coordinate system
+
+At each point attach three perpendicular unit axes: **tangent** $\mathbf T$, **curve normal** $\mathbf N$ (in the osculating plane, toward the osculating-circle centre), and **binormal** $\mathbf B=\mathbf T\times\mathbf N$. They span three planes:
+| plane | spanned by |
+| **Osculating** | $\mathbf T,\mathbf N$ (the curve locally lies here) |
+| **Normal** | $\mathbf N,\mathbf B$ (⊥ tangent) |
+| **Rectifying** | $\mathbf T,\mathbf B$ |
+
+Frenet–Serret (how the frame turns; arc-length $s$)
+
+$$ \tfrac{d\mathbf T}{ds}=\kappa\mathbf N,\quad \tfrac{d\mathbf B}{ds}=-\tau\mathbf N,\quad \tfrac{d\mathbf N}{ds}=-\kappa\mathbf T+\tau\mathbf B $$
+
+**Curvature** $\kappa$ = how fast $\mathbf T$ turns; **torsion** $\tau$ = how fast the curve twists out of its osculating plane. (Helix $\mathbf X=(a\cos t,a\sin t,bt)$: $\kappa=\tfrac{a}{a^2+b^2}$, constant.)
+
+## 3.  parametric surfaces — tangent plane & normal
+
+A surface needs **two** parameters: $\mathbf X(u,v)=(x,y,z)$. The two **coordinate tangents** are the partials $\mathbf X_u,\mathbf X_v$; they span the **tangent plane**, and the **surface normal** is their normalized cross product:
+
+surface normal
+
+$$ \mathbf N=\frac{\mathbf X_u\times\mathbf X_v}{\lVert\mathbf X_u\times\mathbf X_v\rVert} $$
+
+tangent of a curve on the surface (chain rule)
+
+$$ \mathbf X'(t)=\mathbf X_u\,u'(t)+\mathbf X_v\,v'(t) $$
+
+## 4.  the two fundamental forms
+
+The **first fundamental form** $\mathrm I=\mathbf X_t\cdot\mathbf X_t$ measures **lengths** on the surface (the squared tangent magnitude):
+
+first fundamental form
+
+$$ \mathrm I=E\,u'^2+2F\,u'v'+G\,v'^2 $$
+
+$$ E=\mathbf X_u\!\cdot\!\mathbf X_u,\ F=\mathbf X_u\!\cdot\!\mathbf X_v,\ G=\mathbf X_v\!\cdot\!\mathbf X_v $$
+
+The **second fundamental form** $\mathrm{II}$ measures **bending** — how the surface normal changes. Since a tangent is ⊥ the normal ($\mathbf t\cdot\mathbf N=0$), differentiating gives:
+
+second fundamental form
+
+$$ \mathrm{II}=-\,\mathbf t\cdot d\mathbf N=\kappa\,(\mathbf n\cdot\mathbf N)=\kappa\cos\theta $$
+
+$\theta$ = angle between the **curve** normal $\mathbf n$ and the **surface** normal $\mathbf N$. (Coefficient form $\mathrm{II}=L\,u'^2+2M\,u'v'+N\,v'^2$ with $L=\mathbf X_{uu}\!\cdot\!\mathbf N$, etc.)
+
+**🎯 normal curvature**
+A **normal section** = a curve lying in the normal plane, so $\mathbf n$ aligns with $\mathbf N$ ⇒ $\cos\theta=\pm1$ ⇒ $\mathrm{II}=\pm\kappa$. This special curvature is the **normal curvature** — the building block for **classifying surface points** in the next lectures.
+
+### curves bend by κ (and twist by τ); surfaces carry a tangent plane + normal, and two forms — I for lengths, II = κcosθ for bending.
+
+$\kappa=\tfrac{\lVert X'\times X''\rVert}{\lVert X'\rVert^3}$; Frenet $\tfrac{dT}{ds}=\kappa N$; $\mathbf N=\tfrac{X_u\times X_v}{\lVert\cdot\rVert}$; $\mathrm I=Eu'^2{+}2Fu'v'{+}Gv'^2$; normal section ⇒ $\mathrm{II}=\pm\kappa$.
+
+### Self-check quiz
+
+1. Write the 2-D curvature and its 3-D counterpart.
+
+→ Answer: $\kappa=\tfrac{|u'v''-u''v'|}{(u'^2+v'^2)^{3/2}}$; in 3-D the determinant becomes a cross product: $\kappa=\tfrac{\lVert X'\times X''\rVert}{\lVert X'\rVert^3}$
+
+2. Name the three Frenet planes and the binormal.
+
+→ Answer: osculating ($T,N$), normal ($N,B$), rectifying ($T,B$); binormal $\mathbf B=\mathbf T\times\mathbf N$
+
+3. Give the surface normal and the first-fundamental-form coefficients.
+
+→ Answer: $\mathbf N=(X_u\times X_v)/\lVert X_u\times X_v\rVert$; $E=X_u\!\cdot\!X_u$, $F=X_u\!\cdot\!X_v$, $G=X_v\!\cdot\!X_v$
+
+4. What does $\mathrm{II}$ equal, and what is a normal section?
+
+→ Answer: $\mathrm{II}=\kappa\cos\theta$ ($\theta$ = angle between curve & surface normals); a normal section lies in the normal plane so $\cos\theta=\pm1$ ⇒ $\mathrm{II}=\pm\kappa$ = normal curvature
+
+— end of Lecture 42 notes ✏️
+
+# LECTURE 43 — Range Image Processing — Part III
+
+normal curvature · the shape operator · principal, Gaussian & mean curvature · Besl–Jain surface-type classification · curvature of a range image (Monge patch)
+
+🧠 the big picture, first
+
+Every surface point has a local **shape** — peak, pit, ridge, saddle, flat — completely captured by how its normal turns, i.e. by **curvature**. This lecture turns the fundamental forms into two numbers per point (Gaussian $K$ and mean $H$), classifies the shape from their **signs** (Besl–Jain), and — the payoff — runs the whole thing directly on a depth map $z=h(x,y)$ with simple derivative masks.
+
+## 1.  from fundamental forms to two curvatures
+
+Along a tangent direction $(du,dv)$, the **normal curvature** is the second form over the first:
+
+$$ \kappa_n=\frac{\mathrm{II}}{\mathrm I}=\frac{e\,du^2+2f\,du\,dv+g\,dv^2}{E\,du^2+2F\,du\,dv+G\,dv^2},\qquad e=N\!\cdot\!X_{uu},\ f=N\!\cdot\!X_{uv},\ g=N\!\cdot\!X_{vv} $$
+
+A point has many normal curvatures (one per direction). Collapse them with the **shape operator** (Weingarten map):
+
+shape operator
+
+$$ L=\begin{bmatrix}E&F\\F&G\end{bmatrix}^{-1}\begin{bmatrix}e&f\\f&g\end{bmatrix} $$
+
+**read it as:** $L$'s **eigenvalues** are the two **principal curvatures** $k_1,k_2$ (the max/min normal curvatures) and its **eigenvectors** are the **principal directions**. (Signed! "dominant" = larger $|k|$.)
+
+## 2.  Gaussian & mean curvature
+
+Gaussian $K$ = det $L$ = product
+
+$$ K=k_1 k_2=\frac{eg-f^2}{EG-F^2} $$
+
+mean $H$ = ½ tr $L$ = average
+
+$$ H=\frac{k_1+k_2}{2}=\frac{eG-2fF+gE}{2(EG-F^2)} $$
+
+The map inverts: $k_1,k_2$ are the roots of $\,k^2-2Hk+K=0$, i.e. $k_{1,2}=H\pm\sqrt{H^2-K}$.
+
+## 3.  local shape from the signs of $H$ and $K$
+
+Like a 1-D extremum ($f'=0$; $f''<0$ = peak, $f''>0$ = pit), curvature signs name the shape. **Peak**: both $k<0$ ⇒ $H<0,K>0$. **Pit**: both $k>0$ ⇒ $H>0,K>0$. **Flat**: $k_1=k_2=0$ ⇒ $H=K=0$. **Besl & Jain (1986)** used the full sign table (richer than principal-sign classes):
+|  | $K>0$ | $K=0$ | $K<0$ |
+| **$H<0$** | Peak | Ridge | Saddle ridge |
+| **$H=0$** | — | Flat / planar | Minimal surface |
+| **$H>0$** | Pit (cup) | Valley | Saddle valley |
+
+Each pixel gets a surface-type label — useful downstream for **segmenting a range image into surface patches**.
+
+## 4.  ⭐ curvature of a range image — the Monge patch
+
+Range data is a **simplified** surface: the parameters are $x,y$ and depth is a height $z=h(x,y)$, so $X=(u,v,h(u,v))$. Everything simplifies:
+
+first form & normal ($W=\sqrt{1+h_u^2+h_v^2}$)
+
+$$ E{=}1{+}h_u^2,\ F{=}h_uh_v,\ G{=}1{+}h_v^2,\ \ \mathbf N=\tfrac{(-h_u,-h_v,1)}{W} $$
+
+second form
+
+$$ e=\tfrac{h_{uu}}{W},\ f=\tfrac{h_{uv}}{W},\ g=\tfrac{h_{vv}}{W} $$
+
+Since $EG-F^2=1+h_u^2+h_v^2=W^2$, the curvatures have clean closed forms:
+
+Gaussian curvature of a depth map
+
+$$ K=\frac{h_{uu}h_{vv}-h_{uv}^2}{(1+h_u^2+h_v^2)^2} $$
+
+mean curvature of a depth map
+
+$$ H=\frac{(1{+}h_u^2)h_{vv}-2h_uh_vh_{uv}+(1{+}h_v^2)h_{uu}}{2(1+h_u^2+h_v^2)^{3/2}} $$
+
+**⚙️ the range-image curvature pipeline**
+
+1. Treat the depth map as $z=h(x,y)$.
+
+2. Compute $h_u,h_v,h_{uu},h_{uv},h_{vv}$ with **derivative masks** (convolution).
+
+3. Plug into the closed forms → $H,K$ at every pixel.
+
+4. Read the signs of $(H,K)$ off the Besl–Jain table → a **surface-type label** per pixel → segment into patches.
+
+### two numbers say it all: $K=k_1k_2$ (det), $H=\tfrac{k_1+k_2}{2}$ (½ tr); their signs name the shape, and for a depth map they're just derivative masks.
+
+$L=\mathrm I^{-1}\mathrm{II}$; peak $H{<}0,K{>}0$; Monge $K=\tfrac{h_{uu}h_{vv}-h_{uv}^2}{(1+h_u^2+h_v^2)^2}$; Besl–Jain HK signs → surface labels.
+
+### Self-check quiz
+
+1. What are the eigenvalues/eigenvectors of $L=\mathrm I^{-1}\mathrm{II}$?
+
+→ Answer: eigenvalues = the two principal curvatures $k_1,k_2$; eigenvectors = the principal directions
+
+2. Express $K$ and $H$ via principal curvatures and via $L$.
+
+→ Answer: $K=k_1k_2=\det L$; $H=\tfrac{k_1+k_2}{2}=\tfrac12\operatorname{tr}L$
+
+3. Give $K$ for a range image $z=h(x,y)$, and the sign test for a peak.
+
+→ Answer: $K=\tfrac{h_{uu}h_{vv}-h_{uv}^2}{(1+h_u^2+h_v^2)^2}$; peak ⇔ $H<0$ and $K>0$
+
+4. Why did Besl–Jain classify by $(H,K)$ signs rather than principal-curvature signs?
+
+→ Answer: the $(H,K)$-sign map gives a richer set (peak, pit, ridge, valley, saddle ridge, saddle valley, minimal, flat) than the coarser symmetric principal-sign scheme
+
+— end of Lecture 43 notes ✏️
+
+# LECTURE 44 — Range Image Processing — Part IV
+
+a worked curvature example · step vs roof edges · multi-scale curvature edge detection · planar-patch segmentation (least-squares plane fit + greedy merging)
+
+🧠 the big picture, first
+
+Three usable range tools built on the curvature machinery: a full **worked example** of computing $H,K$ on a surface; the **two edge types unique to range data** (step & roof) and how curvature detects them across scales; and how a depth map is **segmented into planar patches** by plane-fitting + greedy merging.
+
+## 1.  worked example — curvatures of a separable surface
+
+For a **separable** surface, write the $u$- and $v$-parts as column vectors and take the element-wise (Hadamard $\odot$) product — differentiation then stays trivial:
+
+$$ \mathbf X(u,v)=F(u)\odot G(v),\quad \mathbf X_u=F'(u)\odot G(v),\quad \mathbf X_v=F(u)\odot G'(v) $$
+
+**🧮 the pipeline (evaluate at $(u,v)=(0.5,0.5)$)**
+
+1. Evaluate $F,G,F',G',F'',G''$ once at $0.5$; form $\mathbf X_u,\mathbf X_v$ and the 2nd derivatives $\mathbf X_{uu}=F''\!\odot\!G$, $\mathbf X_{vv}=F\!\odot\!G''$, $\mathbf X_{uv}=F'\!\odot\!G'$.
+
+2. Unit normal $\mathbf n=\tfrac{\mathbf X_u\times\mathbf X_v}{\lVert\mathbf X_u\times\mathbf X_v\rVert}$; first form $E,F,G$; second form $e=\mathbf X_{uu}\!\cdot\!\mathbf n$, $f=\mathbf X_{uv}\!\cdot\!\mathbf n$, $g=\mathbf X_{vv}\!\cdot\!\mathbf n$.
+
+3. Shape operator $S=\mathrm I^{-1}\mathrm{II}$; $K=\det S=\tfrac{eg-f^2}{EG-F^2}$, $H=\tfrac12\operatorname{tr}S$.
+
+Carrying the numbers through gives **$H\approx0.086$** and $K=\det S$.
+
+## 2.  two edge types — step vs roof
+
+Intensity edges are almost purely **step** (a brightness jump). A range image adds a second kind: where depth is continuous but its **slope** jumps — two planes meeting, like a roof ridge.
+
+#### step edge (jump in value)
+
+0th-order discontinuity (depth jump).
+
+#### roof edge (kink in slope)
+
+1st-derivative discontinuity (two planes).
+
+## 3.  multi-scale curvature edge detection
+
+Smooth with a Gaussian (scale $\sigma$) then differentiate ("derivative of Gaussian"). Curvature of a 1-D profile and its telltale **scale behaviour**:
+
+1-D curvature
+
+$$ k(x)=\frac{z''(x)}{(1+z'(x)^2)^{3/2}} $$
+
+ratio computable from the signal
+
+$$ \frac{k''}{k'}\propto\frac{z^{(4)}}{z^{(3)}} $$
+| edge | candidate =  | scale invariance |
+| **Step** | **zero crossing** of Gaussian curvature | $k''/k'\approx$ const across $\sigma$ |
+| **Roof** | **maximum** of the dominant principal curvature (along its direction) | $\sigma\cdot(k''/k')\approx$ const (ratio $\propto 1/\sigma$) |
+
+Compute candidates at scales $\sigma\in\{20,40,60,80\}$; keep only points whose scale-invariance holds; **report at the finest scale** (smoothing shifts positions).
+
+## 4.  segmenting into planar patches
+
+Fit small planar patches, then **greedily merge** neighbours. Fit a plane $z=a_1x+a_2y+a_3$ to $N$ points by least squares (the pseudo-inverse from model fitting):
+
+least-squares plane fit
+
+$$ XA=Z\ \Rightarrow\ A=(X^{T}X)^{-1}X^{T}Z $$
+
+fit residual = arc cost
+
+$$ E=\big\lVert(I-X(X^{T}X)^{-1}X^{T})Z\big\rVert $$
+
+**🔗 greedy graph merging (Faugeras–Hebert, 1986)**
+
+- Each patch = a **node**; neighbouring patches joined by an **arc** whose cost = residual of fitting the merged patch with one plane.
+
+- Repeatedly merge the **minimum-cost arc**, rebuild the graph; **stop** when the best merge would exceed an error threshold.
+
+### range data has step (value jump) and roof (slope jump) edges — track them across scale by curvature — and segments into planes by least-squares fit + greedy merging.
+
+$K=\det S$, $H=\tfrac12\operatorname{tr}S$; step = curvature zero-crossing, roof = dominant-curvature max; plane $A=(X^TX)^{-1}X^TZ$, arc cost = residual.
+
+### Self-check quiz
+
+1. Step edge vs roof edge in a range image?
+
+→ Answer: step = a jump in the depth value (0th-order discontinuity); roof = continuous depth but a slope (1st-derivative) discontinuity — two planes meeting
+
+2. How do the curvature-derivative ratios behave across scale for each?
+
+→ Answer: step: $k''/k'$ ≈ constant across $\sigma$; roof: $\propto 1/\sigma$, so $\sigma\cdot(k''/k')$ ≈ constant
+
+3. What candidate points are used for step vs roof edges?
+
+→ Answer: step = zero crossings of Gaussian curvature; roof = maxima of the dominant principal curvature along its direction
+
+4. How is a plane fit for patch segmentation, and what's the arc cost?
+
+→ Answer: $A=(X^TX)^{-1}X^TZ$; arc cost = fit residual $\lVert(I-X(X^TX)^{-1}X^T)Z\rVert$; greedily merge the min-cost arc until an error threshold
+
+— end of Lecture 44 notes ✏️
+
+# LECTURE 45 — Range Image Processing — Part V
+
+morphological segmentation (digital neighborhood planes, NPS) · registration of range data — the SVD closed form & ICP · whole-topic summary
+
+🧠 the big picture, first
+
+Two finishers: a **fast morphological** segmentation using local orientation (neighborhood plane sets), and the **registration** problem — find the rotation+translation aligning two range views, first in closed form via **SVD**, then refined by **ICP**.
+
+## 1.  morphological segmentation — neighborhood plane sets
+
+A fast alternative to greedy merging: read each point's **local orientation** from a **3×3×3 voxel** neighborhood (a **26-neighborhood**, $3^3-1$). A surface point's neighbors should lie on one of **9 digital neighborhood planes** (3 principal + 6 diagonal, each 9 points incl. $P$).
+
+neighborhood plane set (the local feature)
+
+$$ \mathrm{NPS}[p]=\{\,i:\ |N(p)\cap P_i\cap A|\ge k\,\},\quad k\ge 3 $$
+
+$A$ = occupied (object) voxels; $P_i$ = the $i$-th plane; $k$ = min coincident points. **Two pixels merge iff their NPS sets are equal** (region growing).
+
+**🔧 noise tolerance**
+Real range data is noisy, so points drift outside the exact 3×3×3. Fix: use an **extended $a{\times}b{\times}c$ neighborhood** and **OR-map** its voxels onto the 26 variables (a variable is true if any mapped voxel is occupied). The mapping must be **total, onto, connected** and structurally similar — then all DNP/NPS definitions apply unchanged.
+
+## 2.  ⭐ registration — align two range views
+
+Two views of the same object differ by a **rigid-body transform** (rotation $R$ + translation $T$, same scale). With correspondences $\{m_i\}\to\{d_i\}$ and noise $v_i$:
+
+model + constrained least squares
+
+$$ d_i=R m_i+T+v_i,\quad E=\sum_i\lVert d_i-R m_i-T\rVert^2 $$
+
+$$ \text{subject to } R^{T}R=I\ (\det R=+1) $$
+
+The orthonormal constraint means it's **not** ordinary least squares. Solve in two moves:
+
+**🧭 the SVD solution**
+
+1. $\partial E/\partial T=0$ ⇒ $\hat T=\bar d-R\bar m$ (centroids). So **centre** both sets: $d_{ci}=d_i-\bar d$, $m_{ci}=m_i-\bar m$.
+
+2. Minimizing $E$ ⇔ **maximizing** $\operatorname{tr}(RH)$ with the cross-covariance $H=\sum_i m_{ci}\,d_{ci}^{T}$.
+
+3. Take $H=UDV^{T}$ ⇒ $\ \boxed{\hat R=VU^{T}}\ $ (orthonormal), then $\hat T=\bar d-\hat R\bar m$.
+
+**🔁 Iterative Closest Point (ICP) — Besl & McKay, 1992**
+When correspondences are unknown/outlier-ridden: initialize $R_0,T_0$; then **repeat** — apply the transform, find each point's **nearest neighbour** (mutually-closest pairs) as new correspondences, re-estimate $R,T$ by the SVD step, until convergence.
+
+## 3.  the whole range-image topic on one page
+
+**📌 range image analysis — cheat-sheet**
+| stage | tools |
+| **sensing** | passive stereo; active: **time-of-flight** ($d=ct/2$), **triangulation**, **structured light** ($2^m$ stripes / speckle) |
+| **local geometry** | surface normal, principal/Gaussian/mean curvature; curvature **signs** → surface type (Besl–Jain) |
+| **edges** | **step** = zero-crossing of Gaussian curvature; **roof** = maximum of dominant curvature; multi-scale tracking |
+| **segmentation** | greedy plane-fit + merge (L44); morphological NPS / local orientation (L45) |
+| **registration** | rigid $R,T$ via SVD ($\hat R=VU^{T}$), refined by **ICP** |
+
+### segment by equal neighborhood-plane-sets; align two views by SVD of the cross-covariance ($\hat R=VU^{T}$, $\hat T=\bar d-\hat R\bar m$), refined by ICP.
+
+NPS $=\{i:|N(p)\cap P_i\cap A|\ge k\}$; registration = constrained LSQ ($R^TR=I$); $H=\sum m_{ci}d_{ci}^{T}$; ICP re-finds correspondences by nearest neighbour.
+
+### Self-check quiz
+
+1. What is a point's NPS, and how does it segment a range image?
+
+→ Answer: $\mathrm{NPS}[p]=\{i:|N(p)\cap P_i\cap A|\ge k\}$ (plane indices with ≥$k$≈3 coincident neighbours); pixels with **equal** NPS merge into one planar segment
+
+2. Why is rigid-body registration not ordinary least squares?
+
+→ Answer: $R$ must be orthonormal ($R^TR=I$, $\det R=+1$) — a constrained optimization, not plain LSQ
+
+3. Give the closed-form SVD registration.
+
+→ Answer: centre both sets; $H=\sum m_{ci}d_{ci}^T$; $H=UDV^T$ ⇒ $\hat R=VU^T$; $\hat T=\bar d-\hat R\bar m$
+
+4. What does ICP add over the one-shot SVD solve?
+
+→ Answer: it handles unknown correspondences/outliers by iterating: transform → nearest-neighbour pairs → re-estimate $R,T$ by SVD → repeat to convergence
+
+— end of Lecture 45 · end of Week 9 ✏️
+
+==============================================================================
+PART: ASSIGNMENT SOLUTION
+==============================================================================
+
+# Week 9 — Range Image Processing — assignment solution
+(source: NPTEL, 5 PDF pages; fractions/matrices from the PDF may be flattened in this text)
+
+Nptel Online Certification Course: Computer Vision
+Week 9: Range image processing
+Type of questions: MCQ/MSQ
+Number of questions: 10
+Total marks: 10 X 2 = 20
+QUESTION 1:
+Type: MCQ
+In binary (Gray-code) structured-light encoding, n patterns are projected. How many distinct
+stripes can be uniquely encoded?
+a) n
+b) 2n
+c) 2n
+d) n2
+Correct Answer: c
+Solution: Each stripe receives a unique n-bit binary codeword from the n projected
+black-and-white patterns. With n bits there are exactly 2n distinct codewords, so 2n stripes
+can be encoded.
+QUESTION 2:
+Type: MCQ
+In a 3-pattern binary structured-light system, what is the 3-bit Gray code assigned to stripe
+number 5 (0-indexed)?
+a) 101
+b) 111
+c) 110
+d) 100
+Correct Answer: b
+Solution: The Gray code of an integer n is obtained by g = n ⊕(n ≫1) (XOR with its own
+right-shift by 1):
+510 = 1012,
+g = 101 ⊕010 = 1112.
+QUESTION 3:
+Type: MCQ
+Which of the following statements about the Microsoft Kinect (first generation) sensor is/are
+correct?
+a) It projects an infrared laser speckle pattern onto the scene.
+b) Points at greater depth appear more defocused / blurry in the IR image.
+c) It operates on the principle of structured light triangulation.
+d) All of the above.
+Correct Answer: d
+Solution: The first-generation Kinect uses an infrared (IR) laser diode that projects a
+pseudo-random speckle pattern. A separate IR camera observes how the speckle deforms
+with depth (structured-light triangulation). Because the IR camera has a fixed focus, objects
+at depths further from the focal plane produce blurrier speckle spots. All three statements are
+therefore true.
+QUESTION 4:
+Type:MCQ
+Consider the surface z = xy parametrised as X(u, v) = (u, v, uv). Which of the following is
+the first fundamental form?
+a) (1 + v2) du2 + 2uv du dv + (1 + u2) dv2
+b) (1 + v) du2 + uv du dv + (1 + u) dv2
+c) (1 + v3) du2 + 2uv du dv + (1 + u3) dv2
+d) (1 + v2) du2 + uv du dv + (1 + u2) dv2
+Correct Answer: a
+Detailed Solution: Compute the partial derivatives:
+Xu = (1, 0, v),
+Xv = (0, 1, u).
+First fundamental form coefficients:
+E = Xu · Xu = 1 + v2,
+F = Xu · Xv = uv,
+G = Xv · Xv = 1 + u2.
+The first fundamental form is:
+ds2 = E du2 + 2F du dv + G dv2 = (1 + v2) du2 + 2uv du dv + (1 + u2) dv2.
+QUESTION 5:
+Type: MCQ
+For the surface X(u, v) = (u, v2, uv), compute the first fundamental form coefficients E, F, G
+at the point (u, v) = (1, 2).
+a) E = 5, F = 2, G = 17
+b) E = 5, F = 4, G = 9
+c) E = 2, F = 4, G = 17
+d) E = 5, F = 2, G = 5
+Correct Answer: a
+Detailed Solution:
+Xu = (1, 0, v),
+Xv = (0, 2v, u).
+At (u, v) = (1, 2): Xu = (1, 0, 2), Xv = (0, 4, 1).
+E = Xu · Xu = 1 + 0 + 4 = 5,
+F = Xu · Xv = 0 + 0 + 2 = 2,
+G = Xv · Xv = 0 + 16 + 1 = 17.
+QUESTION 6:
+Type: MCQ
+Consider the 2D parametric curve x(t) = t2 + t, y(t) = 2t −1. Compute the tangent vector
+(x′(t), y′(t)) at t = 1.
+a) (2, 2)
+b) (3, 2)
+c) (2, 4)
+d) (1, 2)
+Correct Answer: b
+Detailed Solution:
+Differentiate each component:
+x′(t) = 2t + 1,
+y′(t) = 2.
+At t = 1:
+x′(1) = 2(1) + 1 = 3,
+y′(1) = 2.
+Tangent vector = (3, 2).
+QUESTION 7:
+Type: MCQ
+Compute the direction of the surface normal (i.e. Su × Sv before normalisation) at
+(u, v) = (1, 0) for the surface S(u, v) = (3u + v, u2, 2v).
+a) (4, −6, −2)
+b) (4, 6, −2)
+c) (−4, −6, 2)
+d) (4, −6, 2)
+Correct Answer: a
+Detailed Solution:
+Su = (3, 2u, 0)
+u=1
+−−→(3, 2, 0),
+Sv = (1, 0, 2).
+Su × Sv =
+
+i
+j
+k
+3
+2
+0
+1
+0
+2
+
+= i(4 −0) −j(6 −0) + k(0 −2) = (4, −6, −2).
+QUESTION 8:
+Type: MCQ
+Given E = 4, F = 1, G = 3, e = 5, f = 1, g = 2, compute the mean curvature H (upto 4
+decimal places).
+a) H = 0.8182
+b) H = 0.9545
+c) H = 1.0455
+d) H = 0.7273
+Correct Answer: b
+Detailed Solution:
+H = Eg + Ge −2F f
+2(EG −F2)
+= (4)(2) + (3)(5) −2(1)(1)
+2(4)(3) −(1)2
+= 8 + 15 −2
+2 × 11
+= 21
+22 ≈0.9545 .
+QUESTION 9:
+Type: MCQ
+A surface patch is measured at a point P and found to have principal curvatures κ1 = +3.2
+and κ2 = −1.7. Which of the following correctly classifies the surface at P and gives the sign
+of its Gaussian curvature K?
+a) Pit surface;
+K > 0
+b) Saddle surface;
+K < 0
+c) Ridge surface;
+K = 0
+d) Flat surface;
+K = 0
+Correct Answer: b
+Detailed Solution: the Gaussian curvature is the product of the two principal curvatures:
+K = κ1 · κ2.
+Since κ1 and κ2 have opposite signs,
+K = (+3.2)(−1.7) = −5.44 < 0.
+QUESTION 10:
+Type: MCQ
+Which of the following statements about edge detection in range images is correct?
+a) Step edges are detected from zero crossings of Gaussian curvature.
+b) Roof edges are detected from zero crossings of Gaussian curvature.
+c) Roof edge points are detected by extrema of the dominant principal curvature along its
+corresponding direction.
+d) Step edge points are detected by extrema of the dominant principal curvature along its
+corresponding direction.
+Correct Answer: c
+Detailed Solution: In range image edge detection, step edges arise at depth discontinuities
+(jumps in the range value) and are detected by zero crossings of Gaussian curvature (not by
+extrema). Roof edges arise where two surfaces meet at a dihedral angle and are detected by
+extrema of the dominant principal curvature along the direction corresponding to that
+curvature.
+
+==============================================================================
+PART: LECTURE SLIDES
+==============================================================================
+
+# Week 9 — lecture slides
+(source: NPTEL, 58 slides; text layer, plus OCR on 17 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Range Image Processing
+(Week-09: Lectures 41-45)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+
+### Slide 2
+Range data
+q Range data is a 2-1/2 D or 3-D representation of the
+scene.
+q An image d(i, j), which records the distance d to the
+corresponding scene point (X, Y, Z) for each image pixel
+(i, j).
+q It could be provided as a set of 3-D scene points (point
+cloud).
+
+### Slide 3
+Imaging techniques
+n Passive imaging.
+n Stereo imaging
+n Active range sensing
+o Time-of-flight sensors
+o Triangulation-based sensors
+o Structured Light
+
+### Slide 4
+Time-of-Flight Range
+Sensors
+Laser-based time-of-flight
+range sensors: light
+detection and ranging
+(LIDAR) or laser radar
+(LADAR) sensors.
+Limitation:
+o the minimum observation time
+thus limited by the minimum
+distance observable.
+t: Time taken to travel the
+forward and return path.
+v: speed of light in the
+given medium.
+Distance:
+d: (v x t)/2
+Source and
+detector
+collocated.
+Pulsed
+laser
+Use a moving
+mirror to scan
+the beam.
+
+### Slide 5
+Triangulation based
+Sensors
+Yi-Chih Hsieh, Decoding structured light patterns for three-dimensional imaging systems, Pattern Recognition 34 (2001) 343-349 .
+(u,v)
+(i,j)
+(X,Y,Z)
+A light
+source.
+Camera
+The camera
+and light
+source are
+calibrated.
+Apply triangulation
+to get the 3D point.
+Known for a predetermined
+scanning path of the beam.
+Observed
+in camera.
+
+### Slide 6
+Imaging principle
+Yi-Chih Hsieh, Decoding structured light patterns for three-dimensional imaging systems, Pattern Recognition 34 (2001) 343-349 .
+(u,v)
+(i,j)
+(X,Y,Z)
+A light
+source.
+Camera
+Scan the ray in a
+predetermined
+calibrated path.
+Encoding the 3-D
+position of
+projected ray.
+
+### Slide 7
+Structured Light
+Yi-Chih Hsieh, Decoding structured light patterns for three-dimensional imaging systems, Pattern Recognition 34 (2001) 343-349 .
+(u,v)
+(i,j)
+(X,Y,Z)
+Structured
+light
+Camera
+Project a strip or
+pattern.
+Get 3-D positions
+of all the scene
+points lying on the
+projected strip.
+Encoding the 3-D
+position of
+projected ray.
+
+### Slide 8
+Space Encoding
+n Projection of a sequence of m patterns
+to encode 2m stripes using a plain
+binary code.
+n Number of stripes get doubled at
+every new pattern.
+n Each light point (i,j) is associated with
+an m-bit binary code and its image is
+observed.
+
+### Slide 9
+Binary Coding
+Pattern 1
+Pattern 2
+Pattern 3
+Projected
+over time
+Codeword of this píxel: 101… à identifies
+the corresponding pattern stripe
+Courtesy: Prof. Guido Gerig
+http://www.cs.cmu.edu/afs/cs/academic/class/1
+5385-s06/lectures/ppts/lec-17.ppt
+
+### Slide 10
+Spatial Codification
+n Project a certain kind of spatial pattern uniquely
+appearing in the image as a set of neighborhood
+points.
+n Could be spatially arranged dots with varying in size and
+colors.
+n The pattern (providing a codeword)  is associated
+with a calibrated light point.
+does not require multiple projection over the object.
+The codeword obtained from a neighborhood of
+the point around it.
+Courtesy: Guido Gerig:
+http://www.cs.cmu.edu/afs/cs/academic/class/15385-
+s06/lectures/ppts/lec-17.ppt (adapted)
+
+### Slide 11
+RGBD images from
+Microsoft Kinect
+Uses infrared laser light with speckle pattern.
+
+### Slide 12
+Why lasers?
+n easily generate bright beams with lightweight
+sources.
+n infrared beams used unobtrusively.
+n focus well to give narrow beams.
+n single-frequency sources easier to detect.
+n do not disperse from refraction as much as full-
+spectrum sources.
+n semiconductor devices easily generate short
+pulses.
+Light Amplification by
+Stimulated Emission of
+Radiation (LASER)
+
+### Slide 13
+13
+Parametric curve (2D)
+• Parametric curve:      X : I Ì R ® R2
+•Curvature at a point:
+Determinant
+in 2D
+• Tangent  at a point:
+
+### Slide 14
+14
+Parametric curve (3D)
+• Parametric curve:      X : I Ì R ® R3
+•Curvature at a point:
+Cross Product of
+3-vectors
+• Tangent  at a point:
+
+### Slide 15 (OCR)
+X(t) = (u(t), vO), w())
+T(t) = (u'(t), v'(t), w'(t))
+gp arametric curve (3D), XxX"
+Rectifying Plane », binowmal
+» tangent Unit vectors
+Noving meee } la T'(t) = k(t)N(t)
+Frenet Frame <> , ee _
+yy © BD =-ONO
+normal y __ ___
+N'(t) = —k(t)T(t) + t(t)B(t)
+J \ Osculating Plane
+5 Normal Plane Formed by T(t) and a
+point near P=X(t).
+
+### Slide 16
+16
+Parametric surfaces
+• Parametric surface:      x : UÌ R2 ® R3
+• Surface Normal:
+Xu
+Xv
+
+### Slide 17 (OCR)
+; Parametric surfaces
+¢ Parametric surface: x »UcR?—> R3
+Xu) =u), yu pele)
+¢ Surface Normal: NV = AyXAy
+|X, xX, |
+¢ Parameterized curve on the surface: f(t) = (u(t), v(t))
+P(t) = (x(u@), vO), yu), vO), z(u@), vo)
+¢ Tangent vector to the curve f(t) : f = u'(t) Xx, +y'(t) X,
+
+### Slide 18 (OCR)
+a First Fundamental Form
+First fundamental form: The bilinear form that
+associates two vectors in the tangent plane in the
+form of dot product.
+IU. P= U. V
+w.rt. 6 (tC)
+I(¢.t) =t.€ =(u'X, + v'X,). (u'X, + v'Xy)
+= (X,,. X,)u'27+2(X,.Xp)u'v’ + (Xy.X,)v”
+= Eu'*+2Fv' + Gv”?
+Magnitude of the tangent vector EX, - Xy
+F=x,,.X,y
+G=x,,. x,
+
+### Slide 19 (OCR)
+: Second Fundamental Form
+X (u,v) =(x(u,v), y(u,),2(0,0)) yet
+II(u.B) = i. dN(v) Ax, |
+iil =0 ane
+<< N +t.dN@)=0 Y
+When they kn N +¢. dN(v) = 0 ,
+are unit y EN
+vectors IT(t.t) = —k. corte)
+Angle between curve normal and surface normal
+19 For normal section, p =zero.> II(¢.t) = ke nal Curvature
+
+### Slide 20 (OCR)
+pocond Fundamental Form
+X (u,v) = (xu,v), yU,v),2(U,V))
+f =u'()X, +X,
+II(t.t) = t.dN(t)
+¢ Second fundamental form: e=-N.x,,
+— =-N.X,,
+II(t.t) = eu’? + 2fu'v’ + gv" {7-8 x,,
+¢ Normal Curvature: Second fundamental form
+to be normalized by magnitude of tangent (first
+> normal form)
+
+### Slide 21 (OCR)
+pocond Fundamental Form
+i =u'()X, +v OX, o= Nex,
+1(é.t) =t.dN@® ‘ f=-N.x,
+¢ Second fundamental form: g=—-N.x,,
+II(t.t) = eu’? + 2fu'v! + gv”
+¢ Normal Curvature: Second fundamental form
+to be normalized by magnitude of tangent (first
+normal form)
+k, = (t,t) ew*+2fulv'+gvi?
+C 1(¢,t) Ew2+2Fu'v'+Gvr2
+21
+
+### Slide 22
+22
+Linear map, Gaussian and
+Mean curvatures
+Linear map:
+Gaussian curvature (K): Determinant of linear map.
+Mean curvature (H): Half of trace of linear map.
+Eigen values and eigen vectors of linear map provide
+principal curvatures (k1,k2)  associated with principal
+directions.
+EG
+Ff
+Ge
+Eg
+EG
+eg
+Hk
+Principal curvatures are roots of following equation:
+2,1
+e= – N . xuu
+f = – N . xuv
+g= – N . xvv
+E=xu . xu
+F=xu . xv
+G=xv . xv
+
+### Slide 23 (OCR)
+= = = Peak Surface H«O KO Fist Surface H=O0 K-0
+Eight visible
+Surface types
+of
+Pit Surface H2O K20 Minimal Surfaca H=0 K<O
+curvatures
+Ridge Surface H«O K=0 Saddle Ridge H«<O K<O
+EA
+Invariant Surface Characteristics for 3D Object
+Recognition in Range Images, PAUL J. BESL Velev Sorters Heb ie=0 Guna Valley HeO KeO
+AND RAMESH C. JAIN, COMPUTER VISION,
+GRAPHICS, AND IMAGE PROCESSING 33,
+33-80 (1986) 4
+
+### Slide 24
+Surface types from signs of
+curvatures
+peak
+ridge
+saddle
+ridge
+flat
+valley
+saddle
+valley
+pit
+k1
+k2
+peak
+ridge
+Saddle
+ridge
+none
+flat
+Minimal
+surface
+pit
+valley
+Saddle
+valley
+
+### Slide 25
+25
+Example: Monge Patches
+X ( u, v ) =  (u, v, h( u, v ))
+In this case
+• N=                           ( –hu , –hv , 1)T
+• E = 1+hu
+2;  F = huhv,; G = 1+hv
+• e =                          ;   f =                          ;  g =
+(1+hu
+2+hv
+2)1/2
+(1+hu
+2+hv
+2)1/2
+–huu
+(1+hu
+2+hv
+2)1/2
+–huv
+(1+hu
+2+hv
+2)1/2
+–hvv
+h(u,v)
+e= – N . xuu
+f = – N . xuv
+g= – N . xvv
+E=xu . xu
+F=xu . xv
+G=xv . xv
+
+### Slide 26
+Monge Patches:
+Mean and Gaussian Curvatures
+Mean Curvature
+Gaussian Curvature
+
+### Slide 27 (OCR)
+Ex. 1
+Consider the following representation of a surface
+(x(u,v), y(u,v), z(u,v)), 0 <= u,v <=1.
+fi(u) 3 2 4)[w 91) 4 3 2)[v’?
+f2(u) [+s 6 2 {fe g2(V) [3 7 ||
+f3(u) 1 4 =3lly g3(v)| |-5 6 3111
+x(uv)=fAwgav) yuv)=fw)g2(v) 2%) = fswas(r)
+Compute the surface normal, Gaussian and mean
+curvatures at (u,v)=(0.5,0.5).
+
+### Slide 28 (OCR)
+Ans. 1
+3.2 4] fw 4 3 2) [v"
+Fa =|- 6 2 |p| cte=| 1 7 lq
+1 4 -3!l4 “> 6 Bilt
+4 3 2)][2v
+3 2 4)f2u an
+reo=[s & IIAP O-[L 7 al
+1 4 -3h0
+At u=v=0.5,
+5.75 4.5 5 7
+F(0.5) = | 3.75 | G(0.5) = 75 F'(0.5) = fy G'(0.5) = a
+~0.75 4.75 5 1
+22.5 4.0.25
+X= FD Q6e) =|1175 = FADOG'O) =| 30 |
+Element wise multiplication 23.75 —0.75
+
+### Slide 29 (OCR)
+Ans.1 (contd. )
+a —0.587
+Surface normal as (u,v): A _ _AuX%y_ ar uve 0.792
+IXa%Xvll De
+E=X,.X, e@ =X 6 93
+F=X,.X, f =Xuy-t F"'(w) = Fad G"(v) =| 2
+Xyuu = F"(u) © Gv) Xw = F'(u) © G'(v) Xw = Flu) © G"(v)
+. _fe flrE F771 Principal Curvatures (k,, k,):
+Linear map: | | Eigen values of linear map.
+f gif G eg — f°
+Gaussian curvature: k,.k, ~ K ==——>
+EG —F
+Eg + Ge —2Ff
+Mean curvature: (k,+k,/2 ~ H= 2(EG —F2)
+
+### Slide 30
+Ans.1 (contd.)
+At u=v=0.5
+e=107.352
+f= 13.389
+g=19.832
+E=1208.375
+F= 1240.312
+g=2520.625
+Linear map (L):
+Mean Curvature: Trace (L) /2 =0.086
+Gaussian Curvature: Det.(L)=0.0013
+
+### Slide 31
+31
+Finding Step and Roof Edges
+in Range Images
+“Describing Surfaces,” by J.M. Brady, J. Ponce, A.
+Yuille and H. Asada, Proc. International Symposium
+on Robotics Research, H. Hanafusa and H. Inoue
+(eds.), MIT Press (1985)
+Courtesy : www.cs.unc.edu/Research/vision/comp256/vision23.ppt
+
+### Slide 32
+Edge Models
+k1x+h when x<0,
+k2x+c+h when x>0.
+Step edge:
+k1x+h when x<0,
+k2x+h when x>0.
+Roof edge:
+Adapted from:
+www.cs.unc.edu/Research/vision/comp256/vision23.ppt
+
+### Slide 33 (OCR)
+Characterizing fea Bee
+pgs , [= ~.,
+Step edge ~— Roof edge
+G(x; o )=Gaussian mask of scale o.
+«  0°G(x; 0)
+ta) = —Gqz* 2) :
+Curvature at Gaussian smoothened z(x): &,(x) =——*
+l+z p
+Ratios of 2" and 1° derivatives of curvatures: ( z,)
+Step edges: ki (x) zl"(x) Roof edges:
+Roughly remains 7 7-y = Sacyy Inversely
+constant across a(x)  Zg'(x) proportional to
+scales. scale.
+Adapted from:
+www.cs.unc.edu/Research/vision/comp256/vision23. ppt
+
+### Slide 34
+Characterization of edges
+Step edges are zero crossings of one of principal
+curvatures (or Gaussian curvature), whose position
+changes with scale.
+Roof edge is characterized by local maxima of curvature
+and to be sought in the direction of dominant principal
+curvature.
+s k
+roughly remains constant
+across scales.
+roughly remains constant
+across scales.
+
+### Slide 35
+The Algorithm
+Compute a set of Gaussian smoothed images at
+multiple scales.
+Compute the principal directions and curvatures
+at each point of the smoothed images.
+Compute zero crossings of the Gaussian
+curvature and the extrema of the dominant
+principal curvature in the corresponding
+principal direction.
+Zero-crossings: Candidate step edge points.
+Extrema: Candidate roof edge points.
+Use the analytical models across scales to select
+candidate points for respective edges.
+“Describing Surfaces,” by J.M. Brady, J. Ponce, A. Yuille and
+H. Asada, Proc. International Symposium on Robotics
+Research, H. Hanafusa and H. Inoue (eds.), MIT Press (1985)
+
+### Slide 36
+Multi-scale edge tracking
+•Features are tracked from course to fine
+scales.
+•All features at a given scale having no
+ancestor in coarse scale are eliminated.
+•If      remains roughly constant across scales
+output step edge point.
+•If        remains roughly constant across scales
+output roof edge point.
+•Retain the points at finest scale as shift from
+the point is more for larger scale.
+
+### Slide 37
+37
+Scale-
+Space
+Matching
+Reprinted from “Toward a Surface Primal Sketch,”
+By J. Ponce and J.M. Brady, in Three-Dimensional
+Machine Vision, T. Kanade (ed.), Kluwer Academic
+Publishers (1987). Ó 1987 Kluwer Academic
+Publishers.
+Courtesy:
+www.cs.unc.edu/Research/vision/
+comp256/vision23.ppt
+
+### Slide 38
+38
+Segmentation into Planes via
+Region Growing
+Idea: Iteratively merge the pair
+of planar regions minimizing
+the average distance to the
+plane best fitting them.
+Reprinted from “The Representation, Recognition and Locating of 3D Objects,” by O.D. Faugeras and M. Hebert, the International Journal of
+Robotics Research, 5(3):27-52 (1986). Ó 1986 Sage Publications. Reprinted by permission of Sage Publications.
+Nodes: Planar Patches
+Edges: Between adjacent patches.
+Arc cost: Avg. distance to the
+plane best fitting them.
+Greedy
+approach:
+Select the best
+(minimum cost)
+arc,
+and merge the
+nodes.
+Courtesy: www.cs.unc.edu/Research/vision/comp256/vision23.ppt
+
+### Slide 39
+Range image segmentation:
+Morphological approach
+q Uses information of local orientation at a point.
+q Introduces concepts of digital neighborhood plane
+(DNP) and neighborhood plane set (NPS).
+q Fast and easy computation on checking the
+arrangement of neighboring points in the 3D
+discrete space.
+q The NPS at each point computed, which induces a
+unique  partition under the equivalence relation on
+equality  of NPS.
+q Approximate planar segments formed by region
+growing.
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+
+### Slide 40 (OCR)
+3-D Neighborhood of a point p
+a fa fe i
+Vs V2
+Coe
+alata Oh
+0,0,-1)_ | (1.0,-1)
+Rana)
+{0,—1,-1) }(1,=f=1)
+AT TD ME
+| ta NG |
+Q (~1,1.0) (hyo)
+ote |
+(0,09) | (1.0.0)
+al alta)
+(-1,-1,0)] (0,-1,0) | (1,-1.0)
+TT TT 4
+ul Pa fets}
+(111) | (0.1.1)
+(-1,0,1) (1,0,1)
+ul talk)
+(-1,-1,1)]} (0,-1.1) (1,-1.1)
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+
+### Slide 41 (OCR)
+4 Digital Neighborhood planes
+Assume the
+lo a 5 point lies on a
+6.4 AWN sez surface
+T r To .
+\4 A 17 4) |7 ——
+4 5 6 7 8 9
+1 LE EI AA, tee AP
+17_ Yo % We iv LZ 7 \47 Nz
+Digital Neighborhood planes
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+
+### Slide 42
+Digital neighborhood planes
+Set of points
+defining DNP’s.
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+u2 n2 v2
+u8 p
+v8
+u6 n6 v6
+v4 v8 v0
+n4 p
+n0
+u4 u8 u0
+n3 n2 n1
+n4 p
+n0
+n5 n6 n7
+
+### Slide 43
+Digital neighborhood planes
+Set of points
+defining DNP’s.
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+u3 n3 v3
+u8 p
+v8
+u7 n7 v7
+u1 n1 v1
+u8 p
+v8
+u5 n5 v5
+u3 n4 v5
+u2 p
+v6
+u1 n0 v7
+
+### Slide 44
+Digital neighborhood planes
+Set of points
+defining DNP’s.
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+u5 n4 v3
+u6 p
+v2
+u7 n0 v1
+u1 n2 v3
+u0 p
+v4
+u7 n6 v5
+u3 n2 v1
+u4 p
+v0
+u5 n6 v7
+
+### Slide 45
+DNPs: Voxel Sets
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+
+### Slide 46
+Neighborhood Plane Set
+(NPS)
+o Let Pi be the set of points assigned to the ith
+DNP.
+o Neighborhood plane set (NPS) of a point p in an
+image A in Z3 :
+k is a parameter
+threshold number of points required
+for accepting  a DNP in the
+neighborhood.
+
+### Slide 47
+Handling noise in range
+image
+Range image: D(x,y)
+3D point: p (x,y, D(x,y))
+Nabc(p): An extended neighborhood around p of size
+axbxc.
+Map points from Nabc(p) to N(p), and use the same
+definitions of DNP and NPS.
+NPS at p
+
+### Slide 48
+Neighborhood mapping
+function (NMF)
+F: Nabc(p) à N(p).
+1. The NMF F should be total and onto.
+For every point in Nabc(p) there exists a unique point in
+N(p).
+ii.
+For every point in N(p) at least there exists a point in
+Nabc(p) mapped to it.
+2. The NMF F should induce connected partition in
+Nabc(p).
+3. Induced DNP’s should be connected.
+4. Induced DNP’s should have strong structural
+similarity with the respective DNP defined in N(p).
+
+### Slide 49 (OCR)
+Neighborhood mapping function
++ (NMF): An example
+ra lea)
+Vg “%
+ES Saf af
+(Sale [cal
+I x24 (0,1,0) | (5.1.0)
+y\ ee alee | ay
+x IN al ahaa)
+(=1,-1,9)] (0,-1,0) [ (1,-1.0)
+eT aT
+(al ea [eca|
+els]
+to) J. Mukherjee et al., Segmentation of range images,
+cy wy | Pattern Recognition, 25(10), 1141-1156, 1992.
+
+### Slide 50
+Modified DNPs induced by F1
+DNPs in base
+configuration
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+J. Mukherjee et al., Segmentation of 3D surfaces,
+Pattern Recognition Letters, 11, 215-223, 1990.
+o Induced DNPs are
+connected.
+o Structurally similar.
+
+### Slide 51
+The algorithm
+1. Compute NPS at each
+pixel.
+2. Compute connected
+components having the
+same NPS.
+3. Remove small connected
+components.
+4. Smooth a region by
+assigning its label to
+spurious unlabeled pixels
+within it.
+J. Mukherjee et al., Segmentation of range images,
+Pattern Recognition, 25(10), 1141-1156, 1992.
+
+### Slide 52
+Registration of range data
+n Assumptions
+n Surface belongs to the same object.
+n Captured from different viewing direction.
+n Coordinates of corresponding points are
+related by rigid body transformation.
+n Assume same scales for the coordinate axes.
+n Computational problem
+n Estimation of rotation and translation
+parameters.
+
+### Slide 53 (OCR)
+Estimation of rigid body
++ transformation
+=» Two corresponding point sets {m,} and {d,}, i=1,..N
+d; = Rm,4+ F + v; *——— noise
+Solve for R and T “ . 2
+to minimize E= > Ile — Rm; -1||
+i=1
+OE - A
+—_ = — d; —R i T)=0
+== 0S) x mj — 7)
+Means of d,; and m,'s
+
+### Slide 54 (OCR)
+A solution for 2 and 7
+de, = Gi~ A Mey SIM ™ Minimize
+N ee
+E= » Mle, — Rmz,||_ A Y (dBc, +m m_-, — 2d2.Rm,,)
+i=1 i= J
+Maximize
+Solution of R and T SVD in
+H =UDV'*— ofH /
+R =vutT Maximize trace of RH
+T=d—Rm _ Where, H = >, med,
+Correlation matrix 7 #1
+
+### Slide 55
+The Iterative Closest Point (ICP)
+Registration Algorithm
+1. Compute initial registration parameters R0 and T0.
+Initialize error E to E0 (error of model fitting).
+2. Repeat following steps till error converges or
+becomes small.
+Apply transformation to the source scene (or
+point clouds).
+ii.
+Compute closest pairs between source and
+target scenes.
+iii. Re-compute registration parameters and error
+of fitting.
+“A Method for Registration of 3D Shapes,” by P.J. Besl and N.D. McKay, IEEE
+Trans. on Pattern Analysis and Machine Intelligence, 14(2):238-256
+
+### Slide 56 (OCR)
+ICP Registrati
+gistration Results
+Ls aa NN, WI AW
+NS y i.
+ATARAX Wl i) J
+— Se 7) z
+ell DNNANY iy Hl \ NI i YANN
+NN HOA i ‘i i"
+GHA (iA
+Reprinted from “A Method for Registration Hl i [' ) \\ \
+of 3D Shapes,” by P.J. Besl and N.D. McKay, i fh) | iH Hy
+IEEE Trans. on Pattern Analysis and Machine Ih li) !)) | | ( ANY
+Intelligence, 14(2):238-256 (1992), © 1992 IEEE ii I ie 1) \
+Wey
+
+### Slide 57
+Summary
+1. Different types of range sensors.
+Stereo imaging
+Time of flight
+Triangulation through scanning beams
+Structured light
+2. Use of differential geometry in extracting local
+features of a pixel (point) in a range image.
+Surface normal, Principal Curvatures, Gaussian curvature, mean
+curvature.
+Signs of curvatures characterize the local topology of surface.
+3. Characterization of step and roof edges.
+Step edge: Zero crossings of Gaussian curvature.
+Roof edge: Extrema of dominant curvature along its direction.
+Multiscale tracking of edge points.
+
+### Slide 58
+Summary (contd.)
+4. Segmenting range images into planar patches.
+A greedy approach by fitting local surface patches and
+merging them.
+A morphological processing based approach by
+computing neighborhood planes and local orientation.
+5. Registration of range images.
+Rigid body registration.
+Least square error estimation for rotation and translation
+transformation matrices.
+Iterative refinement from initial estimates by computing
+nearest neighboring pairs in two images.
+
+==============================================================================
+PART: LECTURE TRANSCRIPT
+==============================================================================
+
+# Week 9 — Range Image Processing — lecture transcript
+(source: NPTEL, 82 PDF pages; [p.N] marks the page in the PDF)
+
+## Lecture 41 — Range Image Processing – Part I  (transcript PDF page 5)
+
+[p.5] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture – 41 Range Image Processing – Part I In this lecture we will start a new topic to discuss; this is on Range Image Processing.
+
+(Refer Slide Time: 00:23)
+
+So, let us first understand what is meant a range image. A rang data is a D 1 2  two and half D or three-dimensional representation of the scene. It is called two and half D because you have only the surface information in the form of a data it is discretized pixels discretized points on the surface that is represented as an image. So, the representation is something like this that say consider this function say d( i, j) and it records the distance of the corresponding scene point. So, in an image when we consider the array representation of an image at pixel the value what we get in the range image is not the intensity, but the distance of the surface point. So, this value d that is recorded at this point and this distribution; this distribution of this surface points over this discretized space that is a functional distribution that give me the range data, or we sometimes we also consider this data as depth data that is also another 679
+[p.6] nomenclature we used for range data. Also it could be provided as a set of 3-D scene points or point cloud. So, just to explain once again that suppose this position is array index position is given (i,j) and the corresponding functional value here it is f( i, j), then the x, y, z coordinate of the pixel value is given as(i,j), f( i, j) in a discrete 3 dimensional space so this is how this corresponding location is given. So, if I consider a collection of all these points in this representation in this form then we get a set of 3-D scene points.
+
+(Refer Slide Time: 02:18)
+
+We will have range data is shown here in the left side corresponding intensity image is shown and the right side its data range data captured using the Microsoft Kinect sensor that has been shown here. 680
+[p.7]
+(Refer Slide Time: 02:35)
+
+There are various principles on which range imaging takes place we have already discussed about stereo imaging system and we discussed how 3 dimensional scene information could be computed using a stereo imaging system. So, this kind of system is passive imaging system and which would provide you also the range image, but there are other kinds of systems where you get high resolution range image and those are active range sensors or active range sensing mechanisms that is followed. Active in the sense that here you need to use an energy source apart from the scene for detecting the for measuring the depth you have to project a ray from a particular source of energy and by illumination you have to consider the computation of the depth. So, there are three different types of active sensing mechanisms are there; one is time of flight sensors the other one is triangulation based sensors and structured light based sensors. So, let me explain those principles one by one. 681
+[p.8]
+(Refer Slide Time: 03:50)
+
+So, in a time of flight range sensors there is a light source and it say a laser light source usually and you project a light or you transmit a pulsed laser from that point and again he reflection gives you back the corresponding laser signal. So, by detecting that pulses you can measure the time of flight or the duration of the transmission and reflection of the signal. So, if you know the velocity of light , all of we know the velocity of light, then you simply you multiply with that time that would give you the twice of the distances. So, that is a principle; you have both source and detector co-located because the point from where you are transmitting you are also detecting at the same location. So, directly you are getting the shortest path from that location since light travels through the shortest path in that direction itself, you can get this depth. So, in this relationship is very simple if you can measure this time, then you multiply with speed of light and then you get the twice of the distance we have to divide by two to get the actual distance. So, this light source as I, as it is shown here pulse laser. So, it is a laser based time of flight light it is a range sensors there are different kinds of lasers are there like light detection and ranging red lasers are there sensors are or laser ladar sensors are there and these are quite popular lidar or ladar based sensors. And since you are just measuring only one surface point and the depth of a one surface point at a given direction. So, you have to scan the you know whole surface by maneuvering about the direction of the laser beam and there are moving mirror, you can use moving mirror to scan the 682
+[p.9] beams. So, there are mechanisms by which the mirror angles could be varying and accordingly the direction of laser beam could be varied and in a given predetermined path you can find out that what is the depth from where the reflection came and that is how you can get the surface points. So, there is a limitation of this kind of sensing you are limited by the minimum observation time because the mechanism by which you know you can detect a pulse laser, it has its width laser pulse duration, duration of the pulse that is one thing and another thing is the sampling intervals of emitting pulse laser. So, these are you know limiting; these are limiting your observation time and does know your minimum distance what is observable that is also limited by that minimum observation time.
+
+(Refer Slide Time: 07:08)
+
+The other kind of sensor; other kind of principle is triangulation based sensors where you can see in this particular diagram that there is a source for laser beam, it could be any light source, but usually lasers are used for in this case also. So, you project that light on a particular surface point and then the reflection of that light will be captured by a camera. So, in the camera from the images you can get the point of the reflected path, if both camera and light source they are calibrated then you can get the equation of this two 683
+[p.10] lines as we have discussed in the previous lectures of stereo geometry. That if I can get the directions of this 2 rays in 3 dimension then the intersection of these two lines will give you the corresponding three dimensional point. So, this imaging system it calibrates everything. So, from the camera calibration we can find out that in which pixel of the camera in image plane which is illuminated from where the light reflected light is coming to the camera. So, you can get from the camera parameters the equation of this particular you know direction of ray in the equation of this ray in the three-dimensional coordinate system. Similarly by knowing the coordinate location of the laser beam and also by knowing also the in the calibrated face by knowing also the value of i, j with the when you are you know when you are sending this transmitting this laser or transmitting this light that direction itself is also encoded. Or it is also known in the in the system then you can get the equation of these particular direction particular ray and by solving them you can get the three dimensional scene information. So, there are various ways by which you can determine what is the directions by which this particular along which this ray has been transmitted. So, those variations are there. So, this is what known for predetermined scanning path of the beam and then solving the equations and this is observed in camera and you apply triangulation to get that 3-D point.
+
+(Refer Slide Time: 09:55)
+
+684
+[p.11] Now, this same principle is used because as I mentioned only for one directions at a particular time you can get informations only for one surface point given a direction. Now, you have to vary these directions you have to scan the corresponding you know projected ray of the, from the light source projected from the illuminated in a predetermined path. Or in a calibrated path over a at every instance you should know the coordinate of i, j in image plane which will give you the corresponding equation of the straight line equation of this ray. And also you are observing the image points in the camera because of this illumination and for that illuminating point we will discriminate we will help you easily identify this particular point and you can apply this triangulation law.
+
+(Refer Slide Time: 10:50)
+
+Now, the technique of you know triangulation using the principals what I discussed it is quite slow because you know you have to consider shooting ray for every point in its corresponding you know plane of in the respective image plane if I say. So, this is a if I say this is the plane where you are recording the you are identifying a particular directions like it acts like an image plane of a camera in the case of structured light or in the case of light source. So, instead of projecting single ray, what you can do? You can project a vertical you know light itself vertical strip on the surface. So, which means that all your all the directions along this vertical line they are encoded into the strip and when you are sensing this one it could be sensed in a distorted fashion 685
+[p.12] also depending upon the surface it may not be very straight. So, from this point; this point is calibrated with respect to that this corresponds to this one which has been predetermined which has been known to us from the system imaging system itself and this point corresponds to this one. And if you can interpolate this path then you can get for every point they corresponds to particular point in that light strip. So, you need not project multiple times only from single projections you can get information of all the surface which is surface points. So, which is lying on this light stripe. So, this is called structured light range sensing system because the light itself has been structured in different patterns this is a very familiar pattern vertical stripes are very familiar pattern. And in this pattern the 3-D position of projected ray is already encoded and those encodings are used to determine the surface points. So, this is a summary, so you should get 3-D positions of all the scene points lying on the projected strip by this mechanism.
+
+(Refer Slide Time: 13:11)
+
+So, another way by which the structured lighting could be better utilized and where instead of projecting, but only single vertical stripes once again by scanning over the surfaces and you require more number of projections in that case. But you can encode a vertical strip position of a vertical strip in terms of m projected patterns. 686
+[p.13] So, each pattern will try to identify a zone of the surface and finally, the by observing whether a pixel is illuminated or not illuminated by the corresponding you know projection rays in m patterns by observing those strips, then you will get m 2 strips. And in this way you can get m 2 stripes and using just m patterns you can have m 2 I did not distinguish m 2 stripes on the projected surfaces. And for each one you can again apply the law of triangulations as we discussed for the structured lighting. So, just an example. So, you have number of stripes in this pattern usually it gets doubled at every new pattern this is a particular mechanism particular type of structured light patterns and each light point is associated with an m-bit binary code. And its image is observed in your in the scene in the camera and from there you can solve the triangulation losses.
+
+(Refer Slide Time: 14:55)
+
+So, this is this diagram is showing how actually this panel this any particular stripe is encoded using m pattern as you can see here that : consider this ray and consider a vertical striped here. So, this strip is encoded so, in this location pattern say it is illuminated is 1 whereas, in this pattern this particular strip is 0 once again this is 1. So, if you are using m pattern you will have m such stripes and that would give you a binary string of length m and so the you will get m 2 such discrimating patterns. So, code word could be 101 and it goes depending upon the kind of pattern you are placing there 687
+[p.14] and that identifies this corresponding stripe. And from the stripe once again using the triangulation rule you can get all the depth informations for all the scene points which are lying on that particular stripes on the surfaces.
+
+(Refer Slide Time: 16:10)
+
+Now, there are other kind of codifications of you know spatial or the direction of the projected ray where you can consider that your and in this method you did not project it you know multiple times. So, what you can do? You can just simply illuminate only once, but there is a variation of spatial pattern on the greed of projected rays. So, every variation every and it is uniquely appearing at a particular location. So, which means if I consider an image suppose you have a projected ray and as I was mentioning that you are trying to identify the direction of the ray by a calibrated light source. So, this location is modulated by different shapes of patterns through which this lights are projected. So, those will be visible on the surface of the visible means those can be detected it may not be visible in naked eye, but those could be detected by the camera sensors this patterns could be detected which varies in shape and also in colour and also in size. And this is uniquely identifying this particular pattern for example, it uniquely identifies the central point. So, in other locations you will have other kind of variation. So, each pattern in a location will be uniquely identified this location. 688
+[p.15] So, there is a resolution spatial resolutions by which you can encode this directions that is the limitation of this technique. But; however, the advantage is that only single projection can give you all the encoded ray which is illuminating the object. So, in the object you are having all the encoded ray simultaneously and those patterns are projected and from observing in your image if I observe those patterns wherever it is. So, since the pattern. So, you just find out the matching of this pattern with respect to your expected pattern and the this pattern library then you know that this is a image of this location. So, and then you can apply the triangulation.
+
+(Refer Slide Time: 18:53)
+
+So, this technique is very effective it makes the imaging very fast and also your imaging system also becomes cheaper following this technology the resolution of the images will be less as you can understand. So, as I mentioned, as a discuss this it could be spatially arranged dots with varying in size and colors. So, this is one example of the spatial patterns which uniquely characterizing the neighborhood. For example, if I consider this location these neighbouring locations maybe unitary you would not get any other locations which you have similar arrangement of colors or colored dots. So, there are tricky ways by which you can design this patterns and when you detect the corresponding patterns in the camera you are also detecting that particular pattern and 689
+[p.16] that it is a image of this location. So, this location is already encoded there is a particular location or direction of the ray which is given by once again two indices of their plane of projection if I say where the rays are discretized and using then you can apply; you can apply triangulation to solve it. So, it provides a code word is associated with the calibrated light point and it does not require multiple projection over the object that is the advantage. And this code word is obtained from a neighborhood of the point around it that I explained also while discussing its principle.
+
+(Refer Slide Time: 20:37)
+
+So, one example once again the same example of range image I am showing here because this particular sensor which is Microsoft Kinect sensor, it uses infrared laser light with speckle pattern to get the same surface points and to encode the corresponding light points as I mentioned using spatial patterns. You can see that both the images are captured by the same camera, it has the corresponding optical image. So, Kinect also has an optical camera and along with there is a range camera range depth sensors following this which is captured following this principle. So, that is why the images what you are captured by Kinect is known as RGBD images, here RGB stands for red green blue components of the optical image and D stands for depth for the range image. 690
+[p.17]
+(Refer Slide Time: 21:39)
+
+So, when we discussed about this techniques, we mentioned that mostly the light source what is used for this kind of projection is lasers. Now, you know the full form of LASER that is Light Amplification by Stimulated Emission of Radiation. Now, why lasers are used? You could have used any ordinary light source also for the structured light and for the triangulation schemes particularly of course, for time of light you require a coherent source where lasers have to be used. But in other cases also lasers are mostly used compared to with respect to the ordinary lights. The reasons are that first that it easily generate bright beams with lightweight sources. So, that is one advantage of lasers. Then it can generate also infrared beams and infrared lasers are used for generating those beams and which could be used unobtrusively which means that a viewer would not be disturbed by those speckle patterns. Viewer will not get distracted or normal activities will not be hampered or will not provide the disturbing informations or abstract the viewing of the objects are seen. So, that is why this the infrared beams are mostly used for generating this patterns nowadays particularly in Microsoft Kinect it is used and in actions like gaming etc Kinect camera could be used very easily without disturbing the participant or viewer. For lasers also this is another good feature that it focus well to give narrow beams. And also the frequency of the laser that is also single frequency and it is easier to detect that is 691
+[p.18] one advantage. It does not disperse from refraction as much as full spectrum sources; so this is another advantage. And there are semiconductor devices which easily generate the short pulses. So, this is a reason why lasers are used instead of using any other ordinary light source in the rain sensors particularly the sensors where there are options that could have used other light sources still lasers are used in structured light based sensors that we discussed. So, let me give a break here and we have so far we have discussed about different sensing mechanism, and from the next lecture we will be discussing about different theory and fundamentals for processing range data. Particularly will have a brief discussions on different concepts of differential geometry which are useful for characterizing the surface points of the range images. With this let me stop here. Thank you very much for your attention. 692
+
+## Lecture 42 — Range Image Processing – Part II  (transcript PDF page 19)
+
+[p.19] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture - 42 Range Image Processing – Part II
+
+(Refer Slide Time: 00:23)
+
+We are discussing about Range Image Analysis, in the last lecture we discussed different mechanisms for sensing range images. In this lecture we will be discussing different concepts of differential geometry which will be useful in processing range data. So, let me first explain how parametric curves in 2D they are represented mathematically. Here you consider a particular parametric parameter which is which is a subset of for the real space, the whose values know lie in an interval of real space. And you are mapping these parameter value to a coordinate of a of a two dimensional space. So, that is why it is a mapping 2 R R  and in parametric form we can represent this parameter say t which is a variable, which takes values from an interval of real space. For example, from interval between 0 to 1 the parameter values may vary and for each parameter value you get a co ordinate within that interval. You get a two dimensional co ordinate which is denoted here as X(t) as a point and its x co-ordinate as u(t). It is a function of that parameter and v(t) that is a y co-ordinate which is also a function of this parameter. 693
+[p.20] So, this is a parametric description a very simple way to describe a curve as a set of points and it is a continuous curve with the parameter varies continuously and this functions are also continuous over t. So, this curve also a continuous curve can be represented in this fashion. Now when we compute a tangent because of the continuity you come compute the derivatives at those points, if it is continuous of R at least of order one it could be continuous of you in order two also or higher orders. So, at least when it is it is continuous curve of order one then you can compute the tangent and which means mathematically you can very easily get this tangent information by the tangents at those locations also denoted by the corresponding derivatives of those parametric curves, which is giving you the tangent information. Which is giving the vector actually it is giving the directions of the vector with respect to that point and you can also compute the curvature at that point by performing this computations. What you need to do you need to compute the first derivative and second derivative of the parametric curve and then perform this operations. You can see that numerator is nothing but the determinant of this quantity derived from first derivative and second derivative of the parametric curves , which is shown here as a determinant value . That is in this case you can see that this 2 2 2 2 t v t u t v t u         that is that is giving you the corresponding value. So, given a particular value of t you can get a scalar value here, all the scalar values are obtained and then you perform the determinant of this matrix. And this is the magnitude of the tangent vector. So, if your tangent vector is )) (' ), (' ( t v t u that is shown here. So, this magnitude should be ) ) (' ) (' ( 2 2 t v t u  .It is the magnitude of ' X and when you are performing when you are raising it to the power three cube of this amount ( 3 2 2 )) ) (' ) (' ( ( t v t u  ). So, this is the quantity you are measuring. So, this is how the curvature could be computed at any parameter value 3 2 2 3 )) ) (' ) (' ( ( |)' (| t v t u X   694
+[p.21]
+(Refer Slide Time: 05:06)
+
+(Refer Slide Time: 05:07)
+
+So, that is just simply explaining that part. Now, let me consider the parametric representation curve presentation is in three dimension. So, like two dimension you can see all this notations are simply extended in this particular context, where the parametric curve representation is a mapping from a one dimensional real space to a three dimensional real space 3 R R  . So, again the parameter values varies within an interval of real space I and you have an additional co-ordinate that in the z which has been shown as a function of w(t) here, in 695
+[p.22] addition to u and v functions for corresponding x and y coordinates. Similarly, the tangent which is computed in 2D by taking the derivatives of respective functions that also you do it here. And for curvatures also you see that the expression remains the same only it is interpretation is bit different.. You have the cross product of the vectors ' X and '' X . 3' '' ' ) ( X X X t k   So, this is cross product of three vectors you take the double derivatives which means in this case you are taking           ) (' ) (' ) (' t w t v t u . So, that is the vector notation, so I am using column vector notations in this lecture slide everything is shown as row vector, but throughout I have used column vector notation T t w t v t u )) (' ). (' ), (' ( . So, you should considered you know in some cases I will be using column vector notations for doing the exercises. So, let us considered this is this vector this is what is ) (' t X and ) ('' t X which is given as the double derivative with of this function.            ) (' ) (' ) (' ) (' t w t v t u t X            ) ('' ) ('' ) ('' ) ('' t w t v t u t X So, given a value of t you can get this three vectors and then you perform the cross product that is the 3' X interpretations. And similarly X prime cube magnitude we have shown in the two dimensional case you have to extend that concept of these vector. So, take the magnitude of these vector and raise it to the power 3 that would give you the denominator that is how this curvature is completed. 696
+[p.23]
+(Refer Slide Time: 07:48)
+
+So, now we will be you discussing about the parametric curve which is lying on a surface. So, in the previous case we have considered any parametric curve ah, but with respect to surface let us discussed as such if I look it in the curve in an independent fashion our previous analysis or previous representations all are valid. We represent it as a parametric curve representation of three functions of parameters for x y z coordinate given as ) ( ), ( ), ( t w t v t u . Similarly it is tangents are given by their first derivatives and curvatures are computed at every point by computing the cross product of these two term ' X , '' X taking the cross product and the magnitude of the cross product. So, that I missed in the previous you know slide. So, actually it is after completing cross product you have to take the magnitude on the cross product and then in the denominator you compute the tangent by taking the first derivative and take its magnitude and raise it to power three. So, if I divide this two terms i will get the curvature, so that is what we discussed. So now, let us see with respect to surface what other kinds of concepts are there. Consider a point at a particular point of a curve and consider the tangent directions. So, this is t tangent directions at that point say which is given by ) (t T in our notation and consider very near about points. 697
+[p.24] So, this is a point which is very close infinite infinitesimally closed point on the curve. So, this tangent and this curve this point will form a plane and this is this plane ok. So, it is a kind of plane where the tangent is lying also the curve is lying. So, it is a tangential plane kind of thing and which is called actually osculating plane. We will see the concepts names nomenclatures later on first let me define this concepts. First so in that plane where the tangent is lying and also curve is laying at that particular point you can define the normal which is lying on that plane. So, normal which is perpendicular to this tangent and which is lying on that plane.
+
+(Refer Slide Time: 10:25)
+
+So, this is the normal of the curve, so this point is p and this is the tangent what I mentioned and this is the normal. You can also consider another plane which is perpendicular to the tangent plane, actually name of the tangent plane is osculating plane as I mentioned and this is normal as I have shown here. And this you know this red colored plane is considered as a perpendicular plane of the osculating plane and this plane is called normal plane we will come to that. And so the curvature at that point is shown here by this quantity that it is basically radius of circle is giving you inverse of the curvature. So, centre of that circle which forms at that point due to curvature has been shown and it should lie on the normal. And this plane is a normal plane as I was mentioning that normal plane is the perpendicular plane to the osculating plane. So, you have these two 698
+[p.25] planes now you can have another plane also which is perpendicular to both of these planes and that is called Rectifying plane. So, these are the three planes which are defined with respect to a point P by considering it is direction of tangent and also the osculating plane and so normal of the curve at that point. So, the bi normal is a direction which is perpendicular to normal and tangent of the curve, so that is binormal. So, binormal lies in the rectifying plane and also in the normal plane, so it a intersection of normal and rectifying plane. So, you can see as if at every point you have defined a co ordinate system, that means you have three axis which are perpendicular and it is a it can define a local co-ordinate system. So, this is called the moving trihedron or frenet frame. So, this particular configuration and the relationships between the tangent and normal’s in the differential geometric operations those can be expressed. Here all are unit vectors and if you take the derivative of tangent you will get the curvature, you will get the normal vector, unit normal vector which is magnitude which was magnitude not unit normal vector. It is a vector along the normal of the curve with the magnitude’s curvature. Similarly if I take the derivative of the bi normal’s. And then the vector what you get once again it is as along the normal of the curve , but it is magnitude will be modified by a quantity called   which is called torsion of this curve. And the derivative of normal is related with the directions of tangent and binormal in a linear from you can see that this is lying in the plane of rectifying plane particularly this direction. So, it is some directions in the rectifying plane in a so that is expressed. So, these are the three I should say very fundamental relationships between the change of the directions of tangent binormal and normal with respect to its curvature and torsions of the curve. 699
+[p.26]
+(Refer Slide Time: 14:20)
+
+So, we discussed about the representation of parametric curve and also we have discussed some concepts several concepts on normal osculating plane, normal plane, rectifying plane, normal, binormal curvatures and torsion of the curve. So, let us now consider a representation of surfaces, because range data as you understand mostly it is a surface data and of course a curve would lie on a surface and also you can try to treat the surface in totality around your point. So, for parametric surface representation once again here your required two parameters. So, it is surface is a two dimensional entity. So, it is a mapping from a two dimensional real space to a three dimensional real space ( 3 2 R R  ). Once again the parameters may vary with in certain finite ranges. So, you can consider mapping from a subset of real space to the three dimensional real space. surface co ordinate is represented by the x y z coordinate and each one is a function of these two parameters u and v. So, let us consider a curve which is lying on the surface and a at a particular point I can get a directions we have shown here. Say suppose this is a point p and if I considered a curve which is varying over u only, whereas v is kept constant. This is how a curve could be defined when your one parameter is varying, other is constant, then it gets a single parametric description of points and then it becomes a curve on the surface. And you consider another curve on the same point passing through that same point, where it varies over v and u is constant. So, for that you get another say tangent directions. 700
+[p.27] So now, the normal at the surface point, so actually u X and v X these are all tangents and there is a plane touching that surface at that point, in that plane all this tangents are lying. So, that is called tangent plane and surface and the normal to that tangent plane is the normal at that point which is called Surface Normal.
+
+(Refer Slide Time: 17:08)
+
+So, if I denote it by the N in that case and you can see that how surface normal could be computed using this two tangents, because it is perpendicular to these vectors u X and v X . So, you can take simply cross product of them then you can get the directions of the normal and as a vector if you normalize it you get the unit vector along this normal. So, that is how normal at this point computed and that would be giving you the unit normal vector. v u v u X X X X N    701
+[p.28]
+(Refer Slide Time: 17:37)
+
+So, these are the things we discussed and then how we can represent a curve on the surface in the parameterized forms, I have mentioned that if you make one of the parameter constant and the other parameter varying you get this curve. But in general what we can consider even the parameter u and v is also described as a function of a single parameter. So, let us consider a consider another variable t, which is again mapping the values from an interval of real space to the two dimensional real space which were actually co ordinate which are the values given by the combinations of u and v. So, this curve ) (t  equals )) ( ), ( ( t v t u that itself will give you a parametric. Say curve on the surface because using these values of u and v for a particular t you can get a curve on the surface. That is how you can represent any general curve on the surface you need not keep one of the parameter u as constant, the other varying, you can vary both the parameters. But there is a relationship in them where there is a functional relationship in that variation and that functional relationship is denoted by this variable function ) (t  and which is denoting that parametric curve. So, if I expand them we can see that corresponding to ) (t  we get a curve on a surface whose x y z coordinates are given in this fashion, so this is how it is going. So, tangent vector to this curve ) (t  it is given in this form when will this representation, it is a 702
+[p.29] familiar differential operations you first know derivative get derivative of the function X with respect to u partial derivative and then you get the derivative of u with respect t. Similarly you get derivative of X with respect to v and then again you know you get the derivative with respect to ) (t v . So, each one will give you a vector, so you can see u X is also vector v X is also vector where as ) (' t u and ) (' t v . You will get a single scalar value because ) (t u is a function, so you will get a function. So, it is a weighted combination of these two vectors that would give you the tangent. So, what I meant here that if I perform the differentiation of this function and take some value 0t t that is a scalar quantity. So, but u X is a vector and v X is a vector when you are performing partial derivative you are getting )) , ( ), , ( ), , ( ( v u z v u y v u x u u u for u X , so in this way you are getting vectors. So, you are getting the resultant of these two tangent, two vector u X and v X that is giving up the tangent over that parametric curve.
+
+(Refer Slide Time: 21:03)
+
+So, these are some of the key concepts of differential geometry characterizing the surfaces related to the gradient and curvatures. So, the first fundamental form it relates the change of magnitudes or it relates to the gradient directions at the surface point. And magnitude of that tangent or changes in that surface point in the gradients. 703
+[p.30] So, this is called this is a bilinear form that associates two vectors in the tangent plane in the form of dot product. So, the definition of the first fundamental form is that in the tangent plane, if I consider two vectors u and v and if you take the dot product that would give you the corresponding First Fundamental Form. So, with respect to a curve parametric curve ) (t  , then this could be expressed as the dot product of tt. that is that is know tangential directions or this is the tangent actually this t is a parameter, but this is tangent. So, you take the dot product of these two tangents as we have discussed how tangents could be computed, so we are expanding these two tangents. So, you get this particular quantity, so this quantity is related to the first fundamental form. So, where you note that this parameters of E, F and G which characterizes the first fundamental from, they are expressed as dot products of the corresponding partial derivatives of the functions in this way. I mean partial derivatives of the surface point with respect to u.             v v v u u u x x G x x F x x E So, this is just to expand. you have say ) , ( v u X and this you are representing as say )) , ( ), , ( ), , ( ( ) , ( v u z v u y v u x v u X  . So, if I take the partial derivative of all these functions and at a given u and v you get a vector. So, that is how u X is a vector so this is a vector this is also. So, you take the magnitude of that vector that is E similarly you compute v X . So, you are computing u X as a vector and similarly you compute v X as a vector from here and you know you take the dot products and you get this solutions. So, the interpretation of first fundamental form that it is the magnitude of the tangent vector. 704
+[p.31]
+(Refer Slide Time: 24:11)
+
+The other concept which is used in characterizing surface points and the local surface geometry that is second fundamental form. And in the second fundamental form it is related to the curvatures let us see the definition. So, as we have already discussed we can see that we have defined the normal as a normal to the tangential plane and which could be derived by taking the tangents at a points along two curves which would be u X and v X . That means, where varying only u and taking v constant and varying only v taking u constant and you can compute normal. So, in this particular diagram it is shown that if I have a curve where it is varying along v and if I consider with the variations how the normal is changing it is directions. So, that itself that change of normal that is expressed by a vector ) (v dN that that is shown here and let us continue. So, the definition of second fundamental form is that it is a dot product of two vectors u and v not dot product. So, it is a function of two tangential directions u and v at this point, which is given in this term u vector ) (v dN vector. So, as you vary v so this term is ) (v dN , so it is a tangent it is it is basically dot product of tangent with respect to d and b. So, tangent is another curve u this is not the same direction. So, we already know 0 .  N t . So, if I take u and v both as t then actually we get this relationships. So, since tangent is perpendicular to normal. So, 0 .  N t and then we take the derivative with 705
+[p.32] respect to v. So, you get 0 ) ( .   v dN t N dv dt so this is the derivative. So, just from there we are deriving with respect to v. And so we have already seen that if I take the derivative of tangent, you will get the actually the normal of the curve at that point a vector along the normal of the curve whose magnitude would be the curvature at that point. So, you get this quantity here, so this is coming from this and this is the actually second fundamental form. So, from there I can derive that second fundamental form could be expressed as k it is a curvature and this is the angle. So, this is cosine of that plane because this is dot product of two vectors normal and these are all unit vectors. So, this is the angle between these two that would give you the corresponding ) cos( ) cos( ) . ( 0 ) ( . .ˆ 0 ) ( .  k tt II v dN t N n k v dN t N dv dt       So, this is how the second fundamental form is interpreted and you should note that their unit vector, so angle between curve normal and surface normal that is the interpretation. And if you have a normal section, that means when your curve is lying on the normal plane itself then this angle becomes 0 . So, it is something like this that you have a normal section. So, your curve is lying like this in a it is intersection here normal plane. So, your normal section so this is a tangential plane. So, the direction of normal and surface normal both are either 0 0 or 0 180 , whatever depending upon topology of that point. But the dot product would be 0 and sorry the dot product would give you either 1 or -1. So, in this way you can get the corresponding know surface curve and this is called normal curvature. So, with this let me stop here for this lecture, we will continue our discussion on differential geometry as and it is in the context of analyzing range image and it is applications for characterizing surfaces in our subsequent lectures. Thank you very much for your attention. 706
+
+## Lecture 43 — Range Image Processing – Part III  (transcript PDF page 33)
+
+[p.33] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture – 43 Range Image Processing – Part III We continue our discussion on differential geometry based analysis of local surface geometry.
+
+(Refer Slide Time: 00:29)
+
+And in the last lectures we discussed that how normal at a surface point could be computed and we have defined two particular entities describing the local surface characteristics. One is first fundamental form, the other one is second fundamental form. In the first fundamental form essentially we are computing the magnitude of the change of the gradient at that point a magnitude along the tangent vector. And, in the second fundamental form it is related with the computation of curvature and we will continue our discussion on this particular aspect. 707
+[p.34]
+(Refer Slide Time: 01:11)
+
+So, we are using the parametric description of a surface point say u and v are the parameters and normal at tangent at a surface point can be computed in this form, where u and v both again can be expressed in terms of a parametric curve in parametric curve descriptions and then if I induce a curve on the surface we have used this parametric representations. So, if ) (t  which is once again defining the surface point )) ( ), ( ( t v t u for t within certain range, it could be 0 to 1, it could be any other values of the real interval. So, with this description we at this particular value of t we can compute the tangent of that curve by taking the derivative epsilon t. So, this is how the derivatives could be computed for the functions as we have seen that the X can be derived with respect to u and then u with respect to t such chain rule is applied here. So, this is how the tangent vector is computed at the point we have already discussed this also earlier. And then the second fundamental form is defined in this fashion which is the ) ( . t N d t ; that means, as we moved across the along the tangent how the normal is changing its direction. So, that is the vector that changing vector that vector representing that change of normal. So, you are taking the dot product of these two and then you will be you will be getting the second fundamental form which actually measures the local curvatures which represent the which is a measure of local curvatures and which is defined from the functional point of view in this fashion. So, with the same descriptions here you can see e, f, g they are again 3 entities 3 parameters which are related to this functions and this is 708
+[p.35] a definition of e, f, g which are all related to the second fundamental form those parameters. So, they are the dot product of the normal at that surface point and also the second derivative vector of the variations along constant along constant v curve, this is second derivative vector variations along const both u and v directions and this is first derivative with respect to u, then second derivative with respect to v. So, we understand this kind of interpretations of differential calculus or differential that is the definition. And so, normal curvature is actually has to be normalized with respect to the magnitude of the tangent. So, it is the second fundamental form that should be what normalized.
+
+(Refer Slide Time: 04:45)
+
+And this is the, these are the expressions. So, this is what is normal curvature which is second form fundamental form to be normalized and as you can see this is the expression for normal curvature at surface point for the curve described for any particular curve with described by the c parameter t and also the corresponding in the tangent directions along that curve. So, for any tangent direction this is the definition and these are the quantities which are defined earlier that e, f and g these are already defined here and E, F, G they are related to the first fundamental form. And what if we can remember that E should be u u X X . then F is v u X X . . So, these are all X that is a surface point and is G is v v X X . . So, they are the magnitude of the tangents 709
+[p.36] along the constant u, constant v and the other is basically the dot product of 2 tangents along constant u and constant v curves in this description. So, these are the interpretation from the functional point of view. So, let us continue that how this could be further used for computing curvatures locally.
+
+(Refer Slide Time: 06:51)
+
+So, there is a concept called linear map using this parameters and this linear map it contains all the necessary informations for computation of curvature. So, this linear map is defined in this way you can note that the inverse of the parameters of first fundamental form is shown by this matrix     G F F E these are the elements those inverses I show. Linear map : 1          G F F E g f f e So, this is related to first fundamental form parameters and these are related to second fundamental form and those definitions can be seen here how we have defined earlier also in this case. So, how linear map is characterizing let us see. So, in the linear map the eigenvalues and eigenvectors they provide the principle curvatures and also the principle directions corresponding to those principle curvatures. So, these are interesting and we can say that it is basically one of them would be dominant curvature whose value is greater, but note that there is sign involved. So, in 710
+[p.37] the case of computation we call them two principal curvatures, but since their sign involved actually when we are considering with respect to their relative strength then the magnitudes should be considered. Or earlier we have seen this particular feature when you have detected the (Refer Time: 08:39) and you have considered the magnitudes of curvatures here. For a 2 dimensional function of in that case which is equivalent to a function in the surface also is a 2 dimensional function. So, these analysis are can be quite extended in that under this in that scenario is also except that is not a surface that is a brightness distribution or any other functional distribution. So, any way coming back to this particular topic of surface geometry; so, curvature is as a very critical information to understand the local surface topology or geometry. And so, there are two entities which are very intrinsic, one entity particularly Gaussian curvature which is very intrinsic property of the surface geometry and that could be computed as a determinant of linear map which is actually product of this two principle curvatures. And, mean curvature is basically half of the trace of linear map or which is the mean of the two principle curvatures. So, these two also can be an alternative descriptions of local curvatures other than the principal curvatures. So, the expression for mean curvature can be obtained using the parameters of first fundamental form and second fundamental form that is given here and also the expression for Gaussian curvature is also given here. 2 ) ( 2 2 2 1 2 k k F EG Ff Ge Eg H       2 1 2 2 k k F EG f eg K     You note that you know since this is a very familiar expression which can be related to the theory of quadratic equation. So, we can define a quadratic equation this is equation and it is solution is also shown here. So, you can also get principal curvatures given mean curvature and Gaussian curvature. 0 2 2    K Hk k K H H k    2 2 ,1 711
+[p.38]
+(Refer Slide Time: 10:39)
+
+So, the usefulness of this analysis can be understood by this particular technique which is which has found the topology of the local surface curvature. You can see various kinds of local shape that could be attributed by the signs of in this case this is shown with respect to Gaussian curvature and mean curvature. So, r if the mean curvature is negative so, if it is negative and if the Gaussian curvature is positive then it is like a surface like a peak surface just to draw your attention to the fact in our school geometry also we know that when you have a function as a variable of x f(x) and if we get a peak here. So, at this point the peak maximum could be characterized when we find it is double derivatives; that means, if I take the 0 ) (''  x f Where as if it is a minimum then 0 ) (''  x f we have already know this particular feature and it can be explained from differential calculus from there we can explain why the signs should be here negative and positive respectively, and we also know that this mean this maximum and minimum they are characterized by the gradient value that should be equal to 0. However, the fact is that this curvature which is related which is proportional almost to this differential double derivative of the functional value. So, in a surface in a surface again we can consider any particular curve and which has this kind of shape. So, we expect the curvatures values so, principle curvatures should be negative here and all the principle curvature. So, there are two directions. So, if I consider these are the two principle directions for principal curvatures. So, both should 712
+[p.39] be negative then you can get this kind of peak shape that is what is expected here and you know that the mean curvature it is defined as the mean of this two value. 2 2 1 k k H   So, since they are negative so, mean also has to be negative and the Gaussian curvature which is given by K it is defined as product of these two values 2 1.k k K  and since w once again they are negative the product has to be positive. So, that is how this characterization of if the mean curvature is less than 0 and or Gaussian curvature is greater than 0 then you can characterize it as a peak surface. Similarly for the pit surface which is like they like the minimum of a 1 dimensional function. So, this is a scenario this is a pit surface here we expect both of them should be positive both mean curve both curvature should be positive. So, the mean curvature of should be positive as well as a Gaussian curvature should be positive that is what is shown here. So, you can extend this analysis for a flat surface this curvatures are going to be 0 . we know that that radius of curvature is infinite for a flat surface. So, that value of curvature is 0. So, since for a flat surface value of curvature is 0 at any directions so, you get both of them 0 Gaussian and mean should be 0. So, we extend this kind of observation to various other shapes in a 3 dimensional surface and you can explain the kind of a features or observations those are provided in this particular slide. And in fact, this is a paper which discusses this particular properties this is a paper by Paul J Besl and Ramesh Chandra Jain in 1986 it was published and it is very pioneer in paper in characterizing the or in finding out the local topology of a range images from the range image from the range data. So, this shows how we can compute this particular characteristics local properties and this feature again you can use for your purpose is later on for example, segment in surfaces etcetera. 713
+[p.40]
+(Refer Slide Time: 15:57)
+
+So, just to summarize we can characterize the this local topology by the signs of curvature, it could be signs of principal curvatures or it could be signs Gaussian and mean curvatures. So, you can see that for the principal curvatures as I mentioned when both are negative we have peak when both are positive we have pit and then there are combinations of negative positive, positive negative. So, they have almost like a symmetric relationships you can you can find out in this case. You have say ridge, ridge, saddle, saddle because of these see it does not matter in which direction it is negative or positive, but the local surfaces they will have symmetric this property can be described in the form of a symmetric matrix form you can say, it has certain symmetry with respect to this. Whereas for Gaussian and mean curvatures the characterization is a bit more elaborate that you can see here and that is the reason why in the previous work of Besl and Jain they have used Gaussian and mean curvatures, it is interesting they have and we identify these characteristics. So, there are regions like saddle ridge which was earlier could not be characterized a saddle valley minimal surface. So, these are few other kind of characterizations other kind of topologies also they have considered in their analysis. 714
+[p.41]
+(Refer Slide Time: 17:47)
+
+So, we will be considering a special kind of a surface the description and which is akin to our range data and in fact, there is a term of this kind of surfaces surface patches when you consider the parameters u and v, they itself describes the x coordinate and y coordinate and the z coordinate is a function of those two parameters like h(u, v) has been shown. So, this is a familiar range data representations what we have discussed in previous in our previous lectures and one example is shown here in the as a figuratively. So, this is a surface patch and this is u and v like it is equivalent to x and y axis and you get the corresponding height of the surface point from that plane which is a z directions. So, this is how this is described and already we know in general in for any description of parametric surface we can compute the surface normal and then all the elements of first fundamental form and second fundamental form matrices in this form. So, this is note that this is second fundamental form matrices. So, these are all double derivatives they are related to curvatures. vv uv uu x N g x N f x N e          So, this is the second fundamental form matrices and 715
+[p.42] v v v u u u x x G x x F x x E       this is the first fundamental form matrices, these are all derivatives and they are related to magnitude of the tangents or actually this is a dot product of tangents along two directions two different directions for F otherwise they are also of the same directions. So, this quantities can be computed now easily I mean they are they have a special form in this particular aspect, because if I compute u X then if I take that gradient and let me represent them in the form of a column vector so, you get           uh 0 1 That means it is a partial derivative of function ) , ( v u h with respect to u, ) , ( v u h hu   similarly we can compute v X as           vh 1 0 . So, from this two vector we can compute E. So, what should be E? u u X X E   which will give you 2 1 uh  , then v u h h F   and, G is v v X X  that magnitude itself it is 2 1 vh  . So, this is about the elements of the first fundamental form. What about the elements of second fundamental form? Again from this description so, let me first compute the normal vector because it requires to computation of normal and for that I need to take the first cross product of u X and v X . So, I will use that familiar cross product to know computation. So, this is I will expand this determinant and this could be written as. So, this is minus h u i plus, this is minus this should be v, this is v minus h v you know this is minus h v j and k is 1.                    1 .1 ) ( 1 0 0 1 v u v u v u h h k j h i h h h k j i N 716
+[p.43] So, this vector N can be considered as this vector is minus h u minus h v 1 and if I have to normalized it. So, N is given as minus h u minus h v 1 divided by root over 1 plus h u square plus h v square . 2 2 1 )1 ( v u v u h h h h N      and from there you can compute now the other thing. So, if I consider uu X which means I have to once again take the derivative with respect to this and we will get           uu h 0 0 and            uv uv h X 0 0 and            vv vv h X 0 0 . So, your value of e should be dot product of N and uu x and only the you know z component. So, you have 2 2 1 v u uu h h h    e and the similarly I mean for F it is 2 2 1 v u uv h h h    and for G it is 2 2 1 v u vv h h h    . So, this should be minus. So, so this is how these elements are computed just I have described and let us see the result how we can get it.
+
+(Refer Slide Time: 24:59)
+
+717
+[p.44] So, you see that what I have described those are the thing mentioned here and once you have computed this then you can compute the Gaussian curvature and mean curvature using this element. So, linear map is given by 1          G F F E g f f e So, you can compute those quantities and then take the trace of the matrix half of the trace and determinant of the matrix then you will can get the Gaussian curvature and mean curvature and from there also you can then take also principal curvature. So, I will show you the expressions of Gaussian curvature and mean curvature as a result of this operation.
+
+(Refer Slide Time: 26:01)
+
+So, this is how we will get you will get mean curvature this is the expression 2 3 2 2 2 2 ) 1( 2 2 ) 1( ) 1( v u v u uv v vv u uu h h h h h h h h h H         and also Gaussian curvature this is expression. 2 2 2 2 ) 1( v u uv vv uu h h h h h K     So, when you have a range data then you can compute these curvatures by using this particular these expressions because range data as I told that is a simplified form of 718
+[p.45] surface description where the parameters are described itself by the x and y coordinates in those directions. And the depth value is a function of x and y coordinate which is z coordinate and by computing them you can compute the derivatives using the masks as we have discussed earlier in our lectures. In the very first lecture we discussed how derivatives could be computed even the double derivatives other gradients could be computed of a function of a 2 dimensional function that we have discussed. So, use those masks to compute this derivatives partial derivatives and also double derivatives and then from there, you can compute the mean curvature and Gaussian curvature then look at the signs of those curvatures and that would give you the topology of the local surface. So, with this, let me stop here we will continue this discussion of surface geometry local surface geometry in the next lecture. Thank you very much for your attention. 719
+
+## Lecture 44 — Range Image Processing – Part IV  (transcript PDF page 46)
+
+[p.46] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture – 44 Range Image Processing – Part IV
+
+(Refer Slide Time: 00:26)
+
+We continue our discussion on computing local features of range data or surface local features of local geometry or range data. For understanding this process let us discuss a particular problem in computation of this features and let us solve this problem and I hope that would give you a better understanding of the computation. So, you consider this exercise that a parametric surface which has been described in this form. You note that in the problem definition statement, I have used the brief notations by using matrix algebra. So, all the partial functions of u and v they are independently defined and the function of x y parametric functions of the corresponding coordinates, they are separable in terms of the function of u and v. So, that is how it is given. And what we need to do we need to compute the surface normal Gaussian and mean curvatures at (0.5 , 0.5) of the parameter values. So, this is our this is the point. So, this surface point we need to compute and these values. So, you should note that with this parameters value what is a co-ordinate that can be compute it by using this functions. 720
+[p.47] So, you replace u by 0.5 and v by 0.5, then you can get the coordinate of x by this function. So, you can use this values and you can get these coordinates. So, let us proceed that how this computation. So, we will be exploiting this matrix notation to perform the derivative,s first derivative some second derivatives because matrix is a linear operation. So, we can see that those delivery operations also become simple in the structure.
+
+(Refer Slide Time: 02:35)
+
+So, let us considered the representation of the functions of u and v in the form of a column vectors and which is given F(u). So, this is a column vector which is equivalent to like F(u) is expressing           ) ( ) ( ) ( 3 2 1 u f u f u f . So, this is what F(u) similarly G(v). The advantage here with this notation is that, I can easily compute first derivative of all these functions; I can express in terms of matrix itself. So, simply I have to take derivatives of corresponding elements of matrix which is a function of u in this case. So, as you can see, this( ) (' u F ) is a first derivative of the function F( u). Similarly, you compute second derivative of function G( v). So, you put the value of 0.5 you can get the first derivative values of the functional values of F(u) and second derivatives for v equals to 0.5 also you can get these values. 721
+[p.48] So, at u equal to v equal to 0.5 the, the functional values are given by this. So, it is computing all the things together like ) 5.0 ( 1f , ) 5.0 ( 2f and ) 5.0 ( 3f ; these are the corresponding values. So, this(5.75) value is actually ) 5.0 ( 1f and so on. So, this is a interpretations of this computation and similarly we can get G(0.5), we can also get the derivative with respect to u ) (' u F and get the value at 0.5. This is a value get the value with respect to derivative of G at both are 0.5. So, now, this is the vector which is giving you the X u with respect to u the surface point. So, this is giving you in depend this function is in independent of v. So, what you can do? You are multiplying it means your u X is considered as           ) ( ). ( ) ( ). ( ) ( ). ( ' 3 ' 3 ' 2 ' 2 ' 1 ' 1 v g u f v g u f v g u f , . So, this is the vector and this point wise multiplication with respect to G(v) which is given by           ) ( ) ( ) ( 3 2 1 v g v g v g column vector that is expressed by this notation.
+
+(Refer Slide Time: 05:34)
+
+Similarly, you can compute the v X in this passion. 722
+[p.49]
+(Refer Slide Time: 05:39)
+
+So, from these two, we can get the normal because you are getting two tangents along u curve and v curve. So, you take the cross product and normalize it then you get the surface normal. v u v u X X X X n    ˆ So, surface normal at this point is given by this value. So, this is a unit vector unit normal vector at that point. Now to compute the mean curvature and Gaussian curvature as I have already discussed that you have to compute the elements of linear map and then also the linear map itself the matrix linear map and the trace of that matrix half of the trace will give you mean curvature and determinant of that matrix will give you the Gaussian curvature. So, we are computing this particular entities here and we have already seen how the first derivatives with respect to u and v for surface points could be completed. Similarly we will be computing the second derivative. So, this is a linear map and you have to come to those elements and from linear map, we can get principal curvatures eigen values of linear map or as I mentioned the Gaussian curvature as this and also mean curvature as this. 723
+[p.50] So, let us compute     g f f e that is related to second fundamental form and here also we are using that convenient form of derivatives with respect to on the only on the column vectors of u functions of column vectors of u. So, ) ('' u F or second derivative of F(u) that would give you the uu X and element wise multiplication with G(v) that would give you the uu X . Similarly, so this computations first you compute ) ('' u F , second derivative in ) ('' v G and these are the element wise multiplications of respective elements.
+
+(Refer Slide Time: 07:42)
+
+And then the values what you will get you use those values then you will get the elements of second fundamental form in this way. Similarly, we already obtain the, we can get also first fundamental from these are the values and by using them, you can construct the linear map matrix. This is a linear map matrix. So, if you take the trace and take the half of it which means you add them and you would take the average. So, the value would be so, Gaussian curvature is determinant which means y you take the determinant of this matrix it is coming like this and trace is coming like it 0.086 that is what is mean curvature, I think this is what was a problem statement and this is how we could solve them. 724
+[p.51]
+(Refer Slide Time: 08:38)
+
+So, next we will be discussing another kind of processing with the range images and in this case, we would like to compute the edges in the range image. Now the difference between the intensity image and range image is that in the intensity image, a primarily the edges are all like a very discontinue there is a short discontinuity short changes of brightness value at the edges. So, I should say it is a almost like zeroth order discontinuity that is happening in the edges and we call those edges as step edges very short discontinuity. Whereas, for the case of range image, there is a continuous change of the functional value and those edges you have a differential change, the discontinuity is not so, sharp and it is like an kind of an plane planar. It is a intersection of two planes in the functional map and that is producing image and that is how the depth also is varying. Now those kind of edges are called roof edges. So, if I draw them for the simplicity see this is a short change along when we vary this edges that is what is step edge whereas if I consider a change like this is a value these are the two planes and you are observing the depth observing the height, then you see that this change is continuous and this structure this kind of edges called roof edge. So, the in this diagram also it has been shown in this bottle, this is an example of step edge. This transition is an example of step edge whereas, this transition is an example of the here to here this transition is example of roof edge. So, in the range image you have 725
+[p.52] both types of edges and that is why the characterization of these edges are important because they are bit different and their processing should be different.
+
+(Refer Slide Time: 11:05)
+
+So, we will be considering to analyze these two cases. Now I will not go into details of this analysis what I will provide you the result of analysis which will provide the summary of data analysis which helps us in developing an algorithm for extracting edges so, the characterizations the properties that I will be describing. So, this is an example how this edges are model you can see the step edge. There is a sharp jump of the functional values a jump of edge that is you can see here the first function which has been shown here as a step edge and this edge is showing this jump. So, this is the jump which has been shown here. So, it is a certain jump where as for the roof edge you have no jump. So, this is an edge here and there is a continuous gradation continuous decrease of the value in a linear form in a professional form as you move along x. So, with this kind of functional definitions of edges so, this analysis is done with respect one dimensional function. 726
+[p.53]
+(Refer Slide Time: 12:31)
+
+So, you can characterize these two situations in this way. Suppose you smooth this particular functions using a Gaussian mask and then you take the double derivative, you can take higher order derivatives including first derivatives second derivatives of this smoothed signal. So, you are it is possible to compute them because this is one of the techniques or trick so, that is used for computing gradients instead of directly computing gradient. So, we compute gradients in a smoothen signal to handle noise to make it first you smooth the signal . noise should be reduced in that case and then you perform this kind of operations or derivatives. Otherwise furious changes will cause high you know errors in computation of gradients. Now, there are some advantages of having Gaussian mask because either you can smooth the Gaussian smooth it using Gaussian mask and then take the derivatives or instead you take the derivatives of the Gaussian mask and then apply convolutions to get the result in operations. So, that is how you get the second derivative operations. So, what is very characteristics in this analysis? They have observe that ratios of second and first derivatives of curvatures they behave differently across scales; that means, as you vary the smoothing factor sigma the scale of Gaussian mask, they have certain invariance properties or they have certain interesting properties that analysis as in shown. So, this analysis is given by I think this is a paper given in this paper. 727
+[p.54] So, if you would like to go through the details you should read this paper, I will be just describing this particular this results I will be describing here. So, just let me elaborate once again. So, curvature at Gaussians smoothened function is given in this form. it is the usual definition of curvature of a function , one dimensional functional function of a single variable. ) ( ) ; ( ) ( 2 2 '' x z x G x z        Curvature at Gaussian Smoothened z(x): 2 3 ' '' ) 1( ) (    z z x k   As you can see it is a ratio of second derivative and or other in the numerator there is second derivative and in the denominator we have the 1 plus of first derivative raise to the power of 3 by 2. This is a very standard expression of computing curvature for a function of one single variable. Now, if I would like to take ratios of second and first derivatives of curvature, then this ratio can be computed also from the functional from the function z it itself as a ratio of fourth derivative and third derivative of curvature. So, this is how a curvature is related with this original function; curvature is proportional to the second derivative. So, second derivative of curvature is proportional to the fourth derivative of function and first derivative of curvature is proportional to third derivative of function. So, this is how the ratios could be compute it directly from the functions by taking the ratio of fourth derivative and third derivative of the function and there all smoothed across by this scale sigma. So, the characterization of step edge is that this ratio remains roughly same across scales whereas, for roof edges this is inversely proportional to scale. So, when this is there is a real edge point if we observe this properties we can say that edge point is genuine and we can delete spurious edge point which does not you know hold this property. So, t this is one of the very key findings or key observations from the researchers and they have used it, but; however, to detect the edge points we have to use the curvatures. 728
+[p.55]
+(Refer Slide Time: 17:02)
+
+For the step edges it is a zero crossings of one of the principal curvatures that would give you give which will give you a candidate step edge point. And then you observed across scales whether that point preserves the property of invariance of ratios of ratios of those two quantities, what I mentioned that ratios of second derivative of curvature and first derivative of curvature. So, they should be constant. So, that is a thing. So, this should be roughly remains constant across scale whereas, for roof edge it is characterized by local maximum of curvature and that to be also sought in the direction of dominant principal curvature. So, you should note here that dominant in the sense of magnitude that you have to consider which is the dominant and this roughly remains constant across scales. So, this one; that means, earlier it was inversely proportional to scale. So, if I multiplied with scale so, this should we constant. So, these four know observations can be combined together and can be used in developing an algorithm of edge detections. 729
+[p.56]
+(Refer Slide Time: 18:23)
+
+So, the algorithm says that we can compute a set of Gaussian smoothed images at multiple scales, then compute the principal directions and curvatures at each point of the smoothed images compute zero crossings of the Gaussian curvature and the extrema of dominant principal curvature in the corresponding principal direction. So, zero crossings, they would give you the candidate step edge points and extrema would give you the candidate roof edge points. And then use the analytical models across scales to select candidate points for respective edges.
+
+(Refer Slide Time: 19:05)
+
+730
+[p.57] So, this analysis gives you a mechanism of multi-scale edge tracking. So, what it says that you need to track those edge pixels at different scales of images which means images which are smooth smoothed by different scales of Gaussian functions. So, if we can observe that still it is retaining at higher scale also this property is retainwhich means the ratios of the curvatures second derivative on first derivative of curvature, they remain constant across scales for step edge point or the scale multiplied by these ratio remains roughly constant across scales output across scales for roof edge point, then we select those points and we retain those points. But those points they locations, they retain which are given at the finest scale because shift has happened due to the smoothening operations.
+
+(Refer Slide Time: 20:08)
+
+So, this is one example that is once again the results reported in that vapor. So, it is shown here. You can see that edge points of differently smoothed images are shown here with scale 20, scale 40, scale 60 and scale 80 and as you move across hire scale, you will find that edge points are getting fitted out because those are the points which are still maintaining those invariance properties as we noted. And finally, when you consider the result at the locations of the at the point then you are simply getting the these are the edge points, but you are getting from this operations. 731
+[p.58]
+(Refer Slide Time: 20:57)
+
+So, that was about the detection of edges in range images and now I will consider another operations; another processing with range images which is segmentation of range images. Mostly the segmentation of range images there are different algorithms, but I will be restricting ourselves to consider only segmentation of planar patches. If I consider small planar patches and then integrating those planar patches, we can get large surface from them that is one kind of approach and one of this approach is given here of course, it is considering on a planar facets. So, what it does that first you will locally fit very small patch with a equations of plane. And then for each patch it forms a node of a graph between all the neighboring patches, you can let me explain it say you have fitted this patches and these are the neighboring patches. So, you consider also the cost of fitting of the total patch. So, this cost we will give you a average distance to the plane best fitting them. So, this cost of fitting. So, if I merge this, then you have a cost of fitting and that would give you the average fitting. So, let me explain that how a plane could be fitted. See we have already discussed in model fitting. I will simply bring that particular technique here. So, you know that equation of plane can be suppose I have given you what is given as problem here. You have given here a set of points if I consider them as just a set of points. say set of N points and this is a set (   N i i i i z y x S ,... 2 ,1 ) , , (   )and your objective is to find a plane, fit 732
+[p.59] them with a plane which means a plane can be expressed in the form of equations say 3 2 1 a y a x a zi    t that is how a plane could be written. You know that familiar equation of 0     d cz by ax . So, I will just expressed that equation in this form where it is a function it is z as a function of x and y which is a usual form of range data. So, this I can write it in the matrix form as             3 2 1 1 a a a y x and that is equal to z. So, if I have given so, many points I can write a set of linear equations say x 1 y 1, one that should be equal to a 1 x 1 a 2 plus a 2 x 1 plus a 3 should be equal to z 1 x 2 y 2 1 z 2 like this and this is a x n y n one say this is a z n. Z XA z z z a a a y x y x y x n n n                                                 2 1 3 2 1 2 2 1 1 1 1 1 So, what is your problem your objective is to compute 3 2 1 , , a a a to give a plane equation and what you need to minimize. So, let us consider this matrix is Z this matrix is X and this is A. So, you have to minimize this norm AX Z  , you have to compute find out that A which will minimize this particular norm. This is that least square error estimate and we know that we can solve it using non homogeneous method of solving least square error estimate. And many a time I have used this particular analysis say I will write it as AX = Z and I would like to compute sorry it is not AX, it is XA. I.e., XA Z E   So, I will write it as XA equals Z and then A should be equal to X transpose X inverse X transpose Z. Z X X X A T T 1 ) (   So, this is a equation this is a pseudo inverse and the error would be you replace A by this form and you will get the corresponding error. So, error can be computed as so, Z minus X then X transpose X inverse X transpose Z and you can simplify these expressions. So, you will get error. || ) ( || 1 Z X X X X Z E T T    So, this error is the arc cost; this error or planar fit is a arc cost between two nodes. So, for every for this graph, you have nodes you have say four nodes and they have 733
+[p.60] corresponding edges all neighboring edges means your fitting them with planes and the arc cost is this one. So, in this way you form a graph and as you can see, it is we will describe it later on that in this method the edge which is having minimum cost that is considered and those nodes are fitted and now you transform this graph into this form. And you continue go on doing this work.
+
+(Refer Slide Time: 28:03)
+
+So, just to summarize this particular operations. So, what we are doing what is the idea is that you iterately the merge this spare of planar regions to minimize the average distance to the plane best fitting them. And we apply a greedy approach, we select the best minimum cost arc and merge the nodes and we do it iteratively. Go and doing it till we find there is no more patches to be mask because there is a threshold of error. We cannot should not merge with the error is too large. So, this is an example of an image and whose range data is available and if I perform these operations, you will get this kind of planar fits. This is taken from that paper itself which is a representation recognition and locating 3D objects by Faugeras and Helbert and it was also published in 1986. So, this is one technique of segmenting range images. We will continue this discussion I will discuss another technique which is quite fast and effective in the next lecture. So, let me stop here. Thank you very much for your listening. 734
+
+## Lecture 45 — Range Image Processing – Part V  (transcript PDF page 61)
+
+[p.61] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture – 45 Range Image Processing – Part We continue our discussion on segmentation of Range Images. In the previous lecture, we have seen how a greedy approach could perform the segmentation of planar faces in range images.
+
+(Refer Slide Time: 00:20)
+
+Today we will discuss another approach, this is a morphological analysis based approach where it uses information of local orientation at a point and we will find that this approach could be effectively used also to extract the planar segments in range images. So, in this approach a concept of a digital neighborhood plane and neighborhood plane set those concepts are introduced. I will explain these concepts in this lecture. And the advantage of working with this approach is that, it is very fast and very easy computation on performing checks of local neighborhood arrangements and then taking a decision on the local orientation. And after that you can aggregate pixels of similar orientations and form the segments. 735
+[p.62] So, essentially what it does that it computes a set of neighborhood planes. which again I will be discussing and then this itself acts like a feature, this set itself acts like a feature and it induces an unique partition under the equivalence relation of equality of NPS and you can get the segment. And this planar segments are of course, approximate and they can be formed by vision growing, as I mentioned by considering the equality of the local features defined by neighborhood plane set or NPS.
+
+(Refer Slide Time: 02:17)
+
+So, first let me explain how 3 dimensional neighborhood of a point is described. As you know that in a discrete space a 3 dimensional neighborhood can be described by extending the notion of 2 dimension itself. In discrete with phase space, so we will have a 3 3 3   that is a, rectangular tessellations of 3 dimensional space and those points are shown here. So, in this case this is the point which is the central point and whose neighborhood are described. So, this is a point P and you can see that there are 3 cross sections if I move along the directions of x, y and z directions in our conventional notations. So, we can consider say this is y, this is x, and this is z, this is a direction and with respect to this point this is a front plane, and this is the middle section and this is a back plane. And the variables are also identified by considering the positions of neighboring pixels. So, if I assume this is a origin, then with respect to that; for example, this voxel, so in 3 dimension we call the elements in the discrete grid as voxel and say this variable 736
+[p.63] has been named as 0n and the corresponding positions we can see this is a right neighbor of the point p in the middle section. And similarly we have, so if I consider only a 2 dimensional cross section then this is defining a 8 neighbor configurations; but when it is a 3 dimension it is a 26 neighboring configurations and the nomenclature of the variables are also shown here. So, middle plane we have seen all the variables are named using the notations n and their subscript from 0 to 7. Similarly in the back plane, the variables are denoted as v and with subscript 0 to 7. Their variable means, if there is a point then the value of this variable would be 1 or 2 and if it is empty then the value is 0. So, this is a representation of a point set in a discretized space you can say. And as I mentioned range image is nothing but a set of points in 3 dimension, they should lie on surface points; but in a 3 dimension you can describe them also as a 0.6. So, with respect to any point in the range image, you can have a 3 dimensional neighborhood in the corresponding space.
+
+(Refer Slide Time: 05:30)
+
+Now, let me define what is meant by digital neighborhood planes. Now, we assume that the point lies on a surface, then there could be neighboring points also should be lying on some of the neighboring planes. They are defined in these directions, in these configurations; mostly if it is a planar phase in the discrete orientations you are expecting those points should lie in one of those planes. 737
+[p.64] It is once again it is an extension of the corresponding directions, discretized directions of 2 dimensional space; where you have a 0 to 7 or 1 to 8 directions and used in chain codes in 2 dimensional images when we describe the sequence of points in a contour. But in 3 dimension you have surface points here, and there we have to look at the corresponding 3 dimensional configuration of neighboring points. So, in this description, we have shown that what kind of configurations neighboring planes can have. So, if I have all the points in the middle plane, then this is one kind of configurations. There are certain indexes by which these planes are referred to here, for example, this is the index here is 3. So, there are nine such configurations, and all of them actually formed by as you can see that if I consider the this cubic face; then they are formed either by the principal planes in the parallel to the faces of the cubes or their diagonal planes which is connecting the corresponding diagonal edges and showing this planes. So, the numbers here, you can see starting from 1 to 9. So, there are 9 such neighborhood plane which has been defined in this configuration. And in each neighborhood plane there would be once again 9 points including the point p which is a central point. Let me show you those points.
+
+(Refer Slide Time: 07:50)
+
+So, these are the set of points which have been know shown here, and here the corresponding planes, their indexes are shown by their indexes or identities are shown by 738
+[p.65] the corresponding number 1, 2, 3 these are the principal planes. And if you check with the variables that we defined earlier for the digital map, for the neighborhood, 3 3 3   neighborhood those variables are listed in these planes, those are corresponding variables. So, this was a middle plane, so the variable name and you can find out all the variables in this plane, they correspond to the corresponding variables of this third plane. And similarly if I consider all the columns of these cross sections along these directions that will give me the, it is I hope it is second plane this is v 2 v 8 v 6 and now this is the first plane. So, this is the first plane directions and if I use this, this is the second plane directions. So, in this way you can always form this point set by observing the neighborhood variables.
+
+(Refer Slide Time: 09:22)
+
+So, in the same way we can define all other diagonal planes also, I am not pointing out the corresponding configurations you can do it yourselves by observing the name of the variables and corresponding configurations of those diagonal planes. 739
+[p.66]
+(Refer Slide Time: 09:40)
+
+And this is the plane of 7th, 8th, 9th those planes are also described here.
+
+(Refer Slide Time: 09:46)
+
+So, just to have an idea how those planes looks in a discretized grid with voxels when those all the points are there in the plane. So, you can see the corresponding shapes of those planes in the digital grid, those are shown here with their numbers. 740
+[p.67]
+(Refer Slide Time: 10:05)
+
+So, now let me define the neighborhood plane set or in acronym NPS. So, it is considered iP , is a ith DNP; that means, the set of points assigned to the ith DNP. Now, we consider the iP could be an element of neighborhood plane set of a 3 dimensional point P; if it is neighbors contains sufficient number of points in the or lying on that iP itself. So, that that is the inclusion of iP . So, in this way you can check for other planes also and set of all such planes which satisfy this property that the neighboring points of that point P, they lie sufficiently on those planes. So, mathematically we can define neighborhood planes in this way, it is the set of plane i. So, i denotes the i-th data neighborhood plane, such that the neighborhood points of P which is denoted as a set ) ( p N and the corresponding set of points in planes as defined that intersection, and A is just object point. So, only the points which are one and that is defining the object; when it is just making it more precise that we are considering neighboring points where there is a volume, I mean which are not empty which has only object points. 3 }, | ) ( :| { ] [      k k P A p N i p i k 741
+[p.68] So, those points which are lying on a particular plane with a sufficient number that number is k. And usually we take the threshold k is greater than equals 3 two; that means, which means at least four points should lie including the point P. And at least yeah, at least three points should lie including the point P; but we can you can use any other threshold maybe 4 or 5 is sufficient in mostly used in our cases. So, k is a parameter as you can see and it is a threshold number of points required for accepting a digital neighborhood plane in the neighborhood.
+
+(Refer Slide Time: 12:16)
+
+Now, the question is that, this definition what I know given, what I discussed this definition is meant for 3 dimensional grid and where you assume that is an idealized grid, there is no noise and then perfectly you can associate neighborhood planes with the point P. But the problem is that, now if we have noise, so even some of the points which are not lying exactly in your in the 3 3 3   neighborhood or 26 neighborhood have a point P; still those points should have been should be considered because those are deviated due to noise, and they could be a possible candidate of forming DMP. So, that is the case when we are trying to handle range image, because range image is an image which has taken from the real life scenario and there is a expected that there would be noise in those imaging systems. So, in a range image D(x,y) we can define a 3 dimensional point as (x, y, D(x, y)). And around its neighborhood, then to handle this kind of tolerance of deviations of points which may lie on a neighborhood plane. What 742
+[p.69] we considered; we consider an extended neighborhood around p, and this extended neighborhood for example, a size c b a   . So, minimally there should be 3. So, this all of them should be greater than 3. So, that is how the extended neighborhood, and for maintaining symmetry usually they are all odd numbers. So, what we can do here, that is to this is a trick what has been used in this technique; that this tolerance has been accounted for by the fact that we map a set of points in this extended neighborhood to a point of the neighborhood 3 3 3   neighborhood to those variables. So, a particular variable would be true in 3 3 3   neighborhood, if one of the points in that set which has been mapped to it, is true. So, that is why, that is how we can make a simple adaptation of this concept of DNP in this case. And then all the definitions of digital neighborhood plane, and neighborhood plane set they remain the same; only this mapping will take care of those tolerances, giving tolerances to those deviated points or to those noisy points.
+
+(Refer Slide Time: 15:04)
+
+So, before giving an example let me discuss that what are the properties should be maintained when we define such an mapping functions. There could be various possibilities for mapping a set of points to a neighborhood point of N(p); but we should consider those mappings which maintain certain consistency, and which should be helpful in solving our problem. 743
+[p.70] So, we are considering a mapping functions in this case we are naming it as a neighborhood mapping functions, that is a mapping from extended neighborhood of c b a   to a neighborhood of 3 3 3   . So, first thing that the function should be total and onto; which means that, for every point in the extended neighborhood there exists a unique point in N(p). So, for every point you have to have a definition, you have to have a mapping that is the total property; and for every point the in the 3 3 3   neighborhood there exist at least one point in the extended neighborhood which has been mapped to it. So, that is a property of onto function. And then this function should be should induce connected partitions in ) ( p Nabc ; that means, when we are making these mappings, so the points of the extended neighborhood which are mapped to the same point in the 3 3 3   neighborhood they should be connected that is the connected partition in that case. And again as a result the digital neighborhood planes what it will look in the extended neighborhood of the point p, they should be also connected. So, the induced digital neighborhood planes also should be connected. And moreover for the good quality of segmentations it should have strong structural similarity, with the respective DNPs defined in N(p).
+
+(Refer Slide Time: 17:19)
+
+744
+[p.71] So, one such possible neighborhood mapping function is described here. So, in this case you can see that we are extending the neighborhood by 5 3 3   ; which means, there is an extension along the z directions in both the front and backward know directions and there is an additional 3 3plane in front of or in the in behind the point p. So, you can see here, see this is the additional plane which has been additional 3 3 cross sections which has been added to the neighborhood definition of p. So, now if this is the extended neighborhood, then let us see how the mapping is carried out to maintain the properties which I mentioned. So, first thing as you can see that we have mapped all these points to the central cross section of the 3 3 3   neighborhood; which means, if I consider say these points, all these points together they are mapped to 3n , together means no they are all of them are mapped to 3n . So, if any one of them is true, then the variable 3n becomes true. So, it is all logic by which this variable is related to with those points. So, in this way the no extension has been done, and in the same way the other know very other neighboring variables of points they are also mapped. So, the cross section which is behind by two unit, it is mapped to the actually all the variables of backplane of the original neighborhood definitions of 3 3 3   . And cross sections which is in front of two units, again it is mapped to the all the variables, corresponding variables are mapped to the variables in the front cross section of 3 3 3   unit. So, in this way as you can see we can extend the neighborhood definitions we can map them to the variables. And finally, we are working with only say 26 variables with p and with these kind of definitions. So, then the rest of the definitions of digital neighborhood plane, and neighborhood plane set it remains same. 745
+[p.72]
+(Refer Slide Time: 19:54)
+
+So, just to look at the results of the digital neighborhood planes due to these operations or the configurations what you can have. So, these are the digital neighborhood planes which have been induced by this function F. You may note that the central plane or the plane 3 which I have shown earlier, actually it is accepting any points in this volume. So, all these points in that volume it corresponds to plane 3 because of that tolerate, because we have given this tolerance. And in some of these planes also this more number of points are there, and there is a particular rule by which of course, you have to check the planarity of this test of these set of points. So, first thing induced DNPs are connected. So, you have seen that all the digital neighborhood planes here they are connected, and they are structurally similar. Let me show you the once again the configurations of the neighborhood planes, and you can see that the corresponding shapes are similar; say this is plane 2 and this is plane 2 which has been defined, and in this way we have to understand we have we can find out that similarity of shapes. 746
+[p.73]
+(Refer Slide Time: 21:24)
+
+So, it satisfies the properties what we wanted to have in this neighborhood mapping function. And then by applying the definitions of neighborhood plane set we can from the segment. So, the algorithm goes like this, that you can compute the neighborhood plane set at each pixel, then you compute connected components having the same neighborhood plane set; and remove small connected components from them, then smooth a region by assigning its level to spurious unlabeled pixels within it. One example of range image segmentation has been shown here; the upper one is a display of a range image, So, in this case the higher the brightness value nearer the pixels and the darker points are far behind. So, that is how this display has been made and the corresponding, the segmentation results are also shown here. 747
+[p.74]
+(Refer Slide Time: 22:30)
+
+So, now let me discuss another kind of processing with range data and this is registration of range data. So, we know the registration problem that, if I give you two images and if they are related by certain transformation. So, we need to compute the transformation, so that you can obtain the other image by applying transformations, obtain an image from the other image by applying this transformation. So, in the range data also we may consider that this data has been captured from different views. So, they are related by the corresponding coordinate transformations between these two views and that is a kind of rigid body transformation. So, the assumption said that, first thing that surface belongs to the same object; that means, you are viewing the same points. And then captured from different viewing direction, coordinates of corresponding points are related by rigid body transformation and we assume in the same scales for the coordinate axis. So, all other things are similar, only thing is that in the coordinate transformation we have translation and rotation of the corresponding coordinate transformation. So, the computational problem is that estimation of those rotation and translation parameters. 748
+[p.75]
+(Refer Slide Time: 24:00)
+
+So, we are considering this problem of computing parameters of rigid body transformation. So, let us consider there are two corresponding point sets } { i m and } { id . So, } { i m corresponds to point sets of one view, and } { id corresponds to point set of other view; and we would like to get a transformation from } { i m to } { id . And as I mentioned that, it is a rigid body transformation and related with rotation and translations, so we can express them in these relationships. So, all our 3 dimensional points, 3 dimensional vectors and they are expressed in non-homogeneous coordinate system. So, it is written as i i i v T Rm d    , so just to explain. So, if iv is the noise here, and R is a 3 3 rotation matrix and T is a 1 3 translation matrix; and we know that points are described by 1 3 vectors id and i m . So, this relationships are established. Now, our objective is to compute these parameters are R and T in presence of the noise. So, we would like to minimize the error of the model fit, model fitting and this is how the error of model fitting has been expressed here and this is the same sum of square error what we discussed earlier also as you can see. And the estimated rotation matrix and translation matrix they are all denoted here by theover it tilde in my slides. 2 1 ˆ ˆ     N i i i T m R d E 749
+[p.76]
+(Refer Slide Time: 26:06)
+
+And one thing which it is, you should know that it is a constant optimization in the sense there is a property of rotation matrix and that property is that it is an ortho-normal matrix; which means that, this matrix should satisfy this condition, this )ˆ ˆ ( R RT should be equal to I or T R should be equal to 1  R e. So, subject to that we have to solve this minimization. So, it is not a simple least squared error estimation method or simple minimization optimization method, it is a constraint optimization method that we need to consider here. So, we apply in this strategy of a first removing the translation part. So, what we do? We have taken partial derivatives with respect to T and then we get these equations, if I take the derivatives we can find that translation does not have only minus 1 as the coefficients, and you can apply once again matrix algebra to reduce the derivatives into this form. So, from there we can get the estimate of translation in terms of the average of id is and average of i m is given R. So, still we cannot compute T, but we know the relation; if we can get the estimator of rotation matrix R then we can get translation matrix translation 1 3 translation parameters, because we can always compute average of d and average m. So, that is what it is means of id and i m ’s. 750
+[p.77]
+(Refer Slide Time: 27:34)
+
+Let us proceed with that. So, let us make a coordinate transformation, so that we can, we try to remove the translation part from this expression. So, we perform this coordinate transformation and we can see that, with this coordinate transformation, the translation part could be removed because only rotation, with the relationships with rotation and the translation has been established in terms of beam in the estimation. So, the translation can be that parameters could be removed. So, now the minimization problem becomes that, you have to compute R with that constraint of R RT should be equal to identity matrix, so that now this function gets minimized. Now, there is a particular type of solutions, so if I expand it is in this form, and you have to minimize this particular know part; this is once again it is the matrix algebra just to show you that this expression can be written as ) ˆ ( ) ˆ ( i i i i c c T c c m R d m R d   . So, if I perform the corresponding multiplications like simple and linear algebra like simple algebra, but it is all applicable with matrix algebra also because you can check with a dimensional matching and because of linear operations of matrix multiplications and additions. So, you will find that finally, it reduces to the expression what has been shown here. 751
+[p.78]
+(Refer Slide Time: 29:24)
+
+So, you can see here actually if you are going to minimize this thing which means, I need to maximize this particular part. So, what we are doing, we need to maximize this part( i i c T c m R d ˆ 2 ); and then the there is a solutions for that we have to maximize trace of H Rˆ I am not going to know discuss the how we have derived particular these relationships; but this is the solution, so when with the constraint optimization what I have mentioned here. So, the definition of H is that, H is given in this form   N i T c c i id m H 1 . So, it is basically covariance between the corresponding coordinates translated by their means. So, we call it also a correlation matrix. And one of the solutions for maximizing this is, this is a solution that H can be decomposed using singular value decomposition T UDV H  and then R transpose R sorry T VU R  ˆ , you can check this is an orthonormal matrix. So, this is a solutions and then T is obtained as this. But the fact is that, this will give you a particular solutions for a same point, but there would be error fit as we have seen, but we can perform iterative fitting of these points by performing we can refine these solutions, because there could be outliers in the corresponding points and we can remove those outliersby an iterative process. 752
+[p.79]
+(Refer Slide Time: 31:03)
+
+So, there is a technique which is called iterative closest point registration algorithm, in this technique it has considered to removal of those outliers in this way. So, what it does first? It computes initial registration parameters, like denoted as 0 R and 0T ; and then we perform the steps iteratively in this way that, apply transformation to the sourcing or point clouds, and compute the closest pairs between source and target. After applying transformations we can find out the closest pairs; that means, for every point in the source point what is it is nearest neighbor and every point in the trans-parity what is the nearest neighbor. If they correspond to each other then we take those points, and in that way we can get a new data set and use those data sets. So, we can again re- compute registration parameters by applying the same technique what I discussed; and go on doing these things till we get a good registration, till it converges. 753
+[p.80]
+(Refer Slide Time: 32:02)
+
+So, this is one example of a registration result and this has been taken from a paper by Besl and McKay which has been published in 1992. So, this result I mention. So far these are the few techniques of processing of range images we have discussed.
+
+(Refer Slide Time: 32:27)
+
+So, let me conclude this topic with the summary of different things what we discussed under this topic of range image analysis; one is that we have discussed about different types of range sensors. So, we considered stereo imaging. 754
+[p.81] Then time of flight based sensors, triangulation through scanning beams, then structured light. Then, we have considered use of differential geometry in extracting local features of a pixel or a point in a range image. These are the features which we could extract like, surface normal, principal curvature, Gaussian curvature, mean curvature; signs of curvature characterize the local topology of the surface. We discussed also about characterization of step and roof edges. And step edge is could be detected by detecting zero crossings of Gaussian curvatures and roof edge could be detected by considering the Extrema of dominant curvature along its direction. And further if the multi scale tracking of edge points can refine the results.
+
+(Refer Slide Time: 33:42)
+
+We have also discussed about segmentation of range images into planar patches. We discussed a greedy algorithm by fitting local surface patches and merging them; and then a morphological processing based approach by computing neighborhood planes and local orientation. And the last topic of this particular, last topic of this range image analysis it is registration of range images. So, we discussed how rigid body registration parameters could be computed by a technique, there you can use least square error estimation for rotation and translation transformation matrices, it is a constrained optimization problem. And then we can perform iterative refinement from initial estimates by computing 755
+[p.82] nearest neighboring pairs in two images. So, these are the things we have covered in this particular topic. Thank you very much for your listening. 756

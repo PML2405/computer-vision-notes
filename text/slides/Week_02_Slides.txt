@@ -1,0 +1,974 @@
+# Week 2 — lecture slides
+(source: NPTEL, 83 slides; text layer, plus OCR on 25 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Projective Geometry-I
+Week-02-L5
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+
+### Slide 2
+Image formation in optical
+camera
+P à p : Projection
+Center of projection
+Projection plane
+
+### Slide 3
+Real Space and Projective
+Space (2D)
+p(x,y)
+p(x,y,1)
+p(kx,ky,k)
+Homogeneous
+Coordinate system
+p(x,y)              p(kx,ky,k)
+
+### Slide 4 (OCR)
+Homogeneous Representation
+, kx
+A point in R2: x = iM <=» Apoint in P?: X = by
+il
+Singular point in the projective space.
+
+### Slide 5 (OCR)
+Homogeneous Representation
+25
+In R27? <S InP: X= Ey
+25
+a @ aa _ 5
+The point.in.R2: x = | = A
+In mel <> In R2: ?
+Does not belong to P2?.
+
+### Slide 6
+Homogeneous representation
+of a line in a plane
+p(x,y)
+l(a/c,b/c,1)
+l(ka,kb,kc)
+ax+by+c=0
+Point containment in P2
+A point in P2
+A line in P2
+
+### Slide 7
+Points and lines in P2
+x1(x1,y1)
+l:ax+by+c=0
+x2(x2,y2)
+p(x,y)
+l1
+l2
+Exactly one line through two points.
+Exactly one point at intersection of two lines.
+
+### Slide 8
+Examples
+1. Compute the line passing through (3,5) and (5,0) in
+a plane.
+2. Compute the point of intersection of the lines:
+5x-2y+4=0 and 6x-7y-3=0.
+
+### Slide 9
+Duality
+Duality principle:
+To any theorem of 2-dimensional projective geometry
+there corresponds a dual theorem, which may be
+derived by interchanging the role of points and lines
+in the original theorem.
+
+### Slide 10
+Projective Geometry- Part II
+Week 02 Lecture # 6
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+
+### Slide 11 (OCR)
+} Points and lines in a plane
+p € P* L € P* ?ikakb,ke)
+ax+by+c=0 i
+Ne f Ualebie1)
+” | [x y 1] > =0 +
+Z : c
+oF Xx c ! a
+x'1=0 ——-  I'x=0
+x =Ix]' + | =xx:x'
+
+### Slide 12
+Intersection of parallel lines
+X(x,y,1)
+l1:ax+by+c1=0
+l2:ax+by+c2=0
+(b, -a, 0)
+Ideal Point
+
+### Slide 13
+Meaning of an ideal point
+(b, -a, 0)
+A direction !
+Intersection point
+
+### Slide 14
+Ideal points
+Ideal points: Points on the X-Y plane or principal plane
+parallel to projection plane.
+For canonical coordinate
+system, they are of the form:
+An ideal point denotes a direction toward infinity!
+
+### Slide 15 (OCR)
+; I(ka,kb,kc)
+r Line at infinity ;
+i I(alc,b/c,1)
+0 i
+Db}
+Any ideal point 0 cw |
+0} a
+Line at infinity (/,,): Line containing every ideal point.
+In canonical system, it is 0 ;
+
+### Slide 16 (OCR)
+; p model for the projective plane
+; l(ka,kb,kc)
+Ax, H
+A plane passing i
+ideal _, through the origin. { Uale,ble)
+point a H
+7 “oe - %
+4 oO 1 Xj :
+LZ x JS b H
+vA <A straight line passing ;
+ia J through the origin. Cy /
+1 log ! a
+P?= R3- [| = R? Ul,
+From Hartley and Zisserman, “Multiple view geometry ir-somputer vision”, Cambridge Univ. Press.
+(2000)
+
+### Slide 17
+Projection of parallel lines
+from any arbitrary plane
+(b, -a, 0)
+Ideal Plane
+Vanishing Point
+Canonical projection plane
+(CPP)
+
+### Slide 18
+Vanishing points
+Vanishing Points
+Vanishing
+Line
+Vanishing Points
+corresponding to parallel
+lines of a plane lie on a
+line, called vanishing line.
+
+### Slide 19
+A real life example
+Vanishing points
+
+### Slide 20
+A journey toward infinity ….
+
+### Slide 21 (OCR)
+in Conics in P?
+= Curves described by 2" degree equation in the
+plane.
+ax? +bxy #cy? +dxt+tey+f=0
+» A point in homogeneous coordinate: (x ),x,,x3)
+D> (x /X3 X/x3)
+2 2
+x4 x1 x2 x2 x4 x2 _
+=> ax? + bx x2 + 0x2 + dx 1x3 + exX2x3 + fx2 =0
+
+### Slide 22 (OCR)
+peonics in P2
+ax? + bx1X> + cx? + dx1x3 + exX>xX3 + fx? = 0
+= X'’CX =0
+Where
+bd
+“2 2
+b e
+CH|—- =
+2° 2
+d e
+2 2 J
+Conics identified by C with 5 d.o.f. (a:b:c:d:e-f)
+
+### Slide 23 (OCR)
+rn Five points define a conic
+For each point the conic passes through
+ax? + bx,y¥, Hcy? + dx, +ey, + f =0
+> Oxy. r7 xr f)e=0
+e=(a,b,c,d,e, f)'
+
+### Slide 24 (OCR)
+in Five points define a conic
+For each point the conic passes through
+ax? + bx: pA cy; + dx, +ey,+ f =0
+Stacking constraints yields
+vo oxy wx veal ° Kank deficient C |
+x XV y3 XV, 1 egenerate conic
+ex 2 5 le=0 two lines (of rank 2)
+; Ws , ¥3 a repeated line (of rank 1).
+Xy XyVe Ve Xe Vy 1
+XS XsVs Vs Xs Ys |
+
+### Slide 25
+Tangent lines to conics
+The line l tangent to C at point x on C
+is given by l=Cx
+From Hartley and Zisserman, “Multiple view geometry in computer
+vision”, Cambridge Univ. Press (2000)
+
+### Slide 26 (OCR)
+4 Dual conics
+ine tangent to the conic C satisfies 1'C'1=0
+As Cis
+1 = Cx CY x = Cl symmetric,
+_ T x —1
+xTCx = 0 ©> (C741) C(C“) = 0 f
+> (ec) cc“ = 0 & ITEM = 0
+Dual conics = line conics = conic envelopes
+From Hartley and Zisserman, “Multiple view geometry in computer
+vision”, Cambridge Univ. Press (2000)
+
+### Slide 27
+Degenerate Conics
+n Rank of C <3
+n Rank 2 à Two lines / points
+n Rank 1 à One repeated lines / points
+n Degenerate point conic:
+C=l.mT+m.lT
+rank 2,  if l <> m
+n Degenerate dual line conic:
+C*=x.yT+y.xT
+rank 2, if x <> y
+
+### Slide 28
+Summary
+n A point in a 2-D projective space represents a ray
+passing through origin of an implicit 3D space.
+n Requires additional dimension for representation.
+n Homogeneous Coordinate Representation
+n Straight lines in  R2 are elements of a 2D projective
+space.
+n Points and lines hold duality theorem.
+n Conics are represented by a 3x3 symmetric matrix.
+n Every conic has a dual conic or line conic as an envelop
+of its tangents.
+xTl=0,  and lTx=0
+x=l x l’, and l=x x x’
+
+### Slide 29
+Projective Transformation
+Week-02 Lecture # 7
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+
+### Slide 30
+Projective transformation
+n h: P2 à P2
+n Invertible
+n Collinearity of every three points to be
+preserved, i.e. three points x1,x2,x3 lie on the
+same line if and only if h(x1),h(x2),h(x3) do.
+
+### Slide 31
+An example: change of
+coordinate convention
+Origin of P2
+fixed.
+Rotation of axes.
+Change of scale.
+Translation of
+origin in planar
+coordinate system.
+Use of Affine
+coordinate system
+in plane.
+From Hartley and Zisserman, “Multiple view geometry in computer
+vision”, Cambridge Univ. Press (2000)
+
+### Slide 32 (OCR)
+Shift of origin of P2
+xe \ a AP S.
+de \ - ~ ie
+a / " rox Y a
+VW < planar surface ; / Z x A
+\ / / a Lo -
+\ MN / \ So
+image | 1 wd \ Lo
+\ / 7 x a \Z
+rN ° image 2
+ct>
+From Hartley and Zisserman, “Multiple view geometry in computer
+vision”, Cambridge Univ. Press (2000)
+
+### Slide 33 (OCR)
+‘ Form of h
+= Only one form possible.
+= It is linear and invertible.
+x", hint, hb; x,
+"|=|h, “h,, h
+“ 21 22 23 || X2 8DOF
+X 3 hy, Nyy hy; | x3
+X’ = HX = kKHX
+Also called homography and H is the homography matrix.
+
+### Slide 34
+Hx preserves collinearity.
+n Let l be a line in P2.
+n A point x on l satisfies
+lTx=0
+à lTH-1Hx=0
+à (H-Tl)Tx=0
+n H-Tl is the transformed line of l.
+Harder to show that H is the only form of homography.
+
+### Slide 35
+Implications
+n If there is a homography, there exists a
+unique H, which is a 3x3 invertible
+matrix.
+n Functional form known, so easier to
+estimate.
+n H and kH are equivalent, where k is a
+scalar constant.
+n Number of unknowns in H = 8.
+
+### Slide 36
+Estimation of H
+n Given point correspondences (xi , xi’)
+estimate H such that xi’=Hxi.
+n There are 8 unknowns.
+n x’=Hx à Two independent equations.
+n Minimum 4 point correspondences
+needed.
+33
+32
+31
+13
+12
+11
+33
+32
+31
+23
+22
+21
+
+### Slide 37
+Removing projective distortion
+33
+32
+31
+13
+12
+11
+33
+32
+31
+23
+22
+21
+13
+12
+11
+33
+32
+31
+23
+22
+21
+33
+32
+31
+1. Select four points
+in a plane with
+known coordinates.
+2. Form equations.
+3. Setting h33 at 1
+solve them.
+(linear in hij)
+Remark: no calibration at all necessary.
+Does not work if h33=0 in H.
+
+### Slide 38
+Form equations
+-51 h11 -791 h12 –h13 + 51h31            + 791h32
+-51 h21 -791 h22 –h23 + 45900 h31 + 711900 h32 = -900
+-63 h11 -143 h12 –h13 + 63h31
++ 43 h32            = -1
+-63 h21 -143 h22 –h23 + 63 h31
++143 h32
+-444h11 -211h12 –h13 + 222444 h31+ 105711h32 = -501
+-444h21 -211 h22 –h23 - 444 h31
++ 211 h32
+-426h11-719 h12 –h13 + 213426 h31+ 360219 h32 = -501
+-426h21 -719 h22 –h23 + 383400 h31+ 647100 h32 = -900
+13
+12
+11
+33
+32
+31
+23
+22
+21
+33
+32
+31
+(51,791) à(1, 900)
+(63, 143) à (1,1)
+(444 ,211) à (501,1)
+(426, 719) à (501,900)
+
+### Slide 39 (OCR)
+rn In matrix form
+51 -791 -1 0 0 0 51 791 [11 4
+0 0 0 -51 -791 wy 45900° 711900 ||%2} |~900
+—63 -143 -1 0 0 OW 63 143 hy3 —1
+0 0 O -63 143° 41 63 143 |]ho|_} -1
+-444 -211 -1 0 oo O% 222444 105711||h22| |—501
+0 0 0 444 -244 -1 444 211 ||h3 —1
+-426 -719 -1 0 O% 0 213426 360219]|p,,} |—501
+0 0 0 426. =719 -1 383400 647100/|p,,| '-900
+Solve by matrix inversion. h3;=1
+0.9791 0.0181 -63.3104
+H = }]-0.2303 1.2874  -168.6295
+-0.0005  -0.0001 1.0000
+
+### Slide 40 (OCR)
+Solve equations
+0.9791 0.0181 -63.3104
+H= f0230 1.2874 8.6235
+-0.0005 0.0001 1.0000
+
+### Slide 41 (OCR)
+‘ [* ws. 17
+“4 ; adel ye Sa Ht ag ew aepe SRA wee ves fa Rte
+= ~ { ie) ce en & eqs fem & fe wie ts cle | fees od |
+we | , saan wece ate ste (£7 47350) ake cape El
+~, Bee fier Panera ae fe Rene errs ae |
+147 } BR ache Jor 4 oy Gr *o 1 He, cinges “ey, sine |
+anit er wis i sok & quer oar 4 ga fen or eee eet ne
+ded a ] i oret diee on need te pt thie se He
+Be Ue ae ai fg et rs | ore el ot eel ner Rivers & 1
+Behan RNS ed Rae ge ) A aes oad (iy 5d et) sone
+‘ = : ‘ ics
+Feat tend iene wrote de song aE ein ee Sepe fet bees os
+BOS Br ca tie gee Rt se Bt £1 ete: salts abs oe As E | wei bee
+| Zutemen ond (ty sdome) tie ot aaa ae Be gees fom ae dt Oat et a
+ww =
+228 weber ite wa me == sonal & ae Ges wal or fem om get
+| ee eee eee . .
+» CAVE NO. 17
+jew 1
+z elt vn at ] This is one of the finest nd magnificent Mahayana
+H) ssonssteris, scum tor hs apy of Ba gust cons 3 < monasteries, known for its display of the greatest number ol
+Soaks. A rat echo, ymca ee Jatakas. A Brahm inscription, on the wall ofthe courtyard records
+the Oricon (78800 2B) Ts mone Pewter 9 the excavation of this cave by a feudatory prince under Vekateke
+Zocor care om 3 le Pa OS pe King Harisena (478 - 500 A. 0.) The monastery is alto calind the
+een coumoer, capt  pee zodiac cave from a circular plece of gigantic wheel, nino painted on
+frag image of ord Buse, pet presered potas bs verandah’s wall. It consists a verandah, hypostyter hail, sanctum
+ee ee cones Se PA mee Pet Sd “4 with an antechamber, chapels and cells, The sanctum houses a
+is age. Twenty SET, Goons Ms peste 8 hhuge Image of Lord Buddha, flanked by Godhisattves and flying
+ey e008. om a Sr tel figures hovering above them.
+Zz 4 pales te a = aS ‘The cave consists some of the well-preserved paintings of the
+ee? * ee Ere ee ‘any carving, support the hall. The doortrame is lavishly carved and
+Ee d <o BAe ae painted. The lintel of te main door portrays seven Wort! Buckibas
+SECS RR SepeBONS SoN EW © bcbg Srey a, Ags Oe.
+
+### Slide 42 (OCR)
+Direct Linear Transformation
+ri (DLT)
+r hx,
+ca(syiyyt  %i = HY, Hix, =| h2"x,
+pit xX, x Hx, =(0) h? x,
+H = |p2"
+yih?'x, — wih?’ x,
+x’ x Hx, = wh!'x, —x'h?' x, =0
+x'h?'x, —y'h!'x,
+Redundant: x,7(1)+y;- 23)
+
+### Slide 43 (OCR)
+Direct Linear Transformation
+(DLT)
+0" -wx!  ylx! (hl
+w'x} 0" ax! Wh? |=0
+yx! xix! 0" {bh
+hy A = OT =wiixt ix |
+A,h — 0 where to w' xP of —x' xf
+Dimension of A; : 2 x 9.
+
+### Slide 44 (OCR)
+Direct Linear Transformation
+r (DLT): Non-homogeneous Equations
+=» Solving for H_ by setting 35=1. h= "|
+0 0 0 -x,w', -yiw ie swiw'e “i Vi | ¢ _ [-wi’i
+Lea's yw’, wiw'i 0 | ’ 0.0 —Xx;Xx'; oe | 7 ee |
+Ajh = b; . .
+Ah —b Dimension of A: 2nx8
+Minimize ||Ah— b|| “ne 8 «he Bx
+. . ~ T —1aT Imension O : OX
+solution: h = (ATA)~*ATb Dimension of b: 2nx1
+Caution: If 43,=0, no multiplication scale exists, and
+no solution obtained.
+
+### Slide 45
+Direct Linear Transformation
+(DLT): Homogeneous Equations
+n Solving for H:
+Ah =
+Dimension of A: 2nx9
+Rank: 8
+Dimension of h: 9x1
+Dimension of Ah: 2nx1
+such that
+Solution: Unit eigen vector of smallest eigen value of ATA.
+
+### Slide 46
+Other error criteria
+n Algebraic error: Error term in DLT.
+n Geometric error:
+n Geometric error with reprojection:
+n Use of nonlinear iterative optimization
+techniques such as Newton iteration,
+Levenberg-Marquardt (LM) method, etc.
+Euclidean
+distance
+
+### Slide 47
+Transformation invariance and
+normalization
+n Problem: To estimate H given a set of (xi , xi’) .
+n Consider, yi=Txi and y’i=T’xi’ for known T and T’,
+which are invertible.
+n Now estimate homography G from (yi ,  y’i).
+n Can you estimate H from G?
+Caution: For DLT it is not
+equivalent.
+As the constraint ||g||=1 is not
+equivalent to ||h||=1.
+
+### Slide 48
+Robust computation through
+Normalization of data
+n Transform the point set so that its
+center becomes origin (in the plane)
+and avg. distance from it is      .
+n Apply DLT on transformed point.
+n Recover homography from the
+homography of transformed point sets.
+
+### Slide 49
+Summary
+n A projective transformation, invertible and
+preserving collinearity,  is always in a linear form.
+n x’=Hx
+n l’=H-Tl
+n A computational problem: estimation of
+homography given a set of point
+correspondences.
+n Minimum 4 point correspondences needed.
+n Direct linear transformation (using LSE).
+n Use of linear transformation of points to make the
+computation robust.
+
+### Slide 50
+Homography: Properties
+Week 02 Lectures 8-10
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+
+### Slide 51
+Projective transformation
+n h: P2 à P2.
+n Invertible.
+n Collinearity of every three points to be
+preserved, i.e. three points x1,x2,x3 lie
+on the same line if and only if
+h(x1),h(x2),h(x3) do.
+n Only in the form of non-singular 3x3
+matrix.
+
+### Slide 52
+P2àP2
+H-T
+Point: x’=Hx
+Line: l’=H-Tl
+
+### Slide 53
+Vanishing point and line
+ax+by+c=0
+(b, -a, 0)H
+Vanishing line=H-Tl⍺=H-T (0, 0,1)T
+Vanishing point: vl=H (b, -a, 0)T
+
+### Slide 54
+Point and line transformation
+n Point transformation:
+n x’=Hx
+n Line transformation:
+n l’=H-Tl
+n Vanishing point for lines parallel to l=(a,b,c)T:
+n vl=H (b, -a, 0)T
+n Vanishing line:
+n lH=H-Tl⍺
+=H-T (0, 0,1)T
+
+### Slide 55
+Examples
+n Consider the following homography H
+between two projective spaces.
+Compute the transformation of the line formed by
+two points (2,4,2) and (6,9,3) in P2.
+
+### Slide 56
+Method-I
+n Compute transformed points of (2,4,2) and (6,9,3).
+n Take their cross product to compute the
+transformed line.
+11
+12
+16
+
+### Slide 57
+Method-I
+n Take their cross product to compute the
+transformed line.
+11
+12
+16
+11
+12
+16
+−49
+52
+27
+
+### Slide 58
+Method-II
+The line between the points l:
+(1,2,1) x (2,3,1)à (-1,1-1)
+Transformed line: l’=H-Tl
+𝐻/0 = 1
+95
+43
+−34
+−14
+18
+−15
+Compute the line and transform it.
+
+### Slide 59
+Example: Vanishing line
+n Compute the vanishing line in the
+transformed space.
+Transformed line: l’v=H-T l ⍺
+𝐻/2𝑙∝= 1
+95
+43
+−34
+−15
+−14
+18
+−15
+
+### Slide 60
+Projective linear group
+H1
+H2
+H=H1H2
+A cascade of transformation can be replaced by a
+single transformation.
+
+### Slide 61
+Different compositions
+H1
+H2
+H=H1H2H3
+A series of transformation could be performed in
+different composition.
+H3
+H=H1(H2H3)=(H1H2)H3
+
+### Slide 62
+Subgroups and  hierarchy
+From Hartley and Zisserman, “Multiple view geometry in computer vision”,
+Cambridge Univ. Press (2000)
+Projective linear group
+Affine group (last row (0,0,1))
+Euclidean group (upper left 2x2 orthogonal)
+Oriented Euclidean group (upper left 2x2 det 1)
+33
+32
+31
+23
+22
+21
+13
+12
+11
+
+### Slide 63
+Projective Group
+33
+32
+31
+23
+22
+21
+13
+12
+11
+dof=8: 2 scale, 2 rotation, 2
+translation, 2 line at infinity)
+Concurrency, collinearity,  order of contacts, cross
+ratio (ratio of ratio).
+Line at infinity becomes
+finite, allows to  observe
+vanishing points, horizon.
+
+### Slide 64
+Cross Ratio
+X1
+X2
+X3
+X4
+𝑋0𝑋9
+
+### Slide 65 (OCR)
+a, A, Ff, |
+Ay, Ay 1, S$
+n Affine group [9° © 1
+_y A t
+xX = xX = xX
+“10 4
+O, \ dof=6
+rotation deformation 5 A, 0
+A=R(0)R(-¢)DR(¢) £0 4,
+From Hartley and Zisserman, “Multiple view geometry in computer vision”,
+Cambridge Univ. Press (2000)
+
+### Slide 66
+Affine group
+22
+21
+12
+11
+dof=6
+Parallelism, ratio of areas, ratio of lengths on parallel
+lines (e.g midpoints), linear combinations of vectors
+(centroids). The line at infinity l∞.
+H A
+Line at infinity stays at infinity,
+but points move along line.
+
+### Slide 67 (OCR)
+Sh, Shy ft, | |
+STy, Sy 6,
+t Similarity Group |o 0 1] GO
+, sR t dof=4 (1 scale,
+Xx=H,x=| , XY 1 rotation, 2
+r 0 1 translation)
+R R=I
+| | scos? —ssinO t¢, | 1 1
+I=|7 J=|-2 VY=H,I=|ssin@ scosO t,] i |=se"| i |=1
+fe) a) 0 0 10 0
+Ratios of lengths, angles. The circular points I,J.
+
+### Slide 68 (OCR)
+"i tN %&
+: Ty 4 [| 4
+ip !sometry eo
+x' Ecos@ —sind t,|(x e=4]
+y'|=|eésm@  cosé «ty|_y
+1 0 0 Vy
+Orientation preserving: ¢ = |
+Orientation reversing: & = —|
+dof=3 (1 rotation, 2 translation)
+Invariants: length, angle, area
+
+### Slide 69
+Decomposition of projective
+transformations
+tv
+= RK
+det
+Upper-triangular
+Decomposition unique (if chosen s>0)
+QR decomposition:
+Any square matrix decomposed as a
+product of an orthogonal matrix (Q) and
+an upper triangular matrix (R)
+
+### Slide 70 (OCR)
+Decomposition of projective
+t transformations
+f 6 we i '
+H=H,H,H, = T T T —~| oT
+) 1 {0 lives» vVoeoé€#W
+A=sRK+tv\ detK=1 °7°
+Example: 5) 797 0.886" 1.0
+H=/2.707 8.242 2.0
+1.0 2.0 1.0
+2cos45° —2sin45° 10/05 1 O1 0 0
+H=| 2sin45° 2cos45° 2.0] 0 2 O10 1 O
+| 0 0 | 0 i 2
+
+### Slide 71
+Affine properties from images
+projection
+rectification
+For any affine HA.
+From Hartley and Zisserman, “Multiple view geometry
+in computer vision”, Cambridge Univ. Press (2000)
+
+### Slide 72
+Affine rectification
+v1
+v2
+l1
+l2
+l4
+l3
+From Hartley and Zisserman, “Multiple view geometry in computer
+vision”, Cambridge Univ. Press (2000)
+
+### Slide 73
+An example
+(104,69,1) X  (380, 71,1)
+l1=(-2, 276, -18836)
+l2=(-2, 244 , -54900)
+(122,226,1) x (366,228,1)
+(390,250,1) x  (406,53,1)
+(88,254,1) x  (62,49,1)
+l3=(205,-26,-11436)
+l4=(197,16,-80830)
+v1=l1 x l2 =(-10556416, -72128, 64)
+v2=l3 x l4= (2284556,14317258,8402)
+Vanishing Line: lv= 1.0e+14 *  (0,0.0009, -1.5097)
+
+### Slide 74
+An example
+Vanishing Line: lv= 1.0e+14 *  (0,0.0009, -1.5097)
+Scaled lv= (0, -0.0006,1)
+−.0006
+Y=104/6
+
+### Slide 75
+Conics in P2
+XTCX=0
+Conics identified by C
+with 5 d.o.f. (a:b:c:d:e:f)
+A line tangent to the conic C satisfies
+Dual conic
+C-1
+
+### Slide 76
+Transformation of conics
+under homography H
+n X’=HX
+n XTCX=0
+à (H-1X’)TC(H-1X’)=0
+à X’T H-TCH-1 X’=0
+à X’T C’ X’=0
+where transformed conics C’= H-TCH-1
+n C’*=C’-1=(H-TCH-1)-1=HC-1HT
+A conic remains
+a conic under
+homography.
+
+### Slide 77 (OCR)
+t The circular points
+1 1 scos? —ssin@ t¢, |( 1 1
+T=|7|} J=|-7 I'=H,I=/ssinOy scosO t, | i |=se"| i =I
+0) 0) 0 0 1 (0 0
+The circular points-I, J are fixed points
+under the projective transformation H iff H is
+a similarity. They are also on I,.
+Every circle intersects |, at I and J.
+Circle: x? + x4 + dx,x3 + ex2x3 + fxs =0
+Setting x;=0, x? + x4=0. (I and J satisfies it)
+
+### Slide 78 (OCR)
+Conic dual to the circular
+t points (C,,")
+a C,=I1.J'+J.I' (line conic)
+1 O O
+a C= [ 1 ,
+0 0 0
+» As I and J.arefixed under similarity C,” is
+also fixed, i.e, C,"=H, C,"H™= C,"
+a C, is fixed iff H is a similarity.
+a D.o.f. of transformed C,” is 4 and det. =0.
+a |, is the NULL vector of C,”.
+
+### Slide 79 (OCR)
+Measurement of angle under
+| homography
+Lm, + lm,
+I=(1,,1,,1 cos(6)°= ————*__
+A (G+ Bm? + m3)
+Zo, Invariant under homography
+T rx
+m=(m,,m2,M3) cos(@) = l Com
+[CIT r* T rx
+Once C,” is obtained aus Cool) (m Ccom)
+Euclidean angle could ©» =HCoH® and U=H™'l
+be recovered. UT C#m
+—jJIpy-1 * pT L7-T
+If and m orthogonal, UH HCH’ H™’m
+['C.*m=0. =I'C.,m
+
+### Slide 80
+Estimation of C⍺
+n Use the property of orthogonal lines.
+n lTC⍺*’m=0
+n Minimum 5 such orthogonal pairs needed.
+n A typical equation
+n Where C represented by (a,b,c,d,e,f)T.
+n Apply direct linear transform (LSE method) to solve
+a set of homogeneous equations to get C.
+n Make it (C⍺
+*’) a rank 2 matrix using SVD on C.
+𝑙0𝑚0
+2 𝑙0𝑚9 + 𝑙9𝑚0
+𝑙9𝑚9
+2 𝑙0𝑚< + 𝑙<𝑚0
+2 𝑙9𝑚< + 𝑙<𝑚9
+
+### Slide 81
+Recovery of metric properties
+n Compute H from C⍺
+*’ upto similarity.
+n Matrix decomposition method
+n Apply H-1 to the image.
+𝐶∝∗K = 𝐻𝐶∝∗𝐻2
+
+### Slide 82
+Summary
+n Various transformation under homography
+n x’=Hx
+l’=H-T l
+C’= H-TCH-1
+n C’*=C’-1=HC-1HT
+n Projective linear group, its subgroup and hierarchy
+n Projective linear group (8 D.O.F)
+n Affine group (6 D.O.F)
+n Euclidean group (4 D.O.F.)
+n Oriented Euclidean group (3 D.O.F)
+
+### Slide 83
+Summary (contd.)
+n Conic dual to circular points (C⍺
+n Invariant under similarity transform.
+n l ⍺is the zero (NULL) vector.
+n Preserves cosine of angle of two lines under
+transformation
+n Use of homography
+n Affine rectification
+n Stratification (recovery of metric properties)

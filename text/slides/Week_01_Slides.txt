@@ -1,0 +1,896 @@
+# Week 1 — lecture slides
+(source: NPTEL, 67 slides; text layer, plus OCR on 24 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Fundamentals of Image
+Processing – Part I
+(Week-01, Lecture # 1)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+Indian Institute of Technology, Kharagpur
+
+### Slide 2 (OCR)
+How | ted |
+computer?
+lah!
+a. © Bs a
+re
+; wk
+= a a 1 1
+— || 4 = hh
+rent es * ht: 384
+iii e - a in e€lg 1.
+as he +
+t q a ome i
+™. 407 90 103'118 122 115 99 85 78 81°91 97 100/97
+en) =p 81 | 67 84 126 125 :111 96 | §
+> bier 7 idea
+= F i J4) / 0.102 :104:100'93 +84 72/69 |87 422 208 225 213/185,
+0.110 122°4414 111 108 103: 101:95 81 73 79 105 4190/2
+3.119 427 125 121 117 114.111 108 107 103,92 83 83 |:
+A 2D A f . t 3:423 427 122.121 121.119 1141131110
+rray O in egers 7 426 127 126.123 123 1
+
+### Slide 3
+Color images
+
+### Slide 4
+Image File
+width height # Comp.
+# bytes/pixel
+Header
+Stream of pixels
+100
+101
+88
+EOF
+Standard File Formats:
+TIFF, BMP, GIF, PGM, PPM, JPEG, DICOM,  ….
+
+### Slide 5
+Image formation in optical
+camera
+P à p : Projection
+E(P) à I(p) : Stimulation
+
+### Slide 6
+Rules of projection
+Center of
+projection
+Image plane
+Image points formed by intersection of the ray from a point P
+passing through the center of projection O with the image
+plane.
+Perspective
+projection
+
+### Slide 7
+Other imaging principle
+Image points  formed by intersection of parallel rays
+with the image plane.
+Parallel
+projection
+
+### Slide 8
+Other imaging principle
+Tx
+Rx
+Scan radially / translating Tx-Rx
+along a direction.
+
+### Slide 9
+What is an image?
+n Impression of the physical world.
+n Spatial distribution of a measurable
+quantity, encoding the geometry and
+material properties of objects.
+
+### Slide 10
+A few concepts and operations
+
+### Slide 11 (OCR)
+aetsre are x 10
+ee Yeris. — Siey Beal BITE wR cH catcES BRAS HEPA | 16
+Ae SIL AMTITS | ares arate why are aizates 0
+TART famia era RF caret a2 fF Bt4 Z5eH |
+Be AM CHT AIT W eerTH SMITE SAAT SGA
+seal catsica  atetfeat ata serge 4% 1 AEA | 14
+Gorm BIH ICA 91H | aifient Bea ein aces Bera
+we aif ict SIL ICH aT a4 228 Ine Gia BIG Cal |
+wartafe 2a aCe parietal Sica cela Sila ve
+we frettoa ore afr AaraITT weet BA ives | ~ 12
+‘zereths 24 a7a! after sara @fs Gara | x
+mE Tita BG Fz a BING aera Bifeal Ora CAE AMAA ( )
+Weel co eizt74 atari BA, al @ayl atae 10
+aieateas arena etal cals aatae aif ane ce
+aff os sara | ary (eal ota ire @faar ataa 1
+satfieetca feafea era fae rare wire ara ofA 4 | wet (aD)
+ital 1 aie 2H aifSal Ba oi4 to Sta BAT a 8
+8 aries ae FRaiora ara frzate af BS FeECA ETS. =)
+OAs aad aff | AB a 4H CIA form Ora FIC
+ata DUST aewa faa wie fan acu CAR CRA BATS | oO
+famtars ara @fA wars Bre Cam Sere ASS 6
+A STA HAA TEA ora frrzata af attra gata | (oD)
+aioe 3 sigata | era alfa sa of ‘ala ata? \ LL
+CATA CH CATA CA CNA TH COTA CH SrA caifsterntia cAlzstal aff | 4
+ala al afer aire a Wafaw 22m aE aalafs 0 LL
+ay Ha at aff cata 44 BGS BAH AltA HA GET |
+sferere ata 14 | act of& wis site +fAA H1aa
+A ata ata ala Sitar faa Gea ei ai 2
+at atta fag ata o arena BEA Ste BAR
+RS ABTA DIA aaa wr AR faiatton FORA ALF |
+atom ceria Sra | fom ofAdia Ya Stalea acy w Qa
+afean wa atemataca Atal gre Beufeal el Bae | alee), a
+oral Barer 404 apfanwre fea frratoca fire 0 — «42C«CF
+Gl CMT URED ACA TB | tel caf te a4 ater Cie! ] 0 3
+aifacar ott aml ora BHA A 48 de Off acd AE SAR
+fagata S1fA wire @Ahacgata | rd AF fea “ays | 50 100 150 200 250
+xy teal As ae Cea TIeTTA Farcenet ara AUT EO |
+ara aff eels ‘frrafatiaa | faratbone FRR Sel Are HAR rl al eSS X
+| acre TEeVIes Beis lb HAT BIG Ha RO
+wreta erates axis fer eA SrA Fae Bare fataw atfarxs |
+ameotla 1re Tze BA aq BAT GF ASS 48ST
+Normalized Histogram > p(x)
+
+### Slide 12
+Binarization (Thresholding)
+n Separation of foreground from
+background.
+n Foreground: Dark pixels (text)
+n Background: Bright pixels (white region)
+n Pixels in a binarized image set to one of
+the two values (e.g. 255 or 0).
+n 255 for background.
+n 0 for foreground.
+
+### Slide 13
+Binarization (Thresholding)
+n A simple algorithm
+n Choose a threshold value T.
+n A pixel greater than T is set to 255
+(background), otherwise to 0 (foreground).
+
+### Slide 14 (OCR)
+= 3 x 10°
+arcane ae 0
+a “Tio ia) 50 100 150, 200 250
+aerate are ata ae
+cae atoics «eter wiral Re TRI HAR caetrotS sie HAA | 5 Gee afdetiow. — -etem-attal atee —wtel aR coTOEE BEG AIA |
+Bw SIR MMTAITS | are arate BFR ace ITAA H & He SICH UTAITS | wes errata AR are TATE eS”
+waa famed ara rR atl a2 fa a Z9Ba q HTT fawrat ete OR RH Be BFR aI TERA | 2
+ae ait CoB RtCW wrrcma SrmsIC BAR GA y qa oie ae erect ART RGA
+wrecal cgi | ateifeat aca eS AR ci eH A! P seal cetera ater aia ere AIR oH eM Ca |
+care ah ICAI IEF | after! Bf 1a area Barca 0 i care EH tea IC | anifient Bim ere ace Borah
+cme aa aie ITH SIAL are aq BB08 INS WIA BS Cea | RE aR tet WIC ICA Ate. Bq BETS HWS SIT BS CoML |
+Fartate BE ATH paspiara wie cata wif v Ferrate Ra AT 9 - patois tea cater etfs
+as faetoa orf eafins ates aaa wFH cima | a a Ou 5 we fietor fe afee tatetce wees ae
+ztwrat 24 a4 | aifiren wana @Fa yaa | \ . ’ ‘aerate a4 sca! aifient aera ft Gara | \ .
+HE RICA BT BE a BIG wwrag BIfGal ST CAF AMMA | RE ATCA BT Ea OTS sara UTfBRl wT CAR ABH | .
+WES cae atztrH elarin Sia vee] @fayi ata Wa coz aiztea arsed Simao Sal wae +
+sromtews seen teh ene aatae tifa Soe au te mM rome aren tel cohen aa
+aff ae afiyara | aap fval old 97s Sia ataa 9 aff ae shaca . are (al ota size whim ater
+weatfigctera feafen ora fees aeons wir ora BA 4 | 7 wsarfierca |. fenfen aca Fee ars wiea Be AR AFF
+Bical aI BAH eifGel aBa ia ao BIA BAT pa = Ica SY aT RCA aifeal Ra Sta tot Sta eA “ xe
+oe water ee faeisra ort frzary ala afe egert re OR ETT ae Fetter wea fray Bh ae agen RT
+rae ata aff | FF ae 474 IA fom IA A IS 4 wae tae AFH | GE ay AH HLA fe OIA
+ata bua aewa fain ree fax BeH CAE CRA BAATW | ata BU wewa fey ree fen men CARA BAS
+fate ara #f% 1 ators 28re Cea Sara ASS 1 ‘ Faatacn ace FF 0 arent BRoe Cam BeCI SSH
+HH FIN Aaa MEA ora firzate BF ails Fata | m . ? a SIA aacd aig | eta finzata ‘aha pata | .
+Bred BEA STGATA pera aaa 7 ofA Sala ara? \ O e fa tC | O a BIT SH SPAT i pacer atin 7 BFR ‘ata ata ee” \
+CTA HATA OA TA CIA CH Sra cmifstersmcta calzstal ofA | . CAH CAT, CH TA CT CH Sea catformata colestet AFF | .
+ata at after atte a Bags BRA sae calaft 1 ora at afer cits Bahn eae ora eaten
+a Fa a aft cata ta Ase BA AIT SIH GEA J a9 daa aft cata wa ofan BAP ATC IT BRAT |
+aferere ala aa | aca BAG wid ice FAA Hla W afQrwre aH Aa ace ofS Oia ICR BAHT MATH
+HE ata ara ala ata FAR geaIa wt cate YD HH TA ATH HT Sitar FRfae wea ot cra
+at athe faxy ata a aetna EAI Hivta BTM W at athe fay ota wrens YEO Hotere
+aS CITA gas aaa ora AR fasten fas ACH I 6 CRRTH Bae AH wa AE Fatton fSaaa ACH
+wife cotcta Bra | foa aida ye STalya ACF aif cetera Sta | . fon shai Te Stalen aC 1
+afer we ate ett atat 7 Berfyal Sh feaga deeb gieatn we ate tal ys Benfoat wf feta =” Oley
+oral ziatera ara a ‘pfanere fa frtioca farmeviel j orl Beater Bea afirwce fea faetocs fcr 0 :
+ota aces ae) ATH Fat | otal aft aust Af ae Ia, “ Or MCAT URS ICH FTE | rel CAA yr AFH AEA CT
+wifes atte stat erra Bria ag 46 EH BIC5 AE GRA atficors stip stmt wert Bota te de Sf BE OE PRT :
+fagara 41 wicz @Aagate | word FF FeATA MTL | fagatn St Sieg ergata | era CHE fas TANT | .
+ay teal Als gar Cea SILTTA Fame BLAH AUGAFIOA aR Cent Ay fee a VATA FACE SAA ALTA TOA | 3
+ara aR meta FARRAR | Sabon aefaal ytree art | ara af amet fefafaea 1 faearres fat Behe HCA pate
+| aire sa oRae Bera a BA OF AE BITS a AR RL miftore wae laae Sta wien ot Ae ING a a EA a
+wrt eretca atte FRET SF | era aa Bitar faren arfergs | eter etetca cette oFaerto FH | era ae Bary fale atfrge
+ame daa TG TEE BAF aq SAH GF ASS SS I aah oc ge Bef a 44 FA TEST
+
+### Slide 15
+Bayesian Classification of
+foreground and background pixels
+Pixels belonging to two classes:
+w1: Foreground
+w2: Background
+Bayes’ theorem:
+Bayes’ classification rule:
+Assign x to w1 if p(w1|x) > p(w2|x)  else to w2.
+To check whether p(w1)p(x|w1) > p(w2) p(x|w2)
+p(x)
+p(x|w1)
+p(x|w2)
+Compute p(w1|x) and p(w2|x).
+
+### Slide 16
+Expectation-Maximization
+Algorithm
+Th
+1. Compute p(w1) and
+p(w2) from proportional
+areas of each region.
+2. Compute parameters of
+p(x|w1) by assuming it
+Gaussian.
+3. Compute parameters of p(x|w2)
+by assuming it Gaussian.
+
+### Slide 17 (OCR)
+Expectation-Maximization
+Algorithm mh
+ape “'gorithr powl)= > px)
+x=0
+f P(w2)=1- p(wl)
+Q = S x.p(x)
+x=0
+th & op => x’.p(x)- ue
+4. Compute new threshold —
+value so that for x<7h, Ly = > x-p(x)
+P(w1|x)>p(w2|x), and vice x=Th+1
+versa. > 8, ;
+5. Iterate till the value of Th 90) = x. p(x)- ue
+converges. x=Th+l
+
+### Slide 18
+Otsu Thresholding
+n Choose a threshold value, which maximizes
+between class variance (σ2
+Th
+p(x)
+
+### Slide 19 (OCR)
+ef x10°
+“4 8
+12 7
+10
+f\ 2
+o 50 100 150 200 250 oO 50 100 150 200 250
+. state x aerate ee
+ee eerie «wee wIral RIT AA BIOS BPS HEPAT | a
+“ i sie ema aa aon es ae rater . coe etc «eter ical Ate TR CHAR catrAS BFA HEPA |
+Ots . 1 57 waa fama aca RE US BB BEF BI TEER Bayesia n mae aren a ache va a wa
+u: Ae AP CAB AIC SFCHH SHES BHAA BG oe mR Cre CARE FE ROM aA |
+areca catetca | itetfut atc ree 1% oo eR EH | 6 157 qe AM CAB ATC STH SHAT BAA RGA Ni
+Gorm Bh Steal 16H | arfes! Bia era aaa Bea 0 . wrercal catgiea  siretfeat aie aeRSTE AE OF AFA |
+mE ATARI SIC SICAL Are 4 B08 C@lNS Sta BIG ema | coi oh teal ee seg! fet ts aces Soca
+aeriafa eer b pastor wien cata tat v mE TIAA aCe SIT SIAL aTe aq BBre colNS GIA AG Cea | v
+as fi gifs aime craters seta ef emma | wertafe a ATE pasprercn Sica cafe wt frat
+zteret(® a4 aca | afte ara AR Gara | \u. ae frsitoa ‘a orf am ras we \
+ESIC BS Creal sine warm BIfGal ora CAB EMMA nan 9 3 | aise ten bse :
+aBa coe aetna i catasrat Bf, aga faut ata» cre mica 5e eR at OTe Urs IfEA Ore CHE FEMA |
+arenGaa cotel cata metan aire aaa | WBS co a1z178 alae Bia a Saal aad >
+‘a “ae @fara | ae fal ota pa ain tiand Aeatera aren ina ret caf aR Ia Afra AREA
+wantfietetca eaten ara fee Hears otra ara aA AD af ae afara | . arp (wal ola ATS Bhar alan A
+mr an fate aa 4 ° sifeat aba ai ‘ten waza t er satfreatca feafon ara freee qrans ira Bra BEA af eT
+. ae A fieeaty ala af N ws ‘ater Bi aie Bra sifeal aa sta Aol BIA wal ae
+CA BANA ae faaitera ord [RBA Fla BS FORMA oe fretera 74 FeEA fa ate as ets
+eae ata aff! RB a 47 Cat for! Ora SIN sera ae raat oa TRAIT B18 SS TEE
+aca vow aesa fa arce fem scatter’ | eae aaa offs | AF Ae 47H CIA Frm OIA IA
+° ara af caters wars Senora ‘ atta bus aawa fr wre far Bea CAR AA BAAS |
+a aa “a featara at 34 1 aierd Bare Ce Ser MASS ,
+ame TA aA TEA ora Finzata Fa ales Bats | erata afi anna
+ae hh gata i pore ata 7 al “ wien SY amt YAM Aaa TSA wera Preeate BFR <i Baa | \
+CATA CH CTT HCA TH CTA CH era caiftoredia calzial aff wie wT ara i ere at we fa a aT
+eta al afta atta 4 Bafa 2a sae aalafa CTA CH CATA HON TOOT Ct Ord cHiSITR aA CAA fat
+ay aa 74 aff cata #4 AGS BAM AIA lA GBS | a at afer an " Bahew 2am RH ara r
+efeqore ata aa | ace of wia 102 BFA Mia wa 18 cata 24 weneen we wea
+Cre! ata ata ata tae fARRa geal el aia YD eferere aa ata | Hea Diy Wik FIC FIA Alea \
+wt atte fi sta 8 caer Bet Gtr sf 8 AR ata ata ala Bitar fae yeaa ol caizal |
+oes oica gaa mara ora at fi ata foama ACF | at atfea fas cata w mataa BEA iuter at 8
+aiferl cetera Sta | foa ada ya ataler 307 ae ifm cetera a lel fa oR Reon & ‘a ad
+afeata ea atmaetaca atal ae Seiten eh feast deo fem a cain ; wet g Sees i pa ' deo
+cra Barer era fanere fea frettora farseviel u * ct ater wa et a f aa al caren f a ‘
+Ola ALT TERY ates Fett | wrel cafe al a4 aT SIRE . cue A STIWCOC Fa APMTFER FSEWOT .
+iRaCOT AIG stat eee Beta A 46 de 6G 4105 AE aeRBE FRACS TR CH Ft | ore cela aya a4 eT IEE |
+fegata Sih wicx @Agata | wre CHF Foam “Tega | ‘on SE int ire Beta a9x8 Fh bilieahe bitiele
+ee teal A fst Ba LTA Five car AYER t fegata Sif wice ohergaia | ora AF FSA ATA |
+aa AFR mata RATA | fade Fit yt ar | ee taal As ass Ce TATA Facet eran ager gos |
+1 RCE AEP ORVe Ba a aia 7a aii Ha ae AE wae sees rea | fees ea aA a
+© tata crate ee faerie FR wr Mae itaee Faten atPIS | | sien aarins Bene wife oF 3a RIG a eA
+ARPT TS TAA Bef Ge FA VR ASS SS 5 wreta efatca etre iffreset FA | Sra aoe Bitare farm afergS |
+° 2 ama ATS AAAI BaF Gq SAH YF ASS ASS
+
+### Slide 20
+Contrast Enhancement:
+Pixel mapping
+Input pixel (x)
+Output pixel (y)
+255
+255
+Dynamic Range
+Function is monotonically increasing.
+255
+
+### Slide 21 (OCR)
+5000
+4000
+3000
+2000
+1000
+oO
+3 oF a Gee + p
+ae, Le ee arin,” 2000
+5 a a 1000
+y Soe Bee
+pee Fe . 0 50 100 150 200 250
+
+### Slide 22
+Fundamentals of Image
+Processing- Part II
+(Week-01, Lecture #2)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+Indian Institute of Technology, Kharagpur
+NPTEL
+
+### Slide 23
+Segmentation
+n Partitioning image pixels into meaningful
+non-overlapping sets.
+n Binarization: A special case.
+n Can be extended to group pixels in more than
+two labels.
+NPTEL
+
+### Slide 24 (OCR)
+a a
+Multilevel thresholding:
+oa | Ro Bae oe bg peor ae FN
+fea} Ne t , ee ~ tee 4 ‘ sae
+gx OE —— “aS * , eae es = “ae oo Pa” RE A ys
+ee ee sos, Sie my csaleiga
+p 5 a St] we id ; Ee ae a Bip ass %
+Sy Fee ne BS _ . = ~~
+500
+—. - Intervals: [0,60], [61, 119], [120,255]
+Blue Green Yellow
+
+### Slide 25
+Component Labeling
+n Partitioning connected image pixels into
+meaningful non-overlapping sets.
+n Neighborhood definition.
+n 4-neighbor, 8-neighbor
+4-neighbors
+8-neighbors
+NPTEL
+
+### Slide 26
+Component Labeling
+n Form a graph with edges between
+neighboring pixels having same labels.
+n Compute connected components.
+n Graph traversal algorithms
+20
+20
+50
+20
+20
+20
+50
+100
+50
+50
+50
+100
+100
+100
+20
+20
+NPTEL
+
+### Slide 27
+Component Labeling
+n Form graph with edges between
+neighboring pixels having same labels.
+n Compute connected components.
+n Graph traversal algorithms
+20
+20
+50
+20
+20
+20
+50
+100
+50
+50
+50
+100
+100
+100
+20
+20
+Do you require
+an explicit
+graph
+representation?
+Can you
+compute using
+only the image
+array?
+NPTEL
+
+### Slide 28 (OCR)
+rae, \it) See, © 3 : te 4 e
+avr .),
+Ee tS pig) = % 3” ead
+, i A ees aca gag
+COMPONENTS maw « bd
+* _—s =) s «
+adap
+rai a ig:
+ep a
+ee
+
+### Slide 29 (OCR)
+Sm \i | Ge baae” cae 2. a :
+ie , eek oe sy cei fA Rn ey %,
+ee ee Se y PPT MN ey con é Fs 2 ts ae bE:
+F oe 6} © Sareea gt a” a ap ae, 2 algae Ps, ;
+ae es me Ie SS a ‘3
+Nee a a =  » aa = Ra ie \ ee ~ \
+Ce: 3 z , ~ a BAN, Soe -_ .
+Ps Vis bode :
+Wh t of ri h | is missing?
+Y a part OF river Cnannel IS MISSING:
+
+### Slide 30 (OCR)
+4 Gradient Operations
+Consider the image as a 2D function: f(x, y)
+se TED — ferry) S63)
+, a IY) = f(x,y+l)— f(x y)
+oy
+Vile) = FEED)
+
+### Slide 31
+Computation with mask
+1. Scan the image top to bottom
+and left to right.
+2. At every point (x,y) place the
+mask  and compute the
+weighted sum.
+g(x,y)=(1).f(x,y+1)+(-1).f(x,y)
+3. Write the value g(x,y) at (x,y)
+pixel position of the processed
+image.
+Weights
+NPTEL
+
+### Slide 32
+Robust gradient computation
+Prewitt operator
+Averaging  neighboring gradient values
+(6 times of the gradient value in any direction)
+NPTEL
+
+### Slide 33
+Robust gradient computation
+Sobel operator
+Weighted average of  neighboring gradient values
+(8 times of the gradient value in any direction)
+1x
+2x
+1x
+NPTEL
+
+### Slide 34
+Results of gradient
+operations
+Vertical
+Horizontal
+Resultant
+NPTEL
+
+### Slide 35
+More on computation with
+mask
+w1
+w3
+w2
+w4
+wc
+w5
+w6
+w7
+w8
+Convolution operation
+Filtering
+Maskà Filter Response (h(x,y))
+h(x,y)
+f(x,y)
+g(x,y)
+NPTEL
+
+### Slide 36 (OCR)
++ Noise Filter
+eters ion Piece ronan eae FE
+ER Tea ka OS Bi coe I ope ti. XR OR
+Bee Age oe 1 ge cE
+sad et, .. % {ip " e
+Cc pe Be ses eee ~ rey poo
+‘hy SS 2 RA ee : x 7 eas at
+a=0.5, b=0. 3/4,
+and, c=0.25/4
+
+### Slide 37 (OCR)
++ Gaussian Smoothing
+1 Gre He) Se
+GO y= se ee |
+g(x,y) = f(x, y)* G(x, y) ae
+o=2
+Mask size: 9x9
+
+### Slide 38
+Median Filtering
+g(x,y)= the median value among
+the neighbors.
+NPTEL
+
+### Slide 39
+Summary
+1. Images formed by optical camera through
+perspective projection.
+2. Discussed different operations in image
+processing.
+o Binarization
+o Thresholding.
+o Contrast
+enhancement.
+o Segmentation
+o Component
+Labeling
+o Gradient
+computation.
+o Computing edges
+o Convolution operation
+o Filtering
+o Median filtering
+NPTEL
+
+### Slide 40
+Image Transforms: A brief
+introduction
+(Week 01- Lectures 3- 4)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+“Image and video processing in the
+compressed domain”, CRC Press, 2011.
+NPTEL
+
+### Slide 41 (OCR)
+fuN= >. > ayby Gey)
+Image Transform re
+a Image in continuous form: f(x,y): A 2-D
+Properties of
+function, where (x,y) in R?. bone functions
+: 7 » can be extended
+a Let B be a set of basis functions: ©" > analysis.
+B={b(x,y) | i=..,-1,0,1,2,3,....$, by) in R or C.
+a Let fx,v) be expanded using B as follows:
+f(x,y) = ». A,b;(x, y) _ Coefficients of
+. / transform
+The transform of fw.r.t. B is given by {A;|i = ---. —1,0,1,2,3,... }.
+Indexing may be multidimensional say, 4;;.
+
+### Slide 42 (OCR)
+Orthogonal Expansion f() = >. Aibie)
+{ and 1-D Transforms
+a Inner product: <f,g>= | Fear @ax
+= Orthogonal expansion: If B satisfies :
+(b;,b;) =0, fori #j
+= c; Otherwise (for i = j), where c; > 0
+= Transform coefficients in O.E.: ,Aj = a: b;)
+= If c=1, it becomes orthonormal expaniion
+Forward transform © A; = (f,b;)
+=» Inverse transform: f@) = [__Ancoa
+
+### Slide 43 (OCR)
+. Complete base
+Fourier J
+B= {e J®*|—c <w < oo}
+transform “tim |
+¢ pulse function
+tyre [ax 7. . (206(x), forw=0
+Orthogonality: [. eloxdy = 0 otheniwe
+Fourier Transform: #(f(x)) = fiw) = | ° f (x)eJ°*dx
+Inverse eye fo) = 4 ime lox dy
+Full reconstruction e~Iwx — cos(wx) —jsin(wx)
+fGw) = [re costox) — jsin(wx)) dx
+C = {cos(wx)| -— 0 <w < o} S = {sin(wx)| — 2% < w < co}
+\ Orthogonal / But not complete!
+
+### Slide 44
+Even and odd
+functions
+n Even: f(-x)=f(x) for all x.
+n Odd: f(-x)=-f(x) for all x. à f(0)=0.
+n For even f(x) :
+n For odd f(x) :
+n Full reconstruction possible with cosines
+(sines)  only if it is even (odd).
+NPTEL
+
+### Slide 45
+Discrete representation
+n Discrete representation of a function:
+n Can be considered as a vector in an infinite
+dimensional vector space.
+n In our context, it is of a finite dimensional
+space, e.g. {f(n), n=0,1,..N-1}, or
+n f=[f(0) f(1) … f(N-1)]T.
+Sampling interval
+Set of integers
+NPTEL
+
+### Slide 46
+Discrete Linear Transform: A
+general form
+n For n-dimensional vector X any linear transform,
+n e.g.  Ymx1=BmxnXnx1
+n Xnx1: A column vector of dimension n.
+n Ymx1: A column vector of dimension m.
+n Bmxn: A matrix of dimension mxn.
+n Has inverse transform if B is a square matrix and
+invertible.
+NPTEL
+
+### Slide 47
+Basis vectors
+n B is the transformation matrix.
+n Rows of B are called basis vectors.
+n Y(i)=<bi
+*T. X>
+n Orthogonality condition:
+dot product or inner product.
+NPTEL
+
+### Slide 48 (OCR)
+Discrete Fourier Transform
+| 1 wok
+b(n) = —¢)°™N", forO<n<N-1, andO<k<N-1.
+f(k) = d f(n)eP* 8" forO< kN -1. f(NW +k) = fk)
+N-1 ee k/N: Normalized frequency
+f(n) = y S- f(k)e?™ 8" for0O<n<N-1,
+™ Fundamental
+A single period frequency: //(NX,)
+alll ~llullllillll fen
+DFT: Fourier series of a periodic function
+
+### Slide 49 (OCR)
+DFT: Alinear _
+transform w= r@e""F  forosk<n-1
+1 1 |
+FO) jon ve IP £O
+Fa) [ijl e "NL ema |) FG)
+FIN-D] | y j-ient jotta? IFW — D)
+Fy = Leite men 1
+F=Fyf
+Hermitian transpose
+f= Fx'F —1 iy
+Fy = in
+
+### Slide 50 (OCR)
+Generalized Fag = [e-Pitn40)] |
+Di F . 0<(k,n)<N-1
+Iscrete Fourier Pop = $Flo = Ho
+10 ~ N*io ~— N~ 0,3?
+Transform (GDFT) on ener
+1 - kia .
+B-9) (n) = Fen nt, forO<n< N-1, andO<k< N-1
+AY
+N-1 k
+fa,a(k) = S- f(n)e F247 WM) for0<k<N-1
+n=0
+1 vs k
+A . ct+a
+f(n) = WV S- fa g(kjel?™ (Mn +8), forO<n<N-1
+k=0 ». . ,
+a Bs Transformname i (assti(‘i;CCOCOCOCOC CUNO tation
+0 O Discrete Fourier Transform (DFT) f(k)
+0 3 Odd Time Discrete Fourier Transform (OT DFT) fo, 1 (k)
+5 0 Odd Frequency Discrete Fourier Transform (OF DFT) f a o(k)
+
+### Slide 51
+Symmetric / Antisymmetric
+extension of a finite sequence
+Original sequence
+Whole symmetry (WS)
+Half symmetry (HS)
+Whole antisymmetry (WA)
+Half antisymmetry (HA)
+Even function
+Odd function
+DCTs and DSTs exist for
+any finite sequence.
+NPTEL
+
+### Slide 52 (OCR)
+Discrete Cosine / soya Yh fepanee
+‘ Sine Transforms semen
+= Types of symmetric / antisymmetric
+extensions at the two ends of a sequence
+and a type of GDFT> DCTs / DSTs
+Fo0
+| | | a, Type-I Even DCT
+Cie(x(n)) = X7e(k) = \/ 20%) Yan) cos (=) ,O<kK<N.
+
+### Slide 53 (OCR)
+Discrete Cosine / =| V3 for p=0 or N,
+. 1, otherwise.
+Sine Transforms
+HSHS Foi
+—~ N-1 (n 1
+Cae(e(n)) = X1ze(K) = yf 2a(h) > a(n) 0s (SS). osksw1
+WAWA iF),
+— — Type-1 Even DST
+9 V2 2rkn
+Sie(z(n)) = Xere(k) =4/ = xr(n)sin | ——],1<k<N-1
+1e(t(n)) = Xre(k) Vea) (==)
+
+### Slide 54
+Discrete Cosine /
+Sine Transforms
+jF0,1/2
+Type-2 Even DST
+There exist 16 different types of DCTs and DSTs.
+HAHA
+Type-II Even DCT is used in signal, image, and
+video compression.
+NPTEL
+
+### Slide 55 (OCR)
+Matrix form of om={ ys mr=oe%
+} Type-II DCT
+=» Matrix form Cy = V5 (hens RA] .
+N-point DCT oS (kim)SN—1
+= Each row is either symmetric (even
+row) or antisymmetric (odd row).
+; _\  f Cn(k,n) fork even
+Cw(k, N —1—n) = eee for k odd
+X =Cy.x Cy’ = Cyn
+
+### Slide 56
+Convolution Multiplication
+Property (CMP)
+f(t)
+h(t)
+CMP for Fourier Transform
+NPTEL
+
+### Slide 57
+CMP for DFT
+f(n)
+h(n)
+Linear convolution
+o Periodic convolution: Convolution between two finite
+sequences with periodic extension.
+o It is defined if both have the same period, providing a periodic
+sequence with the same period.
+Circular Convolution
+CMP for DFT holds for
+circular convolution.
+NPTEL
+
+### Slide 58
+Antiperiodic extension and
+skew-circular convolution
+n Antiperiodic function with an antiperiod N,
+if  f(x+N)=-f(x).
+n An antiperiodic function of antiperiod N à
+a periodic function of period 2N.
+n Skew-circular convolution: convolution
+between two antiperiodic extended
+sequences of the same antiperiod.
+NPTEL
+
+### Slide 59 (OCR)
+u(n) = 2(n) @ y(n)
++ CMPs for DCTs“) = *(79u")
+Cie (u(n)) = vV2NCie (x(I)) Cre (y(m))
+Cre(u(n)) = V2NOre (2(0)) Cre (u(m))
+Cre (w(n)) = V2NCre (x(l)) Cae (y(m))
+
+### Slide 60
+2-D Transforms
+n Easily extendable if basis functions are
+separable, i.e. B={ bij(x,y)=gi(x).gj(y)}.
+n B: Orthogonal if G={gi(x), i=1,2,..} is
+orthogonal.
+n B: Orthogonal and complete if G is so.
+n Reuse of 1-D transform computation.
+1-D basis function
+They could be from two different
+sets, say b(x,y)=g(x).h(y).
+NPTEL
+
+### Slide 61
+2D Discrete
+Transform
+n Use of separability:
+n Transform columns.
+n Transform rows.
+n Input: Xmxn
+1-D Transform Matrix: B
+n Transform columns: [Y1]mxn=BmxmXmxn
+n Transform rows: Ymxn=[BnxnY1
+T]T
+=Y1Bnxn
+=BmxmXmxnBnxn
+Ymxn =BmxmXmxnBnxn
+NPTEL
+
+### Slide 62 (OCR)
+rn Image Transform: DFT
+Image: f(m,n), of size M x N
+M-1 N-1 km in
+F(k,l) = fim ne 7" Me ?™N
+1 ees} 9 km ‘9 in
+f(m,n) = —— F(k, De?" Me?" N
+Property of separability
+F=F,,fFi y . ey In
+mn Fk, = >) e?™™ > f(m,nje?"N
+m=0 n=0
+
+### Slide 63
+DFT Examples:
+Magnitudes
+and phases
+are shown
+by bringing
+them into
+displayable
+range, and
+shifting the
+origin at the
+center of
+image.
+Magnitude
+Phase
+NPTEL
+
+### Slide 64 (OCR)
+o(p) = rE for p=0 or N,
+AD DCT 1, otherwise.
+a Type-I:
+Xr(k,l) = Fa (k).@ (I). Do Sn—o(x(m, n) cos("47*) cos("")),
+O<k<M,O<1<N.
+= Type-II
+Xir(k,l) = %.a(k).a(l). Oyo Dnzo (elm, n) cos( 2 5P™*) cos( 5),
+— O0<k<M-1,0<1<N-1.
+=» Matrix Representation:
+X = DCT (x) = Cyy-x.Cy
+
+### Slide 65
+An example:
+Discrete Cosine Transform
+There are 16 different types of DCTs and DSTs.
+Input image
+NPTEL
+
+### Slide 66
+Why image transforms?
+n Alternative representation provides other insights of
+structure of images.
+n low frequency and high frequency components.
+n May become useful for providing more compact
+representation.
+n A few transform coefficients.
+n Selective quantization of components, considering their
+effect on our perception.
+n Image compression.
+n Sometimes convenient for processing.
+n Filtering, enhancement, ….
+NPTEL
+
+### Slide 67
+NPTEL

@@ -1,0 +1,625 @@
+# Week 7 — lecture slides
+(source: NPTEL, 53 slides; text layer, plus OCR on 9 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Feature matching and model
+fitting
+(Week-07 Lectures 29-33)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+
+### Slide 2
+Can you get the 3-D structure
+of the scene?
+o Get a set of pairs of corresponding points.
+o Compute fundamental matrix.
+o Derive camera matrices.
+o Solve for 3-D coordinates of scene points for each
+pair of corresponding points.
+
+### Slide 3 (OCR)
+Feature matchi
+Ie |
+ie | |
+(yeaa TTL p(y |
+wes i ian Tees ical ~. a ar oe Py Boi Sot * af eH Z.* i :
+x Peaches arith ? Be Eee peti: aaa Bet BR... 6 2.i4 ‘
+
+### Slide 4
+Matching with Features
+o Detect feature points in both images.
+o Describe them by local statistics.
+o Find corresponding pairs (Matching).
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 5
+Matching key points
+n Representation of a key-point by a feature vector.
+n e.g. [f0 f1 … fn]T
+n Use distance functions / similarity measures.
+n L1 norm
+n L2 norm
+n Lp norm
+
+### Slide 6
+Weighted Distance function
+n More weights to reliable components.
+f , g: Column vectors of dimension n.
+A: A +ve semidefinite matrix
+o Symmetric.
+o vTAv>=0 for all v.
+o Typical example: Diag(w0, w2, … wn-1), wi>=0
+
+### Slide 7 (OCR)
+A few other similarity
+t MmMe€EaSures
+=» Normalized Cross Correlation.
+ty cov(f,g)
+of 5) =F (f)xs.d.(g)
+kewl NGi-D
+ft rei-f)? A 3P(gi-)?
+= Cosine similarity. tg
+Valea
+
+### Slide 8
+Matching criteria
+n Distance based
+n Fixed threshold (FT):
+n Report all matches within the threshold value.
+n Nearest neighbor (NN):
+n Report the nearest neighbor.
+n Nearest Neighbor Distance Ratio (NNDR):
+n Report the NN if ratio of distances between the
+NN and 2nd NN is small.
+
+### Slide 9
+Matching criteria
+Th
+d1
+d2
+d3
+d4
+NNDR:  d1/d2
+NNDR:  d3/d4
+(Accept)
+(Reject)
+
+### Slide 10
+Matching histograms
+n Lp norm of bins (representing same
+intervals of covariates).
+n Usually L1 used.
+n Kullback-Leiber divergence (of pdf).
+n Earth Mover’s Distance (EMD)
+
+### Slide 11
+Earth Mover’s Distance (EMD)
+n EMD of two histograms P and Q measures the
+minimum accumulated cost of transferring masses
+from any bin of P to any bin of Q so that the
+histogram P gets transformed into Q.
+n Cost  defined by the product of transferred mass and
+distance between bin.
+n m x |i-j| for transferring mass m from ith bin of P to jth bin of Q.
+n This would make P[i]=P[i]-m and Q[j]=Q[j]+m.
+n Total mass of P and Q should be same.
+n Accumulated cost is normalized w.r.t. to the total transfer
+of mass.
+
+### Slide 12
+Computing EMD
+n Two normalized histograms:
+n P={pi} and Q={qi}, for i=0,1,…, N-1.
+n mij transferred from i th bin of P to j th bin of Q.
+n dij distance between i th and j th bin.
+n EMD is the minimum normalized work (transfer of
+masses) required for transforming P into Q.
+H. Ling and K. Okada, An Efficient Earth Mover’s Distance Algorithm
+for Robust Histogram Comparison, IEEE Transactions on Pattern
+Analysis and Machine Intelligence, 29 (5), pp. 840-853, 2007.
+
+### Slide 13
+Computing EMD
+n EMD is the minimum normalized work (transfer of
+masses) required for transforming P into Q.
+n Before initiating transfer operation, bins of Q is
+intialized to zero. The input specificaiton qj’s are
+used for specifying constraints of the optimization
+equations.
+H. Ling and K. Okada, An Efficient Earth Mover’s Distance Algorithm
+for Robust Histogram Comparison, IEEE Transactions on Pattern
+Analysis and Machine Intelligence, 29 (5), pp. 840-853, 2007.
+
+### Slide 14
+Efficient computation of
+feature matching
+n Range query
+n Nearest Neighbor of the query.
+n Report all the features within a distance
+from the query.
+n Ordinarily of linear time complexity O(N),
+n N is the number of features in the target image /
+database.
+n Use of indexing and hashing.
+n K-D Tree
+n Locality Sensitive Hashing.
+
+### Slide 15
+K-D tree
+n A binary tree.
+n Each node contains a (key) feature vector.
+n Each node behaves like a node of binary
+search tree (BST) for values of a particular
+dimension
+n Called cut-dimension.
+n Alternate periodically on nodes  along any path.
+n Places a key feature vector following the rules of
+BST comparing on the value of the cut-dimension.
+
+### Slide 16
+NN Search using K-D tree
+n As you walk through the tree nodes
+n Store the current smallest distance and the
+respective key-feature.
+Prune sub-trees by comparing the minimum
+distance  with the corner nodes of the
+hypervolume (bounding boxes) represented by the
+sub-tree.
+n Search the sub-tree to maximize the chance of
+pruning.
+n Go to the sub-tree closer to the query.
+
+### Slide 17
+NN Search using K-D tree
+n May require to traverse all the nodes of the
+tree.
+n Worst case: O(N)
+n In practice close to: O(log(N)+2d), where d is the
+dimension of the feature space.
+n log(N) to find the cell near the query point.
+n 2d search around cells in the neighborhood.
+
+### Slide 18
+Locality sensitive hashing
+(LSH)
+n Locality preserving hashing function
+(h(.)) w.r.t a distance function d(.).
+n Prob.(h(x)=h(y)) should be high, if d(x,y)
+is small,
+n else the probability should be small.
+
+### Slide 19
+LSH: A typical example
+n Choose a random unit vector r of dimension
+n (e.g. following Normal distribution
+(N(0,1)) independently in each dimension).
+n For any vector x of dimension n define a
+hash function as follows:
+It can be shown, for any x and y
+Angle between
+x and y.
+
+### Slide 20
+LSH multidimenstional
+bucketing
+n You may also have a set of  k random vectors
+independently generating k hash values, and
+define the multidimensional bucket for hashing to
+place the input vector.
+n H(x)=[hr1(x) hr2(x) …. hrk(x)]
+n You may have L multiple buckets (corresponding
+to L sets of k random vectors) for the same input.
+n H1(x), H2(x), …, HL(x)
+n Given a query y compute L buckets and search for
+NN in all of them.
+
+### Slide 21
+Model fitting
+n Given a set of data points fit a model to establish
+relationship among the data points.
+n Homography matrix between pixels in two images of the
+same planar scene.
+n Fundamental matrix between corresponding points in two
+stereo images.
+n Given a set of 2-D points fit a straight line / parabolic
+curve / circle / a high degree polynomial curve passing
+through them.
+n Obtain data points and fit appropriate model.
+n Preprocessing, feature detection-description-matching.
+
+### Slide 22
+Knowledge of models
+n Mathematical form  of the class / family
+of Models.
+n 3x3 non-singular homography matrix for
+projective transformation.
+n 3x3 singular fundamental matrix for stereo
+geometry.
+n 3x4 Projection matrix.
+
+### Slide 23
+Choice of a model
+n Error of fitting
+n Mean square error
+n Likelihood
+Pr (Data | Model)
+n Size of a model
+n Number of independent parameters
+n Training and Test Error
+n Large training error: Under-fitting.
+n Low training error, but large test error: Over-fitting
+n Low training and test error: A good fit.
+
+### Slide 24
+Fitting curves and lines
+To decide
+about
+appropriate
+parametric
+models.
+simple model: lines
+simple model: circles
+complicated model: Steam-boat
+
+### Slide 25
+Various Issues
+• Noise / Error
+• in estimation of feature locations.
+• Extraneous data
+• clutter (outliers), multiple lines.
+• Missing data
+• occlusions
+Adapted from slides by S. Lazebnik.
+
+### Slide 26
+Fitting a straight line over 2D
+points
+n Fitting techniques
+n Least Squares
+n Total Least Squares
+n Random Sample Consensus (RANSAC)
+n Hough Voting
+
+### Slide 27
+Line fitting in varying contexts
+• Given points belonging to a line, to find the
+“optimal” line parameters.
+n Least squares
+• To handle outliers.
+n RANSAC
+• Presence of many lines.
+n Voting methods: Hough transform
+Adapted from slides by S. Lazebnik.
+
+### Slide 28
+Least squares line fitting
+nData:
+n(x1, y1), …, (xn, yn)
+n Line equation:
+n yi = m xi + c
+n Find (m, c) to minimize
+(xi, yi)
+y=mx+c
+Adapted from slides by S. Lazebnik.
+“Vertical” least
+squares
+
+### Slide 29 (OCR)
+.  emxrc
+Least squares kal
+| line fitting [Ory
+w Data: (x,,.1)5 ---5 Xs Vn) n
+a Line equation: y, = mx; +c E= >». 0% —mx;—c)?
+a Find (m, c) to minimize ‘=I
+my\2 Yay a ay
+E=YEi(i-b ull | : | - | : | rl =| = XCI?
+Vn Xn 1
+E=(Y¥ —XC)'(Y — XC) = Y'Y — 2(XC)'Y + (XC)* (XC)
+dE
+ao = 2XTXC — 2XTY = 0 [> C= (XTX)-1XxXTy
+Adapted from slides by S. Lazebnik.
+
+### Slide 30 (OCR)
+.  Yemxre
+Least squares tol
+, it (Xj. Vi)”
+| line fitting :
+C = (XX) 1UX'TY
+m= cov(X,Y)_ 7 dixiVi-XV i=1
+var(X) 2 Yxp-x?_ E = n(var(y) — m*var(x))
+_ = — The R*goodness-of-fit criterion compares the
+c=yY—mx variability iq the measurements not explained
+by the model to the total variability in the
+measurements.
+wh — Fi)? 2 E
+Goodness of fit: R* = 1—>S>———=5 > R= 1-
+ffi: RE = 1 Sr Ge” n. var)
+e Not rotation-invariant.
+e Fails completely for vertical lines.
+Adapted from slides by S. Lazebnik.
+
+### Slide 31 (OCR)
++ Total least squares
+a Distance between a point (x,, y,) and the line
+px+qy=d : |px; + qy,— | given petqr=1.
+= . \ ~~ pxtqy=d
+E= >». @x + qyi= a) _ _ Unit normal:
+i=1 ~ (x,y) Ne
+OE
+Fd =D, 2% + 491-4) = 0
+i=1 n
+> d=petqy © FR > @i-#) +ai-y))
+i=1 Adapted from slides by S. Lazebnik.
+
+### Slide 32 (OCR)
+4 Total least squares
+n= >», @C%-#) + q(vi-y))? oo pxtqyed
+i=1 . Unit normal:
+U ~ (x,y) N-@®
+SN
+1-X Wo \ ,
+E=|l|_ A =(UN)™ (UN)
+Xn — x Yn — y
+dE ;
+— =2(UTU)N =0 Subject to ||M|=1.
+aN \
+Eigen vector of UU corresponding to the smallest eigen value.
+Adapted from slides by S. Lazebnik.
+
+### Slide 33 (OCR)
+| Total least squares
+Xy—-X Wy-y p °
+E= | : | | =(UN)' (UN) ~~ pxtqy=d
+Xn—X Mn—y 4 :
+. Unit normal:
+= = 2(UTU)N =0 Subject to |/N|=1. . (x,y) NO@
+(x; — x)? (x; -X) 01 - ¥) N=(.4)
+UTU =| , i=1 i=1 n Re
+> —x) Oi -Y) XC — y)? SS
+i=1 i=1 x
+Eigen vector of U’U corresponding to the smallest eigen value.
+Adapted from slides by S. Lazebnik.
+
+### Slide 34
+Random sample consensus
+(RANSAC)
+• A general framework for model fitting in the
+presence of outliers.
+• Outline
+n Choose a small subset of points uniformly at
+random.
+n Fit a model to that subset.
+n Find all remaining points that are “close” to the
+model and reject the rest as outliers.
+n Do this many times and choose the best model.
+M. A. Fischler, R. C. Bolles. Random Sample Consensus: A Paradigm for Model Fitting with Applications to Image Analysis and
+Automated Cartography. Comm. of the ACM, Vol 24, pp 381-395, 1981.
+Adapted from slides by S. Lazebnik.
+
+### Slide 35
+RANSAC for line fitting
+Perform the following N times:
+Select s points uniformly at random.
+Fit a line using the LSE method.
+Find inliers to this line
+points whose distance from the line is less
+than t.
+For sufficient number of inliers (say > d),
+accept the line and refit using all inliers.
+Adapted from slides by M. Pollefeys
+
+### Slide 36
+Choice of parameters
+• Initial number of points s
+n Typically minimum number needed to fit the model.
+• Distance threshold t
+n Choose t so probability for inlier is p (e.g. 0.95).
+n Zero-mean Gaussian noise with std. dev. σ: t=1.96σ.
+• Number of trials N
+n Choose N so that, with probability p, at least in one trial
+random selections are free from any outlier. (e.g. p=0.99)
+(outlier ratio: e).
+• Consensus set size d
+n Should match expected inlier ratio: (1-e) x n.
+Adapted from slides by M. Pollefeys
+n=No. of data points
+
+### Slide 37
+Estimating number of
+trials N
+Given probability p, so that at least one random
+sample is free from outliers.
+Outlier ratio: e
+Prob. that a sample is outlier.
+Prob. that all s samples are inliers: (1- e)s
+Prob. that at least one sample is an outlier in a
+trial:
+Prob. that all N trials have an outlier:(1- (1- e)s)N
+(1- (1- e)s)
+(1- (1- e)s)N=1-p
+Adapted from slides by M. Pollefeys
+
+### Slide 38 (OCR)
+1200
+1000 |
+800 |
+ChoosingN  ,” |
+400 |
+200 /
+N _ log(1 -_ D) 5 02.  O4 0.6 5 1
+log(1 — (1 - e)*) c
+p= 0 . 99 proportion of outliers e
+iS 5% 10% 20% 25% 30% 40% 50%
+2 2 3 5 6 7 11 17
+3 3 4 7 9 11 19 35
+4 3 5 9 13 17 34 72
+5 4 6 12 17 26 57 146
+6 4 7 16 24 37 97 293
+7 4 8 20 33 54 163 588
+8 5 9 26 44 78 272 1177
+Adapted from slides by M. Pollefeys
+
+### Slide 39
+RANSAC pros and cons
+Pros
+n Simple and general
+n Applicable to many different problems
+n Often works well in practice
+Cons
+n Many parameters to tune
+n Can’t always get a good initialization of the model based
+on the minimum number of samples
+n Sometimes too many iterations are required
+n Not appropriate for low inlier ratio.
+Adapted from slides by M. Pollefeys
+
+### Slide 40
+Voting schemes
+• Let each feature vote for all the models
+that are compatible with it.
+• Hopefully the noise features will not
+vote consistently for any single model
+• Missing data doesn’t matter as long as
+there are enough features remaining to
+agree on a good model.
+
+### Slide 41
+Hough transform
+q Discretize parameter space into bins
+q For each feature point in the image, put a vote in
+every bin in the parameter space that could have
+generated this point.
+q Find bins that have the most votes.
+P.V.C. Hough, Machine Analysis of Bubble Chamber Pictures, Proc. Int. Conf. High Energy Accelerators and Instrumentation, 1959
+Image space
+Hough parameter space
+y=mx+b
+
+### Slide 42
+Parameter space
+representation
+• A straight line in the image corresponds
+to a point in Hough space.
+Image space
+Hough parameter space
+Adapted from slides by  S. Seitz
+y=m1x+b1
+(m1,b1)
+
+### Slide 43
+Parameter space
+representation
+• A point in the image corresponds to a
+line in the Hough space.
+Image space
+Hough parameter space
+Adapted from slides by  S. Seitz
+b=-x1m+y1
+(x1,y1)
+
+### Slide 44
+Parameter space
+representation
+• Two points in the image correspond to
+two lines in the Hough space.
+Image space
+Hough parameter space
+Adapted from slides by  S. Seitz
+b=-x1m+y1
+(x1,y1)
+(x2,y2)
+b=-x2m+y2
+Parameters of
+straight line
+joining these
+two points.
+
+### Slide 45
+• Problems with the (m,b) space:
+n Unbounded parameter domain
+n Vertical lines require infinite m
+• Alternative: polar representation
+Parameter space
+representation
+sin
+cos
+Each point will add a sinusoid in the (q,r) parameter space
+Adapted from slides by  S. Seitz
+q varies from 0 to 180o
+r varies from 0 to the length
+of diagonal of the image grid.
+
+### Slide 46
+Algorithm
+Initialize accumulator A  to all zeros
+For each edge point (x,y) in the image
+For θ = 0 to 180
+ρ = x cos θ + y sin θ
+A(θ, ρ) = A(θ, ρ) + 1
+Find the value(s) of (θ, ρ) where A(θ, ρ) is a local
+maximum
+The detected line in the image is given by
+ρ = x cos θ + y sin θ
+Adapted from slides by  S. Seitz
+A: Accumulator array
+
+### Slide 47
+features
+votes
+Basic illustration
+http://ostatic.com/files/images/ss_hough.jpg
+
+### Slide 48 (OCR)
+A more complicated image
+Biches atari ia: i irene tarot NAG ~ 1 xJe Hough Transform : 7 1x
+eNOS
+aaa , aw .So , \ f
+http://ostatic.com/files/images/ss_hough.jpg
+
+### Slide 49
+features
+votes
+Effect of noise
+http://ostatic.com/files/images/ss_hough.jpg
+
+### Slide 50
+Dealing with noise
+• Requires appropriate resolution of  discretization of the
+grid in the parameter space
+n Too coarse:
+n large votes in a cell  for accumulating  too many different
+lines correspond to a single bucket
+n Too fine:
+n may miss lines as some points may not be exactly
+collinear voting different buckets.
+
+### Slide 51
+Dealing with noise
+• Smoothing accumulator array.
+• Try to get rid of irrelevant features
+n Take only edge points with significant
+gradient magnitude
+
+### Slide 52
+Summary
+n Feature matching.
+n Distance function / Similarity measure.
+n Different policies
+n Use of a threshold value.
+n Nearest Neighbor.
+n Nearest neighbor with distance ratio (NNDR).
+n Use of indexing / hashing for efficient computation.
+n Special distance functions for comparing histograms.
+n Kullback-Leiber Divergence (KLD)
+n Earth Mover’s Distance (EMD)
+
+### Slide 53
+Summary
+n Model fitting
+n Prior knowledge of the model useful.
+n Need to consider goodness of fit.
+n Different techniques for line fitting
+n Least squares
+n Total least squares.
+n RANSAC
+n Hough Transform.

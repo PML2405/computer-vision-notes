@@ -1,0 +1,812 @@
+# Week 11 — lecture slides
+(source: NPTEL, 67 slides; text layer, plus OCR on 14 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Dimension Reduction and
+Sparse representation
+(Week-11: Lectures 51 – 54)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+
+### Slide 2
+Data dimension
+n Consider a set of data points S={xi| xi in Rn}.
+n The dimension of the space Rn is n.
+n Does it mean dimension of the set S also n?
+
+### Slide 3
+Data dimension
+n Consider a set of data points S={xi| xi in Rn}.
+n The dimension of the space Rn is n.
+n Does it mean dimension of the set S also n?
+S could be represented as a set of points on a 2D space (R2).
+
+### Slide 4
+Principal component analysis
+n Consider a set of data points S={xi| xi in Rn}.
+n The dimension of the space Rn is n.
+n Does it mean dimension of the set S also n?
+S could be represented as a set of points on a 2D space (R2).
+Principal component
+analysis (PCA) finds the
+minimum dimensional
+subspace for representing
+data.
+
+### Slide 5
+Principal component analysis
+n Consider a set of data points S={xi| xi in Rn}.
+The dimension of the space Rn is n.
+n Does it mean dimension of the set S also n?
+S could be represented as a set of points on a 2D space (R2).
+Principal component
+analysis (PCA) finds the
+minimum dimensional
+subspace for representing
+data.
+Computes a new set of orthogonal axes.
+Coordinate transformation
+
+### Slide 6
+Maximizing variance of a
+component
+n Consider a feature vector: X=(x1,x2,…xn).
+n Variance of xi:
+n Dominant component:
+n Component with maximum variance.
+n PCA maximizes variance of the dominant component.
+n Consider W=(w1,w2,…wn) a unit vector.
+n Consider the mean of feature vectors:
+n For every Xj translated to the mean vector compute the
+component along W.
+n Find W which maximizes variance of yj’s.
+ij
+var(
+
+### Slide 7 (OCR)
+Maximizing variance of a
+t component
+1 Aset of data points: S={Xj=(x);,x);,...X,j)| X; in R"}.
+, Mean vector of S: = S =(X,,X,°*+,X,)
+y xX} -S || w,
+”? _ mes y, _XTtw
+, Compute W which maximizes:yY'Y —> — (XTw)"XtW
+Such that ||W'™W||=1 ~
+wa W
+
+### Slide 8 (OCR)
+Maximizing variance of a
+n component
+=» Compute W which maximizes:
+wrxx_w Such that ||W'W/||=1
+Covariance matrix (C): Cy = — > (ix — Xi) (Xi) — X)
+i=1
+To maximize: Lagrange multiplier
+L(W) = W'cW-—-A(W'W - 1)
+OL
+7 0 = w'w=1 Eigen vector of C
+— = 0 => 2CW - 2AW = 0 = cW=aw
+Maximum eigen value
+
+### Slide 9
+Principal components
+n Dominant principal component.
+n Eigen vector corresponding to maximum eigen value of  C .
+n The set of eigen vectors corresponding to decreasing
+eigen values provide the principal components.
+n Ev={e1,e2, … en}   with corresponding eigen values in
+increasing order.
+n All vectors are normalized.
+Covariance matrix (C):
+
+### Slide 10
+Principal components
+n i th principal component:
+n Dimension Reduction: Ignore eigenvectors of small
+eigen values.
+n Suppose all the eigen vectors till k th eigen value retained
+for representing data.
+n Y=(y1,y2, …, yk) is k-dimensional representation of data.
+Mean of data points
+
+### Slide 11 (OCR)
+Dimension Reduction
+Y =((X—-S).e,, (X—S).e2,...,(X — S). ex)
+= k dimensional vector
+=» kK <n n N
+. ; 1 _\2
+= Total Variance of data: v= » (=> — xj)
+j=1 i=1
+» Variance is the sum of eigen values. y — >
+j=1
+= Ratio of sum of k eigen values to total sum (variance of
+data): fraction of variance accounted for. .
+
+### Slide 12
+PCA-Algorithm
+Input: A set of  data points: S={Xj=(x1j,x2j,…xnj)| Xj in Rn}.
+Output: A set of k eigen vectors: Ev={e1,e2,…,ek}
+Compute mean of data points.
+Translate all data points to their mean.
+Compute covariance matrix of the set.
+Compute eigen vetcors and eigen values (in increasing
+order).
+Choose k such that the fraction of variance accounted for is
+more than a threshold.
+Use those k-components for representing any data point.
+
+### Slide 13
+Example
+n Data : {( 5, 3, 2), (4, 6, 0), (3, -7, 14), (2, 5, 3),
+(3, 13, -6)}
+n Perform PCA and if applicable, reduce the
+dimension of data.
+
+### Slide 14 (OCR)
+Example (contd. )
+5 4 3 2 3 _ [3.4
+X=|3 6 -7 5 13 S=| 4
+2 0 14 3 -6 2.6
+: 716 6 -4 -14 —4
+K=X-S=|-1 2 -11 1 9
+~6 -26 114 4 -8.6
+1 104 —-2 —.84
+C = —XXT C=]-2 416 —41A4
+5 ~84 —41.4 42.24
+
+### Slide 15 (OCR)
+Example (contd. )
+1.04 —.2 —.84
+C= | —2 41.6 “414
+—.84 —-41.4 42.24
+Total variance: Trace(C)=1.04+41.6+42.24=84.88
+sum of eigen
+Eigen values of C: (83.3238, 1.5562, 0) values
+Respective eigen vectors:
+— 0055 —.8165 —.5774
+7099 4034 .—.5774
+
+### Slide 16 (OCR)
+Example (contd. )
+espective eigen vectors:
+—.0055 —.8165 —.5774
+e1 = -7043 €2 = | A13 | e3 = 5774]
+.7099 4034 .—.5774
+—.0055 -.8165 -—.5774
+B=[€1 e€2 €3]= - 708 413 “3774
+7099 4034 —.5774
+2696 1.9615 0 . a
+32576 —0.7128 0 Points lying in the plane:
+X7™.B=| 15.8421 0.3825 oO} X+Y+Z=10
+—4126 1.7175 0
+—12.4415 0.5742 0
+“ Redundant dimension
+
+### Slide 17
+Coordinate transformation
+e1
+e2
+Normal to plane (e3)
+
+### Slide 18
+Application of PCA
+n Data compression
+n Provides optimum set of orthonormal basis vectors for a
+set of data points.
+n Data dependent.
+n Basis vectors also called as ‘Karhunen-Loeve’ basis, and
+the transform called ‘Karhunen-Loeve Transform’
+(KLT).
+n Type-2 DCT basis vectors are approximately the eigen
+vectors of a 2-D matrix with (j,k) the entries as r|j-k|.
+n Covariance matrix for a useful class of signals, where r is the
+measure of correlation between adjacent samples and a value
+near to 1.
+
+### Slide 19
+Application of PCA
+n Decorrelating components
+n Color images in RGB space highly correlated.
+n By performing PCA with different blocks  of color images a color
+transformation matrix obtained, useful for segmentation.
+n (R+G+B)/3, R-B, (2G-R-B)/2
+n Multispectral, hyperspectral and ultraspectral remote
+sensing images.
+n Multispectral – 10’s of bands
+n Hyperspectral – 100’s of bands
+n Ultraspectral - 1000’s of bands
+n PCA required to highlight decorrelated information.
+Y.I. Ohta, T. Kanade, and T. Sakai, “Color information for region
+segmentation”, Computer Graphics and Image Processing, 13, 222-241,
+
+### Slide 20
+PCA components of a
+hyperspectral image
+Band PCA 1
+Band PCA 2
+Band PCA 3
+Band PCA 4
+Band PCA 5
+Band PCA 6
+Band PCA 7
+Band PCA 8
+Band PCA 9
+Band PCA 10
+Band PCA 11
+Band PCA 12
+Band PCA 13
+Band PCA 14
+Band PCA 15
+Band PCA 16
+Band PCA 17
+Band PCA 18
+Band PCA 19
+Band PCA 20
+Courtesy: Li et al, “A New Subspace Approach for Supervised Hyperspectral Image
+Classification”, 2011 IEEE International Geoscience and Remote Sensing Symposium.
+After
+component 20,
+not much
+details are
+available.
+Removal of
+data
+redundancy.
+
+### Slide 21
+Application of PCA
+n Factor analysis.
+n Highlights decorrelated factors.
+n Useful for classification.
+n For example, eigen faces for representing
+human faces.
+n Performs PCA on a large set of images of human
+faces cropped to the same size.
+n Any arbitrary face expressed as linear combination of
+them.
+n Coefficients of linear combination represent an
+arbitrary face.
+
+### Slide 22
+PCA: Eigen faces
+http://en.wikipedia.org/wiki/Image:Eigenfaces.png
+
+### Slide 23
+Application of PCA
+n Classification / High level processing
+n Using the representation derived by factor
+analysis or component analysis.
+Factor
+analysis
+PCA
+basis
+vectors
+Classification
+Output
+
+### Slide 24
+Fisher linear discriminant
+n For the purpose of classification, dimensional
+reduction using PCA may not work.
+n It captures the direction of maximum variance for
+a data set.
+n For labelled data sets, it does not capture the
+direction of maximum separation between the
+groups of data points of differing labels.
+Well separated
+but not along
+the direction of
+principal
+component.
+Direction for
+principal
+component.
+
+### Slide 25
+Fisher linear discriminant
+n Consider a set of data points S={xi| xi in Rn}.
+n N1 points in class w1.
+n N2 points in class w2.
+n Say, N1+ N2=N (total data points).
+n Consider a line with direction u.
+n Projection of data xi on u: yi= xi
+Tu
+n One dimensional subspace representing data.
+
+### Slide 26
+Separation between projected
+data of different classes
+n m1= mean of data points in w1.
+n m2= mean of data points in w2.
+n Projection of means:
+n my1=m1
+Tu
+n my2=m2
+Tu
+n A measure of separation:
+n D=|my1
+_ my2|
+n Does not consider variance of data.
+my1 my2
+
+### Slide 27
+A better measure of
+separation
+q Normalized by a factor proportional to
+class variances.
+q Scatter of data belonging to class C:
+n Measure of separation:
+n To obtain u maximizing J(u).
+my1 my2
+Class Variance x Number of samples
+Scatter of class w1
+Scatter of
+class w2
+Mean
+Scatter of projected
+samples should be small.
+
+### Slide 28
+Scatter matrix
+n Scatter matrix for samples of class C in
+original space :
+
+### Slide 29 (OCR)
+a Within the class Scatter matrix
+Scatter matrixes for
+class wt ange
+Within the class scatter matrix: S,=S,+S,
+=) (yma) D (ux ulm) (ux- um)
+/ yeW1 xe W igi
+u'S,u ul(x —m,)(x—m,)!'u
+a 2 Ane
+uD =m) &=—m)u
+xew,
+m—) s?+sf=ulS,u
+
+### Slide 30 (OCR)
+Between the class scatter
+| matrix
+Between the class scatter matrix: ™eans om aye
+Sp = (m,; — m2)(m, — m,)!
+D2 =(my;—myz) CS (um, —uTm,)(uTm, — uTm,)"
+SN o
+u'Spue u’(m, — mz)(m, — m2)"u
+Rewriting optimization function
+D2 u'Spu
+To maximize J(u) = (2 +82) >» J(u) = uTSyu
+
+### Slide 31
+Solution
+To maximize
+u should be such that
+Eigen value problem.
+Should be invertible
+SBu  has the eigen vector along (m1-m2)
+(m1-m2)(m1-m2)Tu = k (m1-m2)
+u=SW
+-1 (m1-m2)
+
+### Slide 32
+Example
+n Data points:
+n X1={(5, 3, 2), (4, 6, 0), (3, -7, 14)}
+n X2={(-2 -5 17), (3 -13 10), (-4 -2 16)}
+n Perform LDA and get the optimum direction.
+Check separability in the line of projection.
+n Perform PCA on the whole data set ignoring
+class information and get the dominant
+principal direction. Check the separability of
+projected points on it.
+
+### Slide 33 (OCR)
+apExample (contd. )
+5 4 3 —2 3 —4
+a LDA: x1-= E 6 = X2 = -s ~13 zi
+2 0 14 17 10 = £16
+4 —1 2 10 —12
+meanl = | .67 | mean2 = |—6.67 si=| 92.66 10267
+5.33 14.33 —12 -102.67 114.67
+26 -41 25
+S1 = (X1 — mean1)(X1 — mean1)" so=|-a 64.67 967
+—25 39.67 28.66
+28 —31 —37
+SW=S1+S2 sw = [os 157.33 “63
+—37 —63 143.33
+3.2070
+u=SW~*(meanl—mean2) ,, — -1.1852
+1.2904
+
+### Slide 34 (OCR)
+Example (contd. )
+3.2070
+» LDA: Separability u= -1.1952
+1.2904
+19.31
+Y2 = x2Ty ?- Well separated.
+9.55
+Y2 = 5.5
+5.43
+
+### Slide 35 (OCR)
+| Example (contd. )
+5 4 3 -2 3 -4 — 71s
+« PCA: x=); 6 -7 -5 -13 7 S =| 3
+2 0 14 17 10 16 9.83
+10.92 4  —17.42
+c=| 4 39.67 -27 |
+—17.42 -27 44.14
+Eigen values: 72.96, 20.29, 1.47
+Eigen vectors:
+—0.25 —.52 —0.82
+e1=|-033 ex=| 73 e3 = |—0.27
+0.74 44 —51
+
+### Slide 36 (OCR)
+4 Example (contd. )
+= PCA: Separability af -.63
+0.74
+—1.65
+13.98
+Overlapping.
+.s19)]
+Z2=X2'!e, Z2= | 48
+14.05
+
+### Slide 37
+Sparse Representation:
+Problem Statement
+n Consider a dictionary of N elementary n-D
+vectors known as atoms.
+n D={di| i=1,2,..,N}, N>n
+n Assume all atoms unit vector.
+n Consider any arbitrary vector n-D vector X.
+n Compute the best linear approximation using
+a subset of D as basis vectors.
+n The number of atoms should be minimum.
+n Reconstruction should be as close as possible.
+
+### Slide 38
+Exact / Approximate
+Representation
+n Exact reconstruction.
+n Keeping the number of atoms fixed
+(say, m).
+
+### Slide 39
+Sparse Approximation
+n The problem of approximating a signal
+with the best linear combination of
+elements from a redundant dictionary.
+n Optimal  / Near optimal representation
+n Fast computation
+n Optimal dictionary (joint optimization
+problem)
+Joel A. Tropp, , Greed is Good: Algorithmic Results for Sparse Approximation, IEEE TRANSACTIONS ON INFORMATION THEORY, 50 (10), 2004, 2231-2242.
+
+### Slide 40
+Sparse approximation
+n Minimize the approximation error using L2
+norm using m terms.
+Joel A. Tropp, , Greed is Good: Algorithmic Results for Sparse Approximation, IEEE TRANSACTIONS ON INFORMATION THEORY, 50 (10), 2004, 2231-2242.
+Dictionary
+Data vector
+Linear combination
+Fixed no. of atoms.
+Optimization task
+D={di| i=1,2,..,N}, N>n
+
+### Slide 41 (OCR)
+| Reconstruction given S
+S= {d;, di, very dj, } cD
+Construct matrix B from S with the columns
+as elements of S. m
+Dimension: nxm ay oy
+a2
+X= [d:, Idi, | >. ld; | . How to get the best
+X = BY a. \__ approximation for m
+m1 Y elements ?
+Y= (B'B)1B'X
+
+### Slide 42
+Approaches
+n Two major approaches
+n Orthogonal Matching pursuit (OMP)
+n Basis pursuit (BP)
+
+### Slide 43
+OMP
+An iterative greedy algorithm
+n selects at each step the dictionary element best
+correlated with the residual part of the input vector.
+n produces a new approximant by projecting the
+residual onto the dictionary elements that have
+already been selected.
+n extends the trivial greedy algorithm that succeeds
+for an orthonormal system.
+Joel A. Tropp, , Greed is Good: Algorithmic Results for Sparse Approximation, IEEE TRANSACTIONS ON INFORMATION THEORY, 50 (10), 2004, 2231-2242.
+
+### Slide 44
+BP
+n A more sophisticated approach that replaces
+the original sparse approximation problem by
+a linear programming problem.
+Joel A. Tropp, , Greed is Good: Algorithmic Results for Sparse Approximation, IEEE TRANSACTIONS ON INFORMATION THEORY, 50 (10), 2004, 2231-2242.
+
+### Slide 45
+Matching
+pursuit
+n Minimize the approximation error using L2 norm
+using m terms.
+Joel A. Tropp, , Greed is Good: Algorithmic Results for Sparse Approximation, IEEE TRANSACTIONS ON INFORMATION THEORY, 50 (10), 2004, 2231-2242.
+MP may select the same atom multiple times.
+At k th step:
+Initialization
+Residue (rk)  Approximate representation (ak)
+D={di| i=1,2,..,N}, N>n
+r0=X        a0=0
+
+### Slide 46
+OMP
+n Minimize the approximation error using L2 norm using
+m terms.
+Joel A. Tropp, , Greed is Good: Algorithmic Results for Sparse Approximation, IEEE TRANSACTIONS ON INFORMATION THEORY, 50 (10), 2004, 2231-2242.
+OMP selects an atom only
+once, as the residual is always
+orthogonal to selected set.
+This minimization can be
+performed incrementally
+with standard least-squares
+techniques.
+D={di| i=1,2,..,N}, N>n
+At k th step:
+Initialization
+r0=X        a0=0
+S0={ }
+
+### Slide 47
+BP
+n Minimize the approximation error using L1
+norm.
+n A convex function, hence can be minimized in
+polynomial time.
+Joel A. Tropp, , Greed is Good: Algorithmic Results for Sparse Approximation, IEEE TRANSACTIONS ON INFORMATION THEORY, 50 (10), 2004, 2231-2242.
+subject to
+There exists different approaches to solve
+this problem.
+
+### Slide 48
+Ex.1
+n Consider the following set of basis vectors.
+(a) Show that they form an orthonormal set of basis vectors.
+(b) Decompose a vector [1 2 3]T as a linear combination of
+the above set.
+
+### Slide 49
+Ans. 1(a)
+n Take any pair of vectors and perform
+the dot product, it would be zero.
+n Magnitude of these vectors is 1.
+n Hence, a set of orthonormal basis
+vectors.
+
+### Slide 50 (OCR)
+ns 0)
+a _ A 1
+y fiz PLE tis | |=
+bf ..aynw E lve Is} ya] v2
+31 |S ‘. 0
+B 0 ve
+
+### Slide 51
+Ex. 2
+n Consider a dictionary in a 3-D space consisting of
+following atoms:
+{[ 1 1 1]T, [1 -1  1]T, [-1 -1  1]T, [-1  1  1]T}
+Derive the best representation of the vector [1 2 3]
+using 2 atoms of the above dictionary following
+orthogonal matching pursuit (OMP).
+
+### Slide 52
+Ans.
+n 1st selection of an atom:
+<[1 2 3]T, [1 1 1]T>= 6 and maximum.
+n Therefore, r1=[1 2 3]T-6[1 1 1]T
+=[-5 -4 -3]T
+n 2nd selection: <[-5 -4 -3]T, [-1 -1 1]T>=6 and maximum.
+n Therefore, a2= x.[1 1 1]T+ y.[-1 -1 1]T LSE solution
+approximating [1 2 3]T.
+Examples shown without normalization of
+vectors, as all of them are of equal magnitude.
+
+### Slide 53
+Ans. (contd.)
+
+### Slide 54
+Learning a dictionary
+n Given a set of data points
+X={xi|i=1,2,…,N, xi in Rn}, what should
+be a dictionary D of K atoms so that it
+would provide best possible sparse
+representation for each member of the
+set.
+
+### Slide 55
+Motivation
+n Use of dictionaries adaptive to specific
+classes of signals or data of interest.
+n Application specific.
+n Dictionaries learned from exemplars
+with sparse representation property
+ensured.
+
+### Slide 56
+Problem statement
+n To obtain a sparse Y in RK such that
+n X=DY, or X~ DY
+Michal Aharon, Michael Elad, and Alfred Bruckstein,  K-SVD: An Algorithm for Designing Overcomplete Dictionaries for Sparse
+Representation, IEEE TRANSACTIONS ON SIGNAL PROCESSING, VOL. 54, NO. 11, NOVEMBER 2006, 4311-4322
+n x N
+n x K
+K x N
+Various Sparsity constraints:
+
+### Slide 57
+K-SVD: Forming dictionary for
+sparse representation
+n Given a set of training signals {xi}i=1
+to obtain the dictionary of K elements
+that leads to the best possible
+representations for each member in
+this set with strict sparsity constraints.
+Michal Aharon, Michael Elad, and Alfred Bruckstein,  K-SVD: An Algorithm for Designing Overcomplete Dictionaries for Sparse
+Representation, IEEE TRANSACTIONS ON SIGNAL PROCESSING, VOL. 54, NO. 11, NOVEMBER 2006, 4311-4322
+Various Sparsity constraints:
+
+### Slide 58
+K-SVD
+Generalizes K-means clustering problem.
+Choose a dictionary of K atoms.
+Obtain sparse representation.
+Update dictionary atoms.
+Repeat steps 2 and 3 till convergence.
+n K-means clustering: Extreme sparse
+representation of a signal by a single atom only.
+n K-SVD: A sparse linear combination of K atoms.
+Michal Aharon, Michael Elad, and Alfred Bruckstein,  K-SVD: An Algorithm for Designing Overcomplete Dictionaries for Sparse
+Representation, IEEE TRANSACTIONS ON SIGNAL PROCESSING, VOL. 54, NO. 11, NOVEMBER 2006, 4311-4322
+
+### Slide 59
+K-means clustering
+Given a set of atoms D={di}1
+n Assign the training examples {xi}i=1
+N to their nearest
+neighbor in D.
+n Usually L2 norm used.
+n Given the assignment update D to better fit the
+examples.
+n Update mean of each partition of assignment.
+n Start with any initial set of distinct atoms.
+Michal Aharon, Michael Elad, and Alfred Bruckstein,  K-SVD: An Algorithm for Designing Overcomplete Dictionaries for Sparse
+Representation, IEEE TRANSACTIONS ON SIGNAL PROCESSING, VOL. 54, NO. 11, NOVEMBER 2006, 4311-4322
+
+### Slide 60
+K-means clustering: A code book
+with extreme sparse representation
+The code book: D={di}1
+K=[d1 d2 … dK ]nxK
+n The training examples: [X ]nxN={xi}i=1
+n Extreme sparse vector: ej= [ 0 0 …0 1 0 ... 0]T
+n Only j th term is 1 of K-dim. vector.
+n Sparse representation: Y=[y1 y2 ... yN]KxN
+n where yi is one of ej’s .
+n Optimization problem: Minimize ||X – DY ||2
+n yi=er if ||xi-dr||2 is minimum among all atoms.
+n Update atoms: dj= Mean ({xi | yi=ej}), for all j.
+Michal Aharon, Michael Elad, and Alfred Bruckstein,  K-SVD: An Algorithm for Designing Overcomplete Dictionaries for Sparse
+Representation, IEEE TRANSACTIONS ON SIGNAL PROCESSING, VOL. 54, NO. 11, NOVEMBER 2006, 4311-4322
+Frobenius norm
+
+### Slide 61
+KSVD: Generalization of K-means
+clustering
+The code book: D={di}1
+K=[d1 d2 … dK ]nxK
+n The training examples: [X ]nxN={xi}i=1
+n Sparse representation: Y=[y1 y2 ... yN]KxN
+n where yi provides linear combination of maximum T0
+nonzero terms.
+n Optimization problem:
+n Minimize ||X – DY ||2
+F subject to ||yi||0 < T0, for all i.
+Michal Aharon, Michael Elad, and Alfred Bruckstein,  K-SVD: An Algorithm for Designing Overcomplete Dictionaries for Sparse
+Representation, IEEE TRANSACTIONS ON SIGNAL PROCESSING, VOL. 54, NO. 11, NOVEMBER 2006, 4311-4322
+
+### Slide 62
+Rewriting optimization function
+yj
+T : j th row of Y.
+Michal Aharon, Michael Elad, and Alfred Bruckstein,  K-SVD: An Algorithm for Designing Overcomplete Dictionaries for Sparse
+Representation, IEEE TRANSACTIONS ON SIGNAL PROCESSING, VOL. 54, NO. 11, NOVEMBER 2006, 4311-4322
+Consider effect of
+minimizing w.r.t. k th
+row of Y associated with
+code vector dk keeping
+other terms fixed.
+Perform SVD: Ek=UDVT
+and take columns of U
+and V for max singular
+value (say D(1,1)).
+But the column vector
+may not be sparse.
+Minimize ||X – DY ||2
+F subject
+to ||yi||0 < T0, for all i.
+Ek
+1st Column of U: dk
+D(1,1) x 1st column of V: yT
+
+### Slide 63
+K-SVD: Enforcing
+sparsity
+n Choose only samples from X which have a
+nonzero component along dk.
+n Form reduced Ek (denoted EkR) and yk
+T by yk
+n Perform SVD of EkR to get dk and yk
+n Update dk and yk
+n Repeat for all dj’s and obtain updated D and Y.
+n Repeat till convergence
+Michal Aharon, Michael Elad, and Alfred Bruckstein,  K-SVD: An Algorithm for Designing Overcomplete Dictionaries for Sparse
+Representation, IEEE TRANSACTIONS ON SIGNAL PROCESSING, VOL. 54, NO. 11, NOVEMBER 2006, 4311-4322
+Performing SVD K
+times for K atoms
+in each iteration.
+yj
+T : j th row of Y.
+
+### Slide 64
+The algorithm
+n Input: X={xi | i=1,2,….,N}, xi in Rn.
+n Output: D={di|i=1,2,..,K}, di in Rn. Y={yi|i=1,2,..,N}, yi in RK.
+n Form an initial dictionary of K atoms.
+n K-means clustering.
+n Obtain an initial sparse representation Y using any
+pursuit algorithm.
+n OMP
+n Iterate for updating j th atom and sparse
+representation associated with this atom (j th row of
+
+### Slide 65
+Applications
+n Compression.
+n Denoising
+n Deblurring
+n Super-resolution
+n Mapping of learned dictionaries
+n Inpainting
+
+### Slide 66
+Summary
+n Dimension reduction techniques
+n Principal Component Analysis
+n Data represented in minimal subspace.
+n Involves coordinate transformation.
+n Chooses a direction maximizing variance of dominant
+component.
+n Decorrelating data across different dimensions.
+n Fisher’s Linear Discriminant
+n Data projected on an 1-D subspace.
+n Appropriate for classification using a linear
+discriminant function.
+
+### Slide 67
+Summary
+n Sparse representation
+n Pursuit algorithms
+n Matching pursuit
+n Orthogonal matching pursuit.
+n Basis pursuit
+n Dictionary learning and sparse
+representation.
+n K- SVD

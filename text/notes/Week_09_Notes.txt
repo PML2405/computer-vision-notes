@@ -1,0 +1,484 @@
+# Week 9 — Range Image Processing — study notes
+(Range Image Processing; Prof. Jayanta Mukhopadhyay · Lectures 41–45. Re-taught-from-scratch notes written from the slides + transcript; math is LaTeX between $...$ / $$...$$. Pretty version: https://pml2405.github.io/computer-vision-notes/notes/week9_notes.html)
+
+COMPUTER VISION · NPTEL · IIT KHARAGPUR
+
+Week 9
+
+**Range Image Processing**
+
+Prof. Jayanta Mukhopadhyay · Lectures 41–45
+
+### 📒 what's inside this week
+
+1. Lecture 41 — Range Image Processing · Part I
+range/depth images & point clouds, active vs passive, time-of-flight (LIDAR), triangulation, structured light, Kinect RGB-D
+
+2. Lecture 42 — Range Image Processing · Part II
+differential geometry: parametric curves, tangent, curvature & torsion, the Frenet frame, surfaces, the two fundamental forms
+
+3. Lecture 43 — Range Image Processing · Part III
+normal curvature, the shape operator, Gaussian & mean curvature, Besl–Jain classification, curvature of a range image
+
+4. Lecture 44 — Range Image Processing · Part IV
+worked curvature example, step vs roof edges, multi-scale curvature edge detection, planar-patch segmentation
+
+5. Lecture 45 — Range Image Processing · Part V
+morphological segmentation (NPS), registration via SVD & ICP, whole-topic summary
+
+# LECTURE 41 — Range Image Processing — Part I
+
+range/depth images & point clouds · passive vs active · time-of-flight (LIDAR) · triangulation · structured light (stripe, binary-coded, spatial) · Kinect RGB-D · why lasers
+
+🧠 the big picture, first
+
+An ordinary image stores **intensity** per pixel; a **range image** stores **distance** — a 2.5-D picture of the visible surface. This lecture is **how that depth is physically captured**: one passive way (stereo, done) and three active illumination principles — **time-of-flight**, **triangulation**, and **structured light**.
+
+## 1.  range images, depth data & point clouds
+
+**Range data** is **2.5-D**: only the front surface seen by the sensor, one distance per pixel. Model it as $d(i,j)$ = distance to the scene point imaged at $(i,j)$ (not intensity). Reading the depth as a coordinate gives a **point cloud**:
+
+range image → point cloud
+
+$$ (i,j)\ \mapsto\ (x,y,z)=\big(i,\,j,\,f(i,j)\big) $$
+
+**Passive** sensing = stereo (no energy projected, lower resolution). **Active** sensing projects energy onto the scene for high-resolution depth — three principles follow.
+
+## 2.  time-of-flight (ToF) — LIDAR
+
+A pulsed laser fires; the pulse reflects and returns; measure the round-trip time $t$. Since source and detector are co-located, $c\,t$ is the **out-and-back** path, so depth is half:
+
+time-of-flight depth
+
+$$ d=\frac{c\,t}{2},\qquad c\approx 3\times10^{8}\ \text{m/s} $$
+
+**✍️ worked example (illustrative)**
+Round-trip $t=10\,\text{ns}$: path $=c t=(3{\times}10^8)(10{\times}10^{-9})=3$ m, so $d=\tfrac{3}{2}=\mathbf{1.5\ m}$.
+
+One shot = one direction, so a **moving mirror scans** the beam. Variants: **LIDAR** (Light Detection And Ranging), **LADAR**. The **minimum observation time** (pulse width + sampling interval) bounds the closest measurable distance.
+
+## 3.  triangulation — intersect two rays
+
+#### source ray ∩ camera ray
+
+[diagram text: laser | camera | P]
+
+two calibrated rays meet at the surface point.
+
+A laser lights a point; a camera (elsewhere) images it. Calibration gives **two 3-D rays** — the known laser direction and the camera pixel's back-projected ray — whose **intersection** is the point:
+
+$$ \mathbf P=\mathbf o_L+s\,\mathbf r_L=\mathbf o_C+u\,\mathbf r_C $$
+
+Solve for $s,u$ → $\mathbf P=(x,y,z)$. Scan the beam along a calibrated path for the whole surface.
+
+## 4.  structured light — pattern instead of one ray
+
+One ray per point is slow. **Structured light** projects a **pattern** whose geometry encodes each projected direction; a non-flat surface bends it, and each observed point maps back (by calibration) to its projected ray → triangulate. Three variants:
+| variant | how a ray is identified | projections |
+| **Single vertical stripe** | calibrated stripe correspondence + interpolation | scan the stripe (many) |
+| **Binary-coded** | $m$ patterns → each point gets an $m$-bit code (illuminated=1/dark=0), e.g. 101 | $m$ (resolves $2^m$ stripes) |
+| **Spatial pattern** | unique **local neighbourhood** (dots/speckle) names each point | **one** (fast, lower-res) |
+
+binary-coded: patterns → stripes
+
+$$ N=2^{m}\quad(\text{stripes from } m \text{ patterns}) $$
+
+**e.g.** $m=3$ patterns distinguish $2^3=8$ stripes; a point lit-dark-lit gets code 101 = stripe 5. Each new pattern **doubles** the stripes.
+
+## 5.  Kinect (RGB-D) & why lasers
+
+**🎮 Microsoft Kinect → RGB-D**
+Uses an **infrared laser speckle** (single-projection **spatial** pattern) plus a colour camera, so its output is an **RGB-D image**: **RGB** (colour) + **D** (depth), aligned.
+
+**Why lasers?** ToF requires a **coherent** source; and lasers give bright compact beams, **invisible infrared** (undisturbing — good for gaming), narrow focus, single frequency (easy to detect), low dispersion, and short semiconductor pulses. (LASER = Light Amplification by Stimulated Emission of Radiation.)
+
+### range = distance per pixel (2.5-D); capture it by timing light (ToF, d=ct/2), intersecting two rays (triangulation), or reading a projected pattern (structured light).
+
+point cloud $(i,j,f(i,j))$; ToF $d=ct/2$; triangulation = ray∩ray; binary-coded $2^m$ stripes; Kinect = IR-speckle spatial pattern → RGB-D.
+
+### Self-check quiz
+
+1. Why is range data called 2.5-D, not full 3-D?
+
+→ Answer: it records only the visible surface's depth (one distance per pixel), not the full volumetric/interior structure
+
+2. In time-of-flight, why divide by two?
+
+→ Answer: $c\,t$ is the round-trip out-and-back path; depth is half: $d=ct/2$ (source & detector co-located)
+
+3. How many stripes do $m$ binary-coded patterns resolve, and why?
+
+→ Answer: $2^m$ — each pattern adds one lit/dark bit, doubling the distinguishable $m$-bit code words (e.g. 101)
+
+4. Advantage & limitation of single-projection spatial-pattern structured light?
+
+→ Answer: advantage: one projection encodes all rays → fast/cheap; limitation: bounded by spatial resolution → lower-resolution range image
+
+— end of Lecture 41 notes ✏️
+
+# LECTURE 42 — Range Image Processing — Part II
+
+differential geometry — parametric curves, tangent, curvature & torsion · the Frenet frame · parametric surfaces, surface normal · first & second fundamental forms · normal curvature
+
+🧠 the big picture, first
+
+Range data is **surface data**, so to characterize it we need the language of differential geometry: how curves **bend** (curvature, torsion) and how surfaces are described locally (tangent plane, normal, the two **fundamental forms**). This toolkit is what the next lectures use to **classify surface points**.
+
+## 1.  parametric curves — tangent & curvature
+
+Trace a curve by a parameter $t$ (think "time"): $\mathbf X(t)=(u(t),v(t))$ in 2-D. The **tangent** is the first derivative (velocity); **curvature** $\kappa$ (needs the 2nd derivative) is how sharply it bends:
+
+2-D curvature
+
+$$ \kappa=\frac{|u'v''-u''v'|}{(u'^2+v'^2)^{3/2}} $$
+
+3-D curvature (determinant → cross product)
+
+$$ \kappa=\frac{\lVert\mathbf X'\times\mathbf X''\rVert}{\lVert\mathbf X'\rVert^{3}} $$
+
+**✍️ worked example (illustrative) — circle of radius $R$**
+$\mathbf X(t)=(R\cos t,R\sin t)$: $u'{=}{-}R\sin t,v'{=}R\cos t,u''{=}{-}R\cos t,v''{=}{-}R\sin t$. Numerator $=|R^2\sin^2t+R^2\cos^2t|=R^2$; denominator $=(R^2)^{3/2}=R^3$; so $\kappa=\tfrac{R^2}{R^3}=\tfrac1R$ — matching $\kappa=1/r$ (radius of the osculating circle).
+
+## 2.  the Frenet frame — a moving coordinate system
+
+At each point attach three perpendicular unit axes: **tangent** $\mathbf T$, **curve normal** $\mathbf N$ (in the osculating plane, toward the osculating-circle centre), and **binormal** $\mathbf B=\mathbf T\times\mathbf N$. They span three planes:
+| plane | spanned by |
+| **Osculating** | $\mathbf T,\mathbf N$ (the curve locally lies here) |
+| **Normal** | $\mathbf N,\mathbf B$ (⊥ tangent) |
+| **Rectifying** | $\mathbf T,\mathbf B$ |
+
+Frenet–Serret (how the frame turns; arc-length $s$)
+
+$$ \tfrac{d\mathbf T}{ds}=\kappa\mathbf N,\quad \tfrac{d\mathbf B}{ds}=-\tau\mathbf N,\quad \tfrac{d\mathbf N}{ds}=-\kappa\mathbf T+\tau\mathbf B $$
+
+**Curvature** $\kappa$ = how fast $\mathbf T$ turns; **torsion** $\tau$ = how fast the curve twists out of its osculating plane. (Helix $\mathbf X=(a\cos t,a\sin t,bt)$: $\kappa=\tfrac{a}{a^2+b^2}$, constant.)
+
+## 3.  parametric surfaces — tangent plane & normal
+
+A surface needs **two** parameters: $\mathbf X(u,v)=(x,y,z)$. The two **coordinate tangents** are the partials $\mathbf X_u,\mathbf X_v$; they span the **tangent plane**, and the **surface normal** is their normalized cross product:
+
+surface normal
+
+$$ \mathbf N=\frac{\mathbf X_u\times\mathbf X_v}{\lVert\mathbf X_u\times\mathbf X_v\rVert} $$
+
+tangent of a curve on the surface (chain rule)
+
+$$ \mathbf X'(t)=\mathbf X_u\,u'(t)+\mathbf X_v\,v'(t) $$
+
+## 4.  the two fundamental forms
+
+The **first fundamental form** $\mathrm I=\mathbf X_t\cdot\mathbf X_t$ measures **lengths** on the surface (the squared tangent magnitude):
+
+first fundamental form
+
+$$ \mathrm I=E\,u'^2+2F\,u'v'+G\,v'^2 $$
+
+$$ E=\mathbf X_u\!\cdot\!\mathbf X_u,\ F=\mathbf X_u\!\cdot\!\mathbf X_v,\ G=\mathbf X_v\!\cdot\!\mathbf X_v $$
+
+The **second fundamental form** $\mathrm{II}$ measures **bending** — how the surface normal changes. Since a tangent is ⊥ the normal ($\mathbf t\cdot\mathbf N=0$), differentiating gives:
+
+second fundamental form
+
+$$ \mathrm{II}=-\,\mathbf t\cdot d\mathbf N=\kappa\,(\mathbf n\cdot\mathbf N)=\kappa\cos\theta $$
+
+$\theta$ = angle between the **curve** normal $\mathbf n$ and the **surface** normal $\mathbf N$. (Coefficient form $\mathrm{II}=L\,u'^2+2M\,u'v'+N\,v'^2$ with $L=\mathbf X_{uu}\!\cdot\!\mathbf N$, etc.)
+
+**🎯 normal curvature**
+A **normal section** = a curve lying in the normal plane, so $\mathbf n$ aligns with $\mathbf N$ ⇒ $\cos\theta=\pm1$ ⇒ $\mathrm{II}=\pm\kappa$. This special curvature is the **normal curvature** — the building block for **classifying surface points** in the next lectures.
+
+### curves bend by κ (and twist by τ); surfaces carry a tangent plane + normal, and two forms — I for lengths, II = κcosθ for bending.
+
+$\kappa=\tfrac{\lVert X'\times X''\rVert}{\lVert X'\rVert^3}$; Frenet $\tfrac{dT}{ds}=\kappa N$; $\mathbf N=\tfrac{X_u\times X_v}{\lVert\cdot\rVert}$; $\mathrm I=Eu'^2{+}2Fu'v'{+}Gv'^2$; normal section ⇒ $\mathrm{II}=\pm\kappa$.
+
+### Self-check quiz
+
+1. Write the 2-D curvature and its 3-D counterpart.
+
+→ Answer: $\kappa=\tfrac{|u'v''-u''v'|}{(u'^2+v'^2)^{3/2}}$; in 3-D the determinant becomes a cross product: $\kappa=\tfrac{\lVert X'\times X''\rVert}{\lVert X'\rVert^3}$
+
+2. Name the three Frenet planes and the binormal.
+
+→ Answer: osculating ($T,N$), normal ($N,B$), rectifying ($T,B$); binormal $\mathbf B=\mathbf T\times\mathbf N$
+
+3. Give the surface normal and the first-fundamental-form coefficients.
+
+→ Answer: $\mathbf N=(X_u\times X_v)/\lVert X_u\times X_v\rVert$; $E=X_u\!\cdot\!X_u$, $F=X_u\!\cdot\!X_v$, $G=X_v\!\cdot\!X_v$
+
+4. What does $\mathrm{II}$ equal, and what is a normal section?
+
+→ Answer: $\mathrm{II}=\kappa\cos\theta$ ($\theta$ = angle between curve & surface normals); a normal section lies in the normal plane so $\cos\theta=\pm1$ ⇒ $\mathrm{II}=\pm\kappa$ = normal curvature
+
+— end of Lecture 42 notes ✏️
+
+# LECTURE 43 — Range Image Processing — Part III
+
+normal curvature · the shape operator · principal, Gaussian & mean curvature · Besl–Jain surface-type classification · curvature of a range image (Monge patch)
+
+🧠 the big picture, first
+
+Every surface point has a local **shape** — peak, pit, ridge, saddle, flat — completely captured by how its normal turns, i.e. by **curvature**. This lecture turns the fundamental forms into two numbers per point (Gaussian $K$ and mean $H$), classifies the shape from their **signs** (Besl–Jain), and — the payoff — runs the whole thing directly on a depth map $z=h(x,y)$ with simple derivative masks.
+
+## 1.  from fundamental forms to two curvatures
+
+Along a tangent direction $(du,dv)$, the **normal curvature** is the second form over the first:
+
+$$ \kappa_n=\frac{\mathrm{II}}{\mathrm I}=\frac{e\,du^2+2f\,du\,dv+g\,dv^2}{E\,du^2+2F\,du\,dv+G\,dv^2},\qquad e=N\!\cdot\!X_{uu},\ f=N\!\cdot\!X_{uv},\ g=N\!\cdot\!X_{vv} $$
+
+A point has many normal curvatures (one per direction). Collapse them with the **shape operator** (Weingarten map):
+
+shape operator
+
+$$ L=\begin{bmatrix}E&F\\F&G\end{bmatrix}^{-1}\begin{bmatrix}e&f\\f&g\end{bmatrix} $$
+
+**read it as:** $L$'s **eigenvalues** are the two **principal curvatures** $k_1,k_2$ (the max/min normal curvatures) and its **eigenvectors** are the **principal directions**. (Signed! "dominant" = larger $|k|$.)
+
+## 2.  Gaussian & mean curvature
+
+Gaussian $K$ = det $L$ = product
+
+$$ K=k_1 k_2=\frac{eg-f^2}{EG-F^2} $$
+
+mean $H$ = ½ tr $L$ = average
+
+$$ H=\frac{k_1+k_2}{2}=\frac{eG-2fF+gE}{2(EG-F^2)} $$
+
+The map inverts: $k_1,k_2$ are the roots of $\,k^2-2Hk+K=0$, i.e. $k_{1,2}=H\pm\sqrt{H^2-K}$.
+
+## 3.  local shape from the signs of $H$ and $K$
+
+Like a 1-D extremum ($f'=0$; $f''<0$ = peak, $f''>0$ = pit), curvature signs name the shape. **Peak**: both $k<0$ ⇒ $H<0,K>0$. **Pit**: both $k>0$ ⇒ $H>0,K>0$. **Flat**: $k_1=k_2=0$ ⇒ $H=K=0$. **Besl & Jain (1986)** used the full sign table (richer than principal-sign classes):
+|  | $K>0$ | $K=0$ | $K<0$ |
+| **$H<0$** | Peak | Ridge | Saddle ridge |
+| **$H=0$** | — | Flat / planar | Minimal surface |
+| **$H>0$** | Pit (cup) | Valley | Saddle valley |
+
+Each pixel gets a surface-type label — useful downstream for **segmenting a range image into surface patches**.
+
+## 4.  ⭐ curvature of a range image — the Monge patch
+
+Range data is a **simplified** surface: the parameters are $x,y$ and depth is a height $z=h(x,y)$, so $X=(u,v,h(u,v))$. Everything simplifies:
+
+first form & normal ($W=\sqrt{1+h_u^2+h_v^2}$)
+
+$$ E{=}1{+}h_u^2,\ F{=}h_uh_v,\ G{=}1{+}h_v^2,\ \ \mathbf N=\tfrac{(-h_u,-h_v,1)}{W} $$
+
+second form
+
+$$ e=\tfrac{h_{uu}}{W},\ f=\tfrac{h_{uv}}{W},\ g=\tfrac{h_{vv}}{W} $$
+
+Since $EG-F^2=1+h_u^2+h_v^2=W^2$, the curvatures have clean closed forms:
+
+Gaussian curvature of a depth map
+
+$$ K=\frac{h_{uu}h_{vv}-h_{uv}^2}{(1+h_u^2+h_v^2)^2} $$
+
+mean curvature of a depth map
+
+$$ H=\frac{(1{+}h_u^2)h_{vv}-2h_uh_vh_{uv}+(1{+}h_v^2)h_{uu}}{2(1+h_u^2+h_v^2)^{3/2}} $$
+
+**⚙️ the range-image curvature pipeline**
+
+1. Treat the depth map as $z=h(x,y)$.
+
+2. Compute $h_u,h_v,h_{uu},h_{uv},h_{vv}$ with **derivative masks** (convolution).
+
+3. Plug into the closed forms → $H,K$ at every pixel.
+
+4. Read the signs of $(H,K)$ off the Besl–Jain table → a **surface-type label** per pixel → segment into patches.
+
+### two numbers say it all: $K=k_1k_2$ (det), $H=\tfrac{k_1+k_2}{2}$ (½ tr); their signs name the shape, and for a depth map they're just derivative masks.
+
+$L=\mathrm I^{-1}\mathrm{II}$; peak $H{<}0,K{>}0$; Monge $K=\tfrac{h_{uu}h_{vv}-h_{uv}^2}{(1+h_u^2+h_v^2)^2}$; Besl–Jain HK signs → surface labels.
+
+### Self-check quiz
+
+1. What are the eigenvalues/eigenvectors of $L=\mathrm I^{-1}\mathrm{II}$?
+
+→ Answer: eigenvalues = the two principal curvatures $k_1,k_2$; eigenvectors = the principal directions
+
+2. Express $K$ and $H$ via principal curvatures and via $L$.
+
+→ Answer: $K=k_1k_2=\det L$; $H=\tfrac{k_1+k_2}{2}=\tfrac12\operatorname{tr}L$
+
+3. Give $K$ for a range image $z=h(x,y)$, and the sign test for a peak.
+
+→ Answer: $K=\tfrac{h_{uu}h_{vv}-h_{uv}^2}{(1+h_u^2+h_v^2)^2}$; peak ⇔ $H<0$ and $K>0$
+
+4. Why did Besl–Jain classify by $(H,K)$ signs rather than principal-curvature signs?
+
+→ Answer: the $(H,K)$-sign map gives a richer set (peak, pit, ridge, valley, saddle ridge, saddle valley, minimal, flat) than the coarser symmetric principal-sign scheme
+
+— end of Lecture 43 notes ✏️
+
+# LECTURE 44 — Range Image Processing — Part IV
+
+a worked curvature example · step vs roof edges · multi-scale curvature edge detection · planar-patch segmentation (least-squares plane fit + greedy merging)
+
+🧠 the big picture, first
+
+Three usable range tools built on the curvature machinery: a full **worked example** of computing $H,K$ on a surface; the **two edge types unique to range data** (step & roof) and how curvature detects them across scales; and how a depth map is **segmented into planar patches** by plane-fitting + greedy merging.
+
+## 1.  worked example — curvatures of a separable surface
+
+For a **separable** surface, write the $u$- and $v$-parts as column vectors and take the element-wise (Hadamard $\odot$) product — differentiation then stays trivial:
+
+$$ \mathbf X(u,v)=F(u)\odot G(v),\quad \mathbf X_u=F'(u)\odot G(v),\quad \mathbf X_v=F(u)\odot G'(v) $$
+
+**🧮 the pipeline (evaluate at $(u,v)=(0.5,0.5)$)**
+
+1. Evaluate $F,G,F',G',F'',G''$ once at $0.5$; form $\mathbf X_u,\mathbf X_v$ and the 2nd derivatives $\mathbf X_{uu}=F''\!\odot\!G$, $\mathbf X_{vv}=F\!\odot\!G''$, $\mathbf X_{uv}=F'\!\odot\!G'$.
+
+2. Unit normal $\mathbf n=\tfrac{\mathbf X_u\times\mathbf X_v}{\lVert\mathbf X_u\times\mathbf X_v\rVert}$; first form $E,F,G$; second form $e=\mathbf X_{uu}\!\cdot\!\mathbf n$, $f=\mathbf X_{uv}\!\cdot\!\mathbf n$, $g=\mathbf X_{vv}\!\cdot\!\mathbf n$.
+
+3. Shape operator $S=\mathrm I^{-1}\mathrm{II}$; $K=\det S=\tfrac{eg-f^2}{EG-F^2}$, $H=\tfrac12\operatorname{tr}S$.
+
+Carrying the numbers through gives **$H\approx0.086$** and $K=\det S$.
+
+## 2.  two edge types — step vs roof
+
+Intensity edges are almost purely **step** (a brightness jump). A range image adds a second kind: where depth is continuous but its **slope** jumps — two planes meeting, like a roof ridge.
+
+#### step edge (jump in value)
+
+0th-order discontinuity (depth jump).
+
+#### roof edge (kink in slope)
+
+1st-derivative discontinuity (two planes).
+
+## 3.  multi-scale curvature edge detection
+
+Smooth with a Gaussian (scale $\sigma$) then differentiate ("derivative of Gaussian"). Curvature of a 1-D profile and its telltale **scale behaviour**:
+
+1-D curvature
+
+$$ k(x)=\frac{z''(x)}{(1+z'(x)^2)^{3/2}} $$
+
+ratio computable from the signal
+
+$$ \frac{k''}{k'}\propto\frac{z^{(4)}}{z^{(3)}} $$
+| edge | candidate =  | scale invariance |
+| **Step** | **zero crossing** of Gaussian curvature | $k''/k'\approx$ const across $\sigma$ |
+| **Roof** | **maximum** of the dominant principal curvature (along its direction) | $\sigma\cdot(k''/k')\approx$ const (ratio $\propto 1/\sigma$) |
+
+Compute candidates at scales $\sigma\in\{20,40,60,80\}$; keep only points whose scale-invariance holds; **report at the finest scale** (smoothing shifts positions).
+
+## 4.  segmenting into planar patches
+
+Fit small planar patches, then **greedily merge** neighbours. Fit a plane $z=a_1x+a_2y+a_3$ to $N$ points by least squares (the pseudo-inverse from model fitting):
+
+least-squares plane fit
+
+$$ XA=Z\ \Rightarrow\ A=(X^{T}X)^{-1}X^{T}Z $$
+
+fit residual = arc cost
+
+$$ E=\big\lVert(I-X(X^{T}X)^{-1}X^{T})Z\big\rVert $$
+
+**🔗 greedy graph merging (Faugeras–Hebert, 1986)**
+
+- Each patch = a **node**; neighbouring patches joined by an **arc** whose cost = residual of fitting the merged patch with one plane.
+
+- Repeatedly merge the **minimum-cost arc**, rebuild the graph; **stop** when the best merge would exceed an error threshold.
+
+### range data has step (value jump) and roof (slope jump) edges — track them across scale by curvature — and segments into planes by least-squares fit + greedy merging.
+
+$K=\det S$, $H=\tfrac12\operatorname{tr}S$; step = curvature zero-crossing, roof = dominant-curvature max; plane $A=(X^TX)^{-1}X^TZ$, arc cost = residual.
+
+### Self-check quiz
+
+1. Step edge vs roof edge in a range image?
+
+→ Answer: step = a jump in the depth value (0th-order discontinuity); roof = continuous depth but a slope (1st-derivative) discontinuity — two planes meeting
+
+2. How do the curvature-derivative ratios behave across scale for each?
+
+→ Answer: step: $k''/k'$ ≈ constant across $\sigma$; roof: $\propto 1/\sigma$, so $\sigma\cdot(k''/k')$ ≈ constant
+
+3. What candidate points are used for step vs roof edges?
+
+→ Answer: step = zero crossings of Gaussian curvature; roof = maxima of the dominant principal curvature along its direction
+
+4. How is a plane fit for patch segmentation, and what's the arc cost?
+
+→ Answer: $A=(X^TX)^{-1}X^TZ$; arc cost = fit residual $\lVert(I-X(X^TX)^{-1}X^T)Z\rVert$; greedily merge the min-cost arc until an error threshold
+
+— end of Lecture 44 notes ✏️
+
+# LECTURE 45 — Range Image Processing — Part V
+
+morphological segmentation (digital neighborhood planes, NPS) · registration of range data — the SVD closed form & ICP · whole-topic summary
+
+🧠 the big picture, first
+
+Two finishers: a **fast morphological** segmentation using local orientation (neighborhood plane sets), and the **registration** problem — find the rotation+translation aligning two range views, first in closed form via **SVD**, then refined by **ICP**.
+
+## 1.  morphological segmentation — neighborhood plane sets
+
+A fast alternative to greedy merging: read each point's **local orientation** from a **3×3×3 voxel** neighborhood (a **26-neighborhood**, $3^3-1$). A surface point's neighbors should lie on one of **9 digital neighborhood planes** (3 principal + 6 diagonal, each 9 points incl. $P$).
+
+neighborhood plane set (the local feature)
+
+$$ \mathrm{NPS}[p]=\{\,i:\ |N(p)\cap P_i\cap A|\ge k\,\},\quad k\ge 3 $$
+
+$A$ = occupied (object) voxels; $P_i$ = the $i$-th plane; $k$ = min coincident points. **Two pixels merge iff their NPS sets are equal** (region growing).
+
+**🔧 noise tolerance**
+Real range data is noisy, so points drift outside the exact 3×3×3. Fix: use an **extended $a{\times}b{\times}c$ neighborhood** and **OR-map** its voxels onto the 26 variables (a variable is true if any mapped voxel is occupied). The mapping must be **total, onto, connected** and structurally similar — then all DNP/NPS definitions apply unchanged.
+
+## 2.  ⭐ registration — align two range views
+
+Two views of the same object differ by a **rigid-body transform** (rotation $R$ + translation $T$, same scale). With correspondences $\{m_i\}\to\{d_i\}$ and noise $v_i$:
+
+model + constrained least squares
+
+$$ d_i=R m_i+T+v_i,\quad E=\sum_i\lVert d_i-R m_i-T\rVert^2 $$
+
+$$ \text{subject to } R^{T}R=I\ (\det R=+1) $$
+
+The orthonormal constraint means it's **not** ordinary least squares. Solve in two moves:
+
+**🧭 the SVD solution**
+
+1. $\partial E/\partial T=0$ ⇒ $\hat T=\bar d-R\bar m$ (centroids). So **centre** both sets: $d_{ci}=d_i-\bar d$, $m_{ci}=m_i-\bar m$.
+
+2. Minimizing $E$ ⇔ **maximizing** $\operatorname{tr}(RH)$ with the cross-covariance $H=\sum_i m_{ci}\,d_{ci}^{T}$.
+
+3. Take $H=UDV^{T}$ ⇒ $\ \boxed{\hat R=VU^{T}}\ $ (orthonormal), then $\hat T=\bar d-\hat R\bar m$.
+
+**🔁 Iterative Closest Point (ICP) — Besl & McKay, 1992**
+When correspondences are unknown/outlier-ridden: initialize $R_0,T_0$; then **repeat** — apply the transform, find each point's **nearest neighbour** (mutually-closest pairs) as new correspondences, re-estimate $R,T$ by the SVD step, until convergence.
+
+## 3.  the whole range-image topic on one page
+
+**📌 range image analysis — cheat-sheet**
+| stage | tools |
+| **sensing** | passive stereo; active: **time-of-flight** ($d=ct/2$), **triangulation**, **structured light** ($2^m$ stripes / speckle) |
+| **local geometry** | surface normal, principal/Gaussian/mean curvature; curvature **signs** → surface type (Besl–Jain) |
+| **edges** | **step** = zero-crossing of Gaussian curvature; **roof** = maximum of dominant curvature; multi-scale tracking |
+| **segmentation** | greedy plane-fit + merge (L44); morphological NPS / local orientation (L45) |
+| **registration** | rigid $R,T$ via SVD ($\hat R=VU^{T}$), refined by **ICP** |
+
+### segment by equal neighborhood-plane-sets; align two views by SVD of the cross-covariance ($\hat R=VU^{T}$, $\hat T=\bar d-\hat R\bar m$), refined by ICP.
+
+NPS $=\{i:|N(p)\cap P_i\cap A|\ge k\}$; registration = constrained LSQ ($R^TR=I$); $H=\sum m_{ci}d_{ci}^{T}$; ICP re-finds correspondences by nearest neighbour.
+
+### Self-check quiz
+
+1. What is a point's NPS, and how does it segment a range image?
+
+→ Answer: $\mathrm{NPS}[p]=\{i:|N(p)\cap P_i\cap A|\ge k\}$ (plane indices with ≥$k$≈3 coincident neighbours); pixels with **equal** NPS merge into one planar segment
+
+2. Why is rigid-body registration not ordinary least squares?
+
+→ Answer: $R$ must be orthonormal ($R^TR=I$, $\det R=+1$) — a constrained optimization, not plain LSQ
+
+3. Give the closed-form SVD registration.
+
+→ Answer: centre both sets; $H=\sum m_{ci}d_{ci}^T$; $H=UDV^T$ ⇒ $\hat R=VU^T$; $\hat T=\bar d-\hat R\bar m$
+
+4. What does ICP add over the one-shot SVD solve?
+
+→ Answer: it handles unknown correspondences/outliers by iterating: transform → nearest-neighbour pairs → re-estimate $R,T$ by SVD → repeat to convergence
+
+— end of Lecture 45 · end of Week 9 ✏️

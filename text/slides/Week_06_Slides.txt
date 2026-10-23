@@ -1,0 +1,964 @@
+# Week 6 — lecture slides
+(source: NPTEL, 78 slides; text layer, plus OCR on 10 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Feature detection and description
+(Week 06: Lectures 24-28)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+
+### Slide 2
+Can you match the scene
+points?
+Translation, rotation, scale ..
+o Detection
+o Description
+o Matching
+
+### Slide 3
+Feature detection
+“flat” region:
+no change in
+all directions
+“edge”:  no
+change along
+the edge
+direction
+“corner”:
+significant
+change in all
+directions
+n How does the measure change on shifting windows at
+different points?
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+A local measure for uniquely identifying the  feature.
+
+### Slide 4
+• how do the pixels in W change?
+• compare each pixel before and
+after by summing up the squared
+differences (SSD).
+• this defines an SSD “error” of
+E(u,v).
+Feature detection
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+Consider shifting the window W by (u,v).
+
+### Slide 5
+Small motion assumption
+For small u and v
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 6 (OCR)
+pore detection
+I(a+u,y+v) ~ I(x,y) + Seu t+ Seo ~I(x,y) + Use Ty] |
+EQurv) = So at+uy+uy— La,y))
+(z,y)Ew
+~ ted tt | * | ~1(2,y))
+(x,y)EWw
+EPO
+7 PP Inly]fuj -&’ ; aan
+
+### Slide 7
+Feature detection
+For the example above
+• Suppose the center of the green window
+moved to anywhere on the blue unit circle.
+• Directions for the largest and the smallest E
+values?
+• Eigenvectors of H.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 8 (OCR)
+Quick eigenvalue/eigenvector
+4 eview
+Ax = Ax
+The eigenvectors of a matrix 4 are the vectors x that satisfy:
+hiy —A h
+det(A — AI) =O. dew} “+! M2 = 0
+( ) hoy hoo — A
+The scalar 4 is the eigenvalue corresponding to x
+» The eigenvalues are found by solving:
+At = $ nn + hog) + \/4hizghar + (hi — hoa)
+=» For eigen vector solve the following:
+hi —X hip x
+hai me [EG]
+Once you know 4, you find eigen vector [x y]' by solving the
+above. Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 9
+Feature detection
+Eigenvalues and eigenvectors of H
+• Define shifts with the smallest and
+largest change (E value)
+• x+ = direction of largest increase in E.
+• l+ = amount of increase in direction x+
+• x- = direction of smallest increase in E.
+• l- = amount of increase in direction x-
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 10
+Feature scoring function
+E(u,v) to be large for small shifts in all
+directions
+• the minimum of E(u,v) should be large,
+over all unit vectors  [u v].
+• this minimum is given by the smaller
+eigenvalue (l-) of H
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 11
+Feature detection
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 12
+Feature detection:  Algorithm
+• Compute the gradient at each point in the image.
+• Obtain the H matrix from the entries in the gradient.
+• Compute eigenvalues of H.
+• Locate points with large response (l- > threshold)
+• Select points where l- is a local maximum as
+features.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 13
+Local maximum: illustration
+• Points with l- as a local maximum.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 14
+The Harris operator
+l- is a variant of the “Harris operator” for feature detection.
+• The trace is the sum of the diagonals, i.e.,
+trace(H) = h11 + h22
+• Very similar to l- but less expensive (no square root)
+• Called the “Harris Corner Detector” or “Harris Operator”
+• Lots of other detectors, this is one of the most popular.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 15
+The Harris operator
+Harris
+operator
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 16
+Harris detector example
+Input image
+f-Value
+Local maxima
+
+### Slide 17 (OCR)
+Feature matching
+| 1 Oe
+| 2 ; hi
+| i F - ;
+! 9 i,
+| ! | ] 7 | i
+- £ i: : “ nyo cece + I ;
+as fem
+
+### Slide 18
+Matching with Features
+o Detect feature points in both images.
+o Describe them by local statistics.
+o Find corresponding pairs (Matching).
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 19
+Invariance
+o Is it possible to select same features under
+various transformations?
+o Rotation
+o Change of illumination
+o Scale
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 20
+Scale invariant detection
+Key idea for detecting corners
+Find scale that gives local maximum of f.
+n f is a local maximum in both position and
+scale
+n Common definition of f:  Laplacian
+(or difference between two Gaussian filtered
+images with different s.d.’s.).
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 21
+Invariance
+Consider two images I1 and I2 so that I2 is
+a transformed version of I1
+n For example,
+n Translation
+n Rotation
+n Scale
+n Reflection
+n Non-uniform scaling
+n Illumination
+n View …
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+Tranformational Invariance:
+Detection of the same
+features regardless of the
+transformation.
+
+### Slide 22
+Detection and description: to
+be invariant
+Both should be ensured.
+1. Detector to be transformational invariant.
+n Harris measure is invariant to translation and rotation.
+n Scale requires handling of  multi-resolution representation
+n Usual approach: Computing features at multiple scales using
+a Gaussian pyramid.
+n More precise computation locates features at  “the best scale”
+(e.g., SIFT)
+2. Feature descriptor to be transformational invariant.
+captures the information in a region around the detected
+feature point.
+n e.g. histogram of gradient directions in a square window centering a
+feature point.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 23
+Finding Keypoints – Scale,
+Location
+n How do we choose scale?
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 24
+Scale Invariant Detection
+n Functions for determining scale
+Kernels:
+where Gaussian
+Laplacian
+Difference of Gaussians
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+Convolve with image and observe extrema in 3-D.
+
+### Slide 25 (OCR)
+4 Kernel plots in 1-D
+0.2
+A NIX
+-0.1 E :
+-0.2 | :
+-0.3
+—— DoG
+-0.4
+5 -4 3 -2 Al 0 1 2 3 4 5
+Both kernels are invariant to scale and rotation.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 26
+Relationship between LoG and
+DoG operator
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+The factor (k-1) is kept constant across scales.
+èdoes not influence extrema locations.
+
+### Slide 27
+Finding Keypoints
+– Scale, Location
+Convolve with
+Gaussian
+Downsample
+Find extrema
+in 3D DoG space
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 28
+Scale Invariant Detectors
+n Harris-Laplacian (Mikolajczyk & Schmid)
+n Apply Laplacian operation with varying scale.
+n Get local maxima of Harris corner response in space
+and scale.
+D.Lowe. “Distinctive Image Features from Scale-Invariant Keypoints”.  IJCV
+2004
+• SIFT (Lowe)
+• Find local maximum Difference of Gaussians in
+space and scale
+K. Mikolajczyk, C.Schmid. “Indexing Based on Scale Invariant Interest Points”.
+ICCV 2001.
+
+### Slide 29
+Scale Invariant Detection:
+Summary
+n Given: two images of the same scene with a large
+scale difference between them.
+n Goal: find the same interest points independently in
+each image.
+n Solution: search for maxima of suitable functions in
+scale and in space (over the image).
+Methods:
+1. Harris-Laplacian [Mikolajczyk, Schmid]: maximize Laplacian
+over scale, Harris’ measure of corner response over the
+image.
+2. SIFT [Lowe]: maximize Difference of Gaussians over scale
+and space.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 30
+Keypoint localization
+n There are still a lot of points, some
+of them are not good enough.
+n The locations of keypoints may be
+not accurate.
+n Eliminating edge points.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 31
+Eliminating edge
+points
+n Edge point: large principal curvature across the
+edge but a small one in the perpendicular
+direction.
+n The eigenvalues of H are proportional to the
+principal curvatures, so two eigenvalues
+shouldn’t differ too much.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+D(.)=DoG of the function.
+Eliminate keypoint if
+the ratio greater than
+the threshold.
+
+### Slide 32
+Orientation assignment
+n Create histogram of local
+gradient directions at selected
+scale.
+Assign canonical orientation at
+peak of smoothed histogram.
+Each key specifies stable 2D
+coordinates (x, y, scale,
+orientation).
+If there are two major orientations, use both.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 33 (OCR)
+Keypoint localization with
+agp orientation
+| — initial
+* = b wee .
+a | <gteoa Es keypoints
+ss — ; Matt Lie a 2) mat Pitt
+233x189 acta UE
+“it et mT ge Rie pwat sg. 832
+(a) (b) lias 1
+re Be Teg 536
+reypoints peta ANE ne ES keypoints
+cf i a owes 8 after
+a oe ee
+FESTONC scenic (hich threshold
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 34
+Keypoint Descriptors
+n At this point, each keypoint has
+n location
+n scale
+n orientation
+n Next is to compute a descriptor for the local
+image region about each keypoint that is
+n highly distinctive
+n invariant as possible to variations such as
+changes in viewpoint and illumination
+
+### Slide 35
+• Take 16x16 square window (orientation corrected)
+around detected feature
+• Compute edge orientation (angle of the gradient - 90°)
+for each pixel
+• Throw out weak edges (threshold gradient magnitude)
+• Create histogram of surviving edge orientations
+Scale Invariant Feature
+Transform (Lowe’99, ICCV)
+Adapted from slide by David Lowe
+2p
+angle histogram
+
+### Slide 36
+SIFT descriptor
+• Divide the 16x16 window into a 4x4 grid of cells
+(2x2 case shown below).
+• Compute an orientation histogram for each cell
+• 16 cells * 8 orientations = 128 dimensional
+descriptor.
+Adapted from slide by David Lowe
+
+### Slide 37
+Robustness
+n changes in viewpoint
+n Up to about 60 degree out of plane rotation
+n significant changes in illumination
+n Sometimes even day vs. night
+Capable of handling
+
+### Slide 38
+Speeded-Up Robust Features
+(SURF): Another descriptor
+n Speeded-Up Robust Features (SURF)
+n (Bay et al. ECCV, 2006)
+n Box-type convolution filters and use of
+integral images to speed up the
+computation.
+n Use of Hessian operator for key point
+detectionà Local maxima of det(H).
+n Accumulate orientation corrected Haar
+wavelet responses.
+
+### Slide 39
+Hessian Operator
+Convolution with the Gaussian
+second order derivative with image.
+Keypoint: Maximum of det(H(.)) over space and scale.
+Bay et al, Speeded up robust features (SURF), CVIU, 2008
+
+### Slide 40 (OCR)
+Approximation of Gaussian by
+| Box fi lte rs Bay et al, Speeded up robust features (SURF), CVIU, 2008
+FCCC Coo Se
+SSEmmEECE a, Boe
+S.C] > be
+Se 9x9 Box-fi ers a re annnenoe
+Seem «| et PRfOxImation OF Ee
+Co ae Gaussian width 1.2.7 11 3a
+———_ . =CCCC eee
+Coe TT <> |
+_— | ae
+PEPE Cre D EEC
+FCLEL CE »
+det (Happrox) — DrrDyy (wDry)?. w0.9
+
+### Slide 41
+Fast computation using the
+integral image
+Only 3 additions
+and four
+memory access.
+Bay et al, Speeded up robust features (SURF), CVIU, 2008
+
+### Slide 42
+Haar Filter Responses
+n Dominant orientation by accumulating
+Haar horizontal and vertical responses
+in a rotated sliding window (of width
+600) at the scale of key point.
+n The longest vector provides the
+dominant direction.
+Haar Filters
+Box filter implementation.
+Bay et al, Speeded up robust features (SURF), CVIU, 2008
+6 operations needed for
+computing each filter response
+using integral image.
+
+### Slide 43
+SURF: Sum of Haar Wavelet
+responses
+Size of the window=20 x scale
+o Partitioned into 4x4
+square sub-regions.
+o Haar wavelet
+responses at
+regularly spaced
+5x5 sample patches
+in each sub-region.
+o Each sub-region
+has 4D vector.
+o Concatenate them
+to 64 D vector.
+Bay et al, Speeded up robust features (SURF), CVIU, 2008
+
+### Slide 44
+Other types of detectors and
+descriptors
+n FAST: Features from Accelerated
+Segment Test (Rosten et al, PAMI,
+2010).
+n BRIEF: Binary Robust Independent
+Elementary Features (Colonder et al,
+ECCV, 2010).
+n ORB: Oriented FAST and Rotated BRIEF
+(Rublee et al, ICCV, 2011)
+
+### Slide 45 (OCR)
+FAST: Principle
+; TT TILL
+— “CL SLLLLL
+7 wait |i
+nn ttt
+[I] SEER EE
+OBEGEEOORn
+a ) OOD BEREEDOSS
+im
+i RI naan
+SLE LLU Le
+Yt I Cholele! | | lo
+FCCP eet Ce ie
+Tee
+o 12 point test: Ifthere exists 12 consecutive
+points in the set of 16 points brighter than
+the central pixel (Rosten et al ICCV’05).
+o Modified strategy: Train decision tree on the
+boolean conditions given labelled data.
+Rosten et al, Faster and Better: A Machine Learning
+Approach to Corner Detection, PAMI, 2010
+
+### Slide 46
+FAST: Partitioning  of points on
+the circle and Training a DT
+o Classification of points in three
+classes and create three partitions
+for a point.
+o Train a decision tree.
+Rosten et al, Faster and Better: A Machine Learning
+Approach to Corner Detection, PAMI, 2010
+
+### Slide 47
+BRIEF: Principle
+o Generate randomly a set of nd pairs of locations
+(xi,yi) in a patch centered around a point.
+o Perform  the following boolean test.
+BRIEF descriptor: nd Dimensional binary string
+128, 256, 512
+Colonder et al, BRIEF: Binary Robust Independent
+Elementary Features, ECCV, 2010
+
+### Slide 48
+ORB: Principle
+n FAST does not operate across scale.
+n Apply FAST detector on pyramid of
+smoothened images.
+n Orientation by intensity centroid: The vector
+from the center of the patch and to a centroid
+considering the intensity distribution
+(intensity weighted center of patch).
+n Rotate the patch by the angle and compute
+BRIEF called steered BRIEF.
+
+### Slide 49
+Matching
+n Representation of a key-point by a feature vector.
+n e.g. [f0 f1 … fn]T
+n Use distance functions / similarity measures.
+n L1 norm
+n L2 norm
+n Lp norm
+
+### Slide 50
+Region descriptors
+n Patch descriptors
+n Texture descriptors
+n Image / Sub-Image  global descriptors
+
+### Slide 51
+Patch Descriptor: Histogram of
+Gradients (HoG)
+n Compute centered horizontal and vertical
+gradients with no smoothing.
+n Compute gradient orientation and magnitudes,
+n For color image, pick the color channel with the
+highest gradient magnitude for each pixel.
+n For a 64x128 image, divide the image into 16x16
+blocks of 50% overlap. à7x15=105 blocks in
+total.
+N.Dalal and B. Triggs, Histograms of oriented gradients for
+human detection, CVPR-2005
+
+### Slide 52
+Histogram of Gradients (HoG)
+n Each block: 2x2 cells with size 8x8.
+n Quantize the gradient orientation into 9 bins.
+n The vote is the gradient magnitude.
+n Interpolate votes between neighboring bin center.
+n The vote can also be weighted with Gaussian to
+down-weight the pixels near the edges of the block.
+n Concatenate histograms.
+n Feature dimension: 105x4x9 = 3,780
+N.Dalal and B. Triggs, Histograms of oriented gradients for human
+detection, CVPR-2005
+
+### Slide 53
+Object detection with patch
+descriptors.
+n Typical examples:
+n Pedestrian detection
+n Character recognition
+n Detection as a classification task.
+n Generate labeled sample feature descriptors.
+n Train a classifier.
+n NN, SVM, Decision Tree, Random Forest …..
+n Label an unknown patch using its descriptor.
+
+### Slide 54
+Non-maximal suppression
+n Expected to get a high detection score with
+neighboring overlapping patches.
+n Select the patch with locally maximal score.
+n A greedy approach:
+n Select the best scoring window
+n It is expected to cover the target object.
+n Suppress the windows that are too close to the
+selected window.
+n Search next top-scoring windows out of the rest.
+
+### Slide 55
+Texture descriptor
+n Texture: spatial
+arrangement of the
+colors or intensities in
+an image
+n A quantitative measure
+of the arrangement of
+intensities in the region.
+Computer Vision by Shapiro and Stockman, Pearson,  (2001)
+
+### Slide 56
+Texture descriptors
+n Edge density and direction
+n Local Binary Pattern (LBP).
+n Co-occurrence Matrix.
+n Laws’ texture energy features.
+
+### Slide 57
+Edge density and direction
+n Compute gradient at each pixel.
+n The descriptor: normalized  histograms of
+magnitudes and directions of gradients over a
+region.
+n (HR(mag),HR(dir))
+n Numbers of bins in histograms kept small (e.g.
+10).
+n Use L1 norm between the feature vectors as a distance
+measure.
+Normalized histogram
+of magnitudes.
+Normalized histogram
+of directions.
+Normalized histogram à Area =1;
+
+### Slide 58
+Local Binary Pattern (LBP).
+T. Ojala, M. Pietikainen, and D. Harwood, A Comparative Study of Texture Measures with
+Classification Based on Feature Distributions, Pattern Recognition, vol. 29, pp. 51-59, 1996.
+o Values range from 0 to 255.
+o Obtain normalized histogram over a region.
+o Not rotational invariant.
+o Invariant to illumination and contrast.
+You may have
+different ordering of
+neighbors.
+
+### Slide 59
+Variations of LBP
+n Making it rotational invariant.
+n A circular neighborhood of radius R, with P pixels at
+equal intervals of angles.
+n Use interpolation if does not belong to the discrete grid.
+where ROR(x , i) performs a circular bit-wise right shift on the
+P-bit number x, i times.
+T. Ojala, M. Pietikainen, and T.i Maenpaa , Multiresolution Gray-Scale and Rotation Invariant
+Texture Classification with Local Binary Patterns, TPAMI, VOL. 24, NO. 7, JULY 2002, pp. 971-987
+LBP8,1 ß à LBP
+36 distinct values for LBPri
+8,1.
+
+### Slide 60
+Variations of LBP
+n Uniform pattern
+n Not more than 2 spatial transitions in the bit sequence.
+n U(11111111)=0
+n U(11101111)=2
+n U(10001001)=4
+T. Ojala, M. Pietikainen, and T.i Maenpaa , Multiresolution Gray-Scale and Rotation Invariant
+Texture Classification with Local Binary Patterns, TPAMI, VOL. 24, NO. 7, JULY 2002, pp. 971-987
+Use rotation invariant value
+by computing minimum
+applying ROR operator. Exactly P+1
+uniform
+patterns, hence
+P+2 distinct
+values.
+
+### Slide 61
+Nine uniform patterns of
+LBP8,R
+riu2
+n The nine uniform patterns and the
+numbers inside them correspond to
+their unique codes.
+T. Ojala, M. Pietikainen, and T.i Maenpaa , Multiresolution Gray-Scale and Rotation Invariant
+Texture Classification with Local Binary Patterns, TPAMI, VOL. 24, NO. 7, JULY 2002, pp. 971-987
+
+### Slide 62
+Variance Measures of the
+Contrast
+T. Ojala, M. Pietikainen, and T.i Maenpaa , Multiresolution Gray-Scale and Rotation Invariant
+Texture Classification with Local Binary Patterns, TPAMI, VOL. 24, NO. 7, JULY 2002, pp. 971-987
+n Local variance of intensities of uniform
+pattern.
+n Normalized histogram of local variances.
+
+### Slide 63
+Co-occurrence Matrix (Cr)
+n Cr(x,y): How many times elements x
+and y occur at a pair of pixels related
+spatially (designated by r in the
+notation).
+n e.g. p r q denotes q is shifted from p by a
+translation of t=(a,b), i.e. q=p+t.
+n C(a,b)(x,y): Number of cases in an image where
+I(p)=x and I(p+t)=y.
+
+### Slide 64
+Co-occurrence Matrix (Cr)
+1 1
+0 0
+0 0
+1 1
+C(0,1)
+C(1,0)
+C(0,1)
+
+### Slide 65 (OCR)
+Co-occurrence Matrix (C,.)
+0 1 0 1
+4) 2
+ppolaa) ol 44KAM 04 | 2
+OO tt aa 1 2i 4
+Ata} oft Cvo,1) 0 1 Cu)
+fafa
+(| 2) 3
+C11)
+
+### Slide 66
+Normalized Co-occurrence
+Matrix (Nr)
+1 1
+0 0
+0 0
+1 1
+C(0,1)
+C(1,0)
+C(1,1)
+1/3
+1/6
+1/6
+1/3
+1/3
+1/6
+1/6
+1/3
+2/9 2/9
+2/9
+1/3
+Divide by the sum of frequencies in a matrix.
+
+### Slide 67
+Symmetric Co-occurrence
+Matrix (Sr)
+1 1
+0 0
+0 0
+1 1
+C(0,1)+C(0,-1)
+C(1,0)+C(-1,0)
+C(1,1)+C(-1,-1)
+4+4 2+2
+2+2 4+4
+4+4 2+2
+4+4 2+2
+2+2 2+2
+2+2 3+3
+Sr(x,y)=Cr(x,y)+C-r(x,y)
+
+### Slide 68 (OCR)
+Features from Normalized Co-
+| occurrence Matrix
+Energy = ». ». Ne (x,y)
+x oy
+Entropy = — >. ») N,-(x, y) logs N,(x,y)
+xy
+Contrast = ». »@ — y)?N,.(x, y)
+x oy
+Homogeneity = 2 2 ee
+
+### Slide 69 (OCR)
+Features from Normalized Co-
+occurrence Matrix
+Correlation = Dix Lay re) y _ y) Nr)
+ar
+Mean.and s.d. Mean and s.d.
+of row sums of cnn sums
+f=) MG) 90) = > NG)
+y x
+
+### Slide 70
+Laws’ texture energy features
+n A set of 9 5x5 masks used to compute
+texture energy.
+K. Laws, “Rapid Texture Identification”, in SPIE Vol. 238: Image Processing for
+Missile Guidance, 1980, pp. 376-380.
+L5 (Level): [1 4 6 4 1]
+E5 (Edge): [-1 -2 0 2 1]
+S5 (Spot):  [-1 0 2 0 -1]
+R5 (ripple): [1 -4 6 -4 1]
+A mask: Outer
+product of any pair.
+e.g. E5L5: E5.L5T
+Computation with mask:
+Convolution
+
+### Slide 71
+Laws’ texture energy features
+n A set of 9 5x5 masks used to compute
+texture energy.
+K. Laws, “Rapid Texture Identification”, in SPIE Vol. 238: Image Processing for
+Missile Guidance, 1980, pp. 376-380.
+L5 (Level): [1 4 6 4 1]
+E5 (Edge): [-1 -2 0 2 1]
+S5 (Spot):  [-1 0 2 0 -1]
+R5 (ripple): [1 -4 6 -4 1]
+16 such masks possible.
+Combine a few pairs to make 9 masks.
+L5E5 and E5L5
+L5R5 and R5L5
+E5S5 and S5E5
+L5S5 and S5L5
+E5R5 and R5E5
+S5R5 and R5S5
+S5S5
+R5R5
+E5E5
+Take
+average of
+responses
+of two
+masks.
+
+### Slide 72
+Laws’ texture energy
+Subtract local
+average at each
+pixel.
+Convolve
+with 16
+masks.
+Compute
+energy map for
+each channel.
+Combine a few
+symmetric pairs
+to 9 channels.
+Input image
+9 dimensional
+feature space.
+15x15
+window
+Sum of
+absolute
+values
+in a
+15x15
+window.
+L5E5 and E5L5
+L5R5 and R5L5
+E5S5 and S5E5
+L5S5 and S5L5
+E5R5 and R5E5
+S5R5 and R5S5
+S5S5
+R5R5
+E5E5
+
+### Slide 73
+Use of texture descriptors
+n Detection of object patches
+represented by textured patterns.
+n Segmentation of images.
+n Classification / Matching
+n Generate a Library of labelled feature
+descriptors.
+n Detection of classes (class labels).
+n Matching to the nearest texture descriptor.
+
+### Slide 74
+Image / Object Descriptor
+n Bag of visual words
+n Compute key-point based feature descriptors
+over a library of images.
+n Quantize them (clustering) to form a finite set of
+representative descriptors (visual words).
+n For an image assign the nearest visual word
+corresponding to the feature descriptor of a key
+point.
+n Represent by each image by a histogram of
+visual words.
+Sivic et. al., Discovering objects and their location in images, ICCV’ 2005.
+K-means
+clustering
+
+### Slide 75
+Vector of locally aggregated
+descriptors (VLAD)
+n Form the codebook of visual words as in BoVW
+representation.
+n C1, C2, …, Ck
+n Each local descriptor x in an image is associated
+to one of these visual words.
+n Accumulate the differences w.r.t. the
+corresponding cluster center.
+Cluster centers of dimension D (say).
+o Form V=[v1 v2 …. vk]
+o VLAD descriptor=V/||V||
+Dimension: k.D
+Jegou et al., Aggregating local descriptors into a
+compact image representation, CVPR, 2010.
+
+### Slide 76
+Application of global image
+descriptor
+n Content based image retrieval
+n Image search based on visual content
+Query
+image
+Retrieved images from a database.
+
+### Slide 77
+Summary of Techniques
+n Scale and
+transformation
+invariant feature
+detection:
+n Harris corner-
+Laplacian Maximum.
+n DOG Maximum.
+n Intensity weighted
+FAST.
+n Scale and
+transformation
+invariant Feature
+descriptor:
+n SIFT, SURF, ORB
+
+### Slide 78
+Summary of Techniques
+n Region and texture
+descriptors.
+n HoG
+n Edge density
+n LBP
+n Co-occurrence matrix
+n Laws’ texture energy
+n Image global descriptor
+n BoVW
+n VLAD
+n A few applications
+n Key point descriptor:
+Matching corresponding
+points of a scene.
+n Region descriptor:
+Object detection
+n Global descriptor :Image
+retrieval.

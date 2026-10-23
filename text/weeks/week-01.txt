@@ -1,0 +1,3303 @@
+Computer Vision (NPTEL 106105216, IIT Kharagpur, Prof. Jayanta Mukhopadhyay)
+WEEK 1: Fundamentals of Image Processing and Transforms
+Lectures:
+  - Lecture 1: Fundamentals of Image Processing – Part I (transcript p.5)
+  - Lecture 2: Fundamentals of Image Processing – Part II (transcript p.25)
+  - Lecture 3: Image Transform – Part I (transcript p.43)
+  - Lecture 4: Image Transform – Part II (transcript p.62)
+
+This file concatenates, in order: study notes, assignment solution, slides, transcript.
+Hub: https://pml2405.github.io/computer-vision-notes/
+
+==============================================================================
+PART: STUDY NOTES
+==============================================================================
+
+# Week 1 — Fundamentals of Image Processing and Transforms — study notes
+(Fundamentals of Image Processing  +  Image Transforms; Prof. Jayanta Mukhopadhyay · Lectures 1–4. Re-taught-from-scratch notes written from the slides + transcript; math is LaTeX between $...$ / $$...$$. Pretty version: https://pml2405.github.io/computer-vision-notes/notes/week1_notes.html)
+
+COMPUTER VISION · NPTEL · IIT KHARAGPUR
+
+Week 1
+
+**Fundamentals of Image Processing**  +  **Image Transforms**
+
+Prof. Jayanta Mukhopadhyay · Lectures 1–4
+
+### 📒 what's inside this week
+
+1. Lecture 1 — Fundamentals of Image Processing · Part I
+what an image is, how it's formed, histograms, thresholding, Otsu, contrast enhancement
+
+2. Lecture 2 — Fundamentals of Image Processing · Part II
+segmentation, connected components, gradients, Prewitt/Sobel, convolution & filtering
+
+3. Lecture 3 — Image Transform · Part I
+basis functions, orthogonal expansion, Fourier transform, the DFT as a matrix
+
+4. Lecture 4 — Image Transform · Part II
+DCT & DST, convolution–multiplication, circular convolution, 2-D transforms
+
+Read top-to-bottom — every idea is re-taught from scratch, so you never need the video. 🎧→📝
+
+# LECTURE 01 — Fundamentals of Image Processing — Part I
+
+from “what is a pixel?” all the way to automatic thresholding & contrast enhancement
+
+🧠 the big picture, first
+
+Before we can do any vision, we need to agree on what an **image** even is to a computer. The answer is delightfully boring: an image is just a grid of numbers.
+
+Once it's numbers, everything else — brightening, finding edges, separating text from background — becomes arithmetic on a 2-D array. This whole lecture builds that toolbox. 🧰
+
+## 1.  how an image is represented
+
+A grayscale image is stored as a 2-D array of integers. Each cell of the array is one **pixel** (“picture element”), and the integer in it is that pixel's **brightness** — how light or dark that spot is.
+
+A real grayscale image. Zoom in far enough and it's… just a table of numbers.
+
+#### zoom in → it's a number grid
+
+[diagram text: 88 | 73 | 74 | 92 | 70 | 64 | 88 | 71 | 76]
+
+each pixel = one integer, usually 0 (black) … 255 (white)
+
+To fully describe the array you also need its **size**: the **width** (columns) and **height** (rows). The lighthouse image above, for example, is width = 256, height = 384 — so 256×384 ≈ 98,000 pixels.
+
+### colour images = three arrays stacked
+
+A colour image is **three** 2-D arrays — one each for the primary colours **Red**, **Green**, **Blue**. At any pixel location, the three values at that same index combine (superimpose) into the final colour. These three arrays are called the **channels**.
+
+Red channel
+Green channel
+Blue channel
+
+Add R+G+B back together on screen → the full-colour photo. So a colour pixel is a triple $(R,G,B)$, each 0–255.
+
+## 2.  storing an image as a file
+
+On disk everything is a **file = a stream of bytes**. The pixel values are stored as one long stream of bytes, but the raw stream alone is meaningless — you also need to know how to read it. So a small **header** is written ahead of the pixel stream.
+
+**📦 what a header carries**
+
+- **width** & **height** — so we can fold the 1-D byte stream back into a 2-D array
+
+- **number of components** — 1 for grayscale, 3 for a colour image
+
+- **bytes per pixel** — commonly 1 byte ⇒ values **0…255** (an unsigned 8-bit integer)
+
+- plus an end-of-file marker
+
+Different standardised formats package this differently — e.g. TIFF, BMP, GIF. If you know the format, you can parse its header and recover the image.
+
+## 3.  how an image is formed
+
+Where do those numbers come from? From **light**. In an optical camera, light reflects off a 3-D scene point, passes through the **lens**, and lands on the **image plane** (the focal plane), where sensors measure it and digitise it.
+
+#### the rule of perspective projection
+
+[diagram text: P | (3-D scene pt) | image plane | O = centre of projection (lens) | p (image pt)]
+
+Draw the ray from scene point **P** through the lens centre **O**; where it pierces the image plane is the image point **p**.
+
+Two things get encoded at **p**: (1) its **position** (given by that ray rule), and (2) its **brightness** — proportional to the amount of light energy reflected from P and focused onto that point. A well-focused lens gathers that energy into a sharp point → a sharp picture.
+
+**📐 perspective projection — the rule**
+The image point is the intersection of **(the ray from P through the centre of projection O)** with the image plane. This is the projection used by ordinary cameras and by our own eyes.
+
+### …but perspective isn't the only way to form an image
+
+#### parallel projection
+
+[diagram text: image plane | parallel rays (no single centre)]
+
+Rays are **parallel**, not converging. Example: **X-ray imaging** — parallel X-ray beams pass through the body onto a plate.
+
+X-ray = parallel projection. Beams pass straight through tissue & bone onto the image plate.
+
+A third family is **range / time-of-flight imaging**: a transmitter sends a wave (acoustic or EM), and the time until the reflection returns — combined with the wave's velocity — gives the distance to each surface point. Scan radially and you build up a surface. Example: ultrasound / echocardiograms.
+
+**💡 so, what is an image?**
+An image is a **spatial distribution of a measurable quantity, encoding the geometry and material properties of objects.**
+
+“Measurable quantity” = brightness for a camera, X-ray absorption for radiography, distance for ultrasound. Same idea, different physics.
+
+## 4.  the histogram — an image's first statistic
+
+The simplest thing we can measure about an image is **how often each brightness value occurs**. That frequency count is the **histogram**: for every brightness level 0…255, how many pixels have it.
+
+**read it as:** “the histogram is the **frequency distribution** of brightness.” Divide every count by the total number of pixels and it becomes a **probability distribution** $p(x)$ — the chance a random pixel has brightness $x$.
+
+$$ p(x)=\frac{\text{number of pixels with brightness }x}{\text{total number of pixels}},\qquad \sum_{x=0}^{255}p(x)=1 $$
+
+#### a document image has a bimodal histogram
+
+[diagram text: brightness 0 → 255 | text (dark) | background | (bright)]
+
+Two peaks (“modes”): dark text pixels vs. bright background pixels.
+
+## 5.  binarization by thresholding
+
+A classic task on document images: separate **foreground** (text) from **background**. Turning the image into just two values is called **binarization**, and the simplest method is a single **threshold** $T$:
+
+$$ \text{out}(x,y)=\begin{cases}255 & \text{if } f(x,y) > T\\[2pt] 0 & \text{otherwise}\end{cases} $$
+
+(Here 255 = white/background, 0 = black/text — you can flip the convention.)
+
+a real document image (dark text on bright paper)
+its brightness histogram — the vertical line is the threshold $T$. Text pixels sit left of it, paper pixels to the right.
+
+But **which** $T$? The professor shows $T=156$ vs $T=192$ on the same document: a higher $T$ makes text sharper but lets in more spurious noise. Picking it by hand doesn't scale across many documents — so we want to choose $T$ automatically. Two ways follow. 👇
+
+## 6.  automatic threshold #1 — Bayesian classification
+
+Model the two peaks as two **classes** of pixels: $w_1$ (foreground) and $w_2$ (background). For a pixel with brightness $x$, we want the **posterior probability** of each class and pick the bigger one:
+
+$$ \text{assign }x\to w_1 \ \text{ if } \ P(w_1\mid x) > P(w_2\mid x), \ \text{ else } w_2. $$
+
+We can't measure $P(w_i\mid x)$ directly, so we flip it with **Bayes' theorem**:
+
+Bayes' theorem
+
+$$ P(w_i\mid x)=\frac{P(w_i)\,p(x\mid w_i)}{p(x)} $$
+
+**🧩 what each piece means**
+
+- $p(x\mid w_i)$ = **likelihood** — how brightness is distributed within class $i$. We model each as a **Gaussian** $\;\mathcal N(\mu_i,\sigma_i)$. Easy to compute.
+
+- $P(w_i)$ = **prior** — the fraction of pixels in class $i$ (the area under that hump). Given a threshold, it's just proportional area.
+
+- $p(x)$ = evidence — the same for both classes, so it **cancels** in the comparison. We never actually need it. 🎉
+
+**so the decision becomes:** compare $P(w_1)\,p(x\mid w_1)$ vs $P(w_2)\,p(x\mid w_2)$ — priors × Gaussian likelihoods. Whichever is larger wins the pixel.
+
+## 7.  finding the threshold — the EM algorithm
+
+Chicken-and-egg: to compute the Gaussians we need to split the pixels, but to split them we need a threshold. The **Expectation–Maximization (EM)** algorithm breaks the loop by **iterating**:
+
+**🔁 EM loop for the threshold**
+
+1. Guess a threshold $T$. It splits brightness into a left half (class 1) and right half (class 2).
+
+2. **Priors** from proportional areas: $P(w_1)=\sum_{x=0}^{T}p(x)$, and $P(w_2)=1-P(w_1)$.
+
+3. **Parameters** of each Gaussian — weighted mean & weighted variance of each side:
+
+$$ \mu_1=\frac{1}{P(w_1)}\sum_{x=0}^{T} x\,p(x),\qquad \sigma_1^{2}=\frac{1}{P(w_1)}\sum_{x=0}^{T}(x-\mu_1)^2\,p(x) $$ $$ \mu_2=\frac{1}{P(w_2)}\sum_{x=T+1}^{255} x\,p(x),\qquad \sigma_2^{2}=\frac{1}{P(w_2)}\sum_{x=T+1}^{255}(x-\mu_2)^2\,p(x) $$
+
+1. Recompute the best threshold from these updated Gaussians (the $x$ where $P(w_1\mid x)$ stops beating $P(w_2\mid x)$).
+
+2. **Repeat** steps 2–4 until $T$ stops changing → **converged**. 🎯
+
+These are exactly the weighted mean and weighted variance formulas from statistics — nothing exotic, just weighted by the histogram probabilities.
+
+## 8.  automatic threshold #2 — Otsu's method
+
+A different, very popular idea: instead of iterating, just **try every possible $T$** and keep the one that makes the two classes most separated. The separation measure is the **between-class variance**:
+
+between-class variance
+
+$$ \sigma_b^{2}(T)=P(w_1)\,P(w_2)\,\big(\mu_2-\mu_1\big)^2 $$
+
+**read it as:** “how far apart are the two class means, weighted by how big each class is.” Bigger $\sigma_b^2$ = cleaner split.
+
+**worked example — scanning for Otsu's T (illustrative numbers, to show the method)**
+Say at candidate $T$ we read off from the histogram: $P(w_1)=0.4,\ P(w_2)=0.6,\ \mu_1=60,\ \mu_2=170$.
+
+1. $(\mu_2-\mu_1)^2=(170-60)^2=110^2=12100$
+
+2. $\sigma_b^2 = 0.4\times0.6\times12100 = 0.24\times12100 = \mathbf{2904}$
+
+3. Compute this for **every** $T\in[0,255]$; the $T$ giving the largest $\sigma_b^2$ is Otsu's threshold.
+
+On the professor's document image this landed at **$T=157$**, giving a clean binarization very close to the Bayesian one.
+
+## 9.  contrast enhancement (histogram equalization)
+
+Sometimes the pixels are bunched into a narrow brightness range → the image looks flat/low-contrast. **Contrast enhancement** stretches that range back out to the full 0–255 by **mapping** each input pixel to a new output pixel.
+
+**⚠️ the mapping must be monotonic**
+If $x_1 > x_2$ then the outputs must satisfy $s_1 > s_2$ (a brighter pixel stays brighter). Otherwise you'd scramble which pixels are light vs dark.
+
+The popular choice uses the pixel's own **cumulative distribution function (CDF)** as the mapping — this is **histogram equalization**:
+
+$$ s = 255\cdot \text{CDF}(x) = 255\sum_{k=0}^{x} p(k) $$
+
+#### the CDF is a monotone “S” curve → it becomes the mapping
+
+[diagram text: input brightness x → | s | s = 255·CDF(x)]
+
+Flat parts of the histogram → gentle slope; crowded parts → steep slope, which spreads those pixels apart (more contrast).
+
+**worked example — equalizing a tiny image (illustrative)**
+4 brightness levels with probabilities $p(0)=0.1,\ p(1)=0.2,\ p(2)=0.3,\ p(3)=0.4$ (so max level = 3). Map with $s=3\cdot\text{CDF}$:
+
+1. CDF: $0.1,\ 0.3,\ 0.6,\ 1.0$
+
+2. $s(0)=3(0.1)=0.3\to0,\quad s(1)=3(0.3)=0.9\to1$
+
+3. $s(2)=3(0.6)=1.8\to2,\quad s(3)=3(1.0)=3.0\to3$
+
+The crowded high levels get pushed apart, using the full available range — exactly the pre-processing step used before Bayesian binarization to sharpen the histogram's modes.
+
+### an image is a grid of numbers — so “seeing” starts as arithmetic on a 2-D array.
+
+histogram → threshold (Bayesian / EM / Otsu) → binarize; CDF mapping → enhance contrast.
+
+### Self-check quiz
+
+1. A colour image of size 256×384 uses how many 2-D arrays, and what's the range of each value (1 byte/pixel)?
+
+→ Answer: 3 arrays (R, G, B); each value 0–255
+
+2. In Bayes' rule for thresholding, why can we ignore the evidence term $p(x)$?
+
+→ Answer: it's identical for both classes, so it cancels when we compare $P(w_1|x)$ vs $P(w_2|x)$
+
+3. Otsu picks the threshold that maximizes which quantity?
+
+→ Answer: the between-class variance $\sigma_b^2 = P(w_1)P(w_2)(\mu_2-\mu_1)^2$
+
+4. Why must a contrast-enhancement mapping be monotonically increasing?
+
+→ Answer: to preserve ordering — a brighter input pixel must stay brighter than a darker one
+
+— end of Lecture 1 notes ✏️
+
+# LECTURE 02 — Fundamentals of Image Processing — Part II
+
+segmentation · connected components · gradients & the Prewitt/Sobel masks · convolution = filtering
+
+🧠 the big picture, first
+
+Lecture 1 turned an image into numbers and split it into two classes (text vs background). Now we go further: split it into **many regions**, find **connected blobs**, and detect **edges**.
+
+The star of this lecture is one idea that quietly runs all of image processing: slide a small grid of weights over the image and take a weighted sum — that's convolution, and it does blurring, sharpening and edge-finding.
+
+## 1.  segmentation
+
+**Segmentation** = partitioning the image pixels into **meaningful, non-overlapping sets**. Binarization from Lecture 1 was the special case of just two sets (foreground / background). In general we can have many.
+
+### multilevel thresholding
+
+Instead of one threshold, use several to cut the brightness range into intervals, and paint each interval a colour. Example — three intervals:
+
+$$ [0,60]\ \Rightarrow\ \color{#2471a3}\text{blue},\qquad [61,119]\ \Rightarrow\ \color{#1e8449}\text{green},\qquad [120,255]\ \Rightarrow\ \color{#b7950b}\text{yellow} $$
+
+an aerial image — the dark branching shape is a **river channel**
+
+#### multilevel thresholds cut the histogram
+
+[diagram text: T₁=60 | T₂=119 | brightness 0 → 255]
+
+Dark water → blue segment; mid tones → green; bright ground → yellow.
+
+The thresholds can be found automatically (extend the Bayesian idea from Lecture 1) or chosen by eye from the histogram's modes.
+
+## 2.  connected-component labelling
+
+Grouping pixels by brightness isn't the whole story — two blue patches on opposite sides of the image shouldn't be “the same thing”. We also want to group pixels that are **physically connected in the plane**. First we must define what “connected” means, via a **neighbourhood**.
+
+#### 4-neighbourhood
+
+[diagram text: x,y | x,y+1 | x,y−1 | x−1,y | x+1,y]
+
+the 4 edge-sharing neighbours
+
+#### 8-neighbourhood
+
+[diagram text: x,y]
+
+4 edges + 4 diagonals (pink)
+
+**🔗 how to find the components**
+
+1. Think of every pixel as a **node**. Put an **edge** between neighbouring pixels that have the same label (same segment).
+
+2. Run any graph traversal — **BFS** or **DFS** — each connected piece it discovers is one **connected component** (one blob).
+
+3. Practical note: you don't actually need to build a graph. The image array + the neighbourhood rule already is the graph, so you can traverse the array directly.
+
+On the river image, the largest component recovers the whole river channel as one region. (Puzzle the professor leaves you: part of the river channel goes missing from that component — why? Hint: a bridge or a brightness change breaks the connectivity along the channel.)
+
+## 3.  gradients — where the edges are
+
+An **edge** is where brightness changes sharply. “Rate of change” of a 2-D function $f(x,y)$ is its **gradient**: the vector of partial derivatives along the two axes.
+
+gradient vector
+
+$$ \nabla f=\left(\dfrac{\partial f}{\partial x},\ \dfrac{\partial f}{\partial y}\right) $$
+
+On a discrete grid we approximate derivatives with **finite differences** — just subtract a neighbour:
+
+$$ \frac{\partial f}{\partial x}\approx f(x{+}1,y)-f(x,y),\qquad \frac{\partial f}{\partial y}\approx f(x,y{+}1)-f(x,y) $$
+
+**read it as:** “how much brighter is my right neighbour than me?” (that's the x-gradient) and “…my top neighbour?” (the y-gradient). Big difference ⇒ an edge runs through here.
+
+The two components combine into an edge strength via the vector **magnitude** — this catches edges in every direction:
+
+$$ |\nabla f|=\sqrt{\left(\tfrac{\partial f}{\partial x}\right)^2+\left(\tfrac{\partial f}{\partial y}\right)^2} $$
+
+original image
+gradient (one direction)
+magnitude → all edges pop
+
+## 4.  masks & convolution — the one big idea
+
+A finite difference is really a tiny **mask** (a.k.a. kernel): a small grid of **weights**. To use it, place it on a pixel, multiply each weight by the pixel under it, add them up, and that weighted sum replaces the centre pixel. The $x$-difference above is just the $1\times2$ mask $\begin{bmatrix}-1&1\end{bmatrix}$.
+
+Generalise to a $3\times3$ mask with arbitrary weights $w_1\ldots w_9$:
+
+$$ g(x,y)=\sum_{i}\sum_{j} w(i,j)\, f(x+i,\,y+j) $$
+
+**💡 this weighted-sum-with-a-sliding-mask IS convolution**
+Sliding one fixed mask across every pixel is the **convolution** operation. The mask **is** the **impulse response** $h(x,y)$ of a **Linear Shift-Invariant (LSI)** system, and the whole operation is also called **filtering** — so “mask”, “kernel”, “impulse response” and “filter” all mean the same grid of weights.
+
+$$ g(x,y) = (h * f)(x,y) $$
+
+## 5.  robust gradients — Prewitt & Sobel
+
+A single-pixel difference is noisy. To make gradients **robust**, average the finite difference over a little neighbourhood. Because everything is linear, that averaging folds into one cleverly-weighted mask.
+
+Prewitt (averages 6 differences)
+
+$$ G_x=\begin{bmatrix}-1&0&1\\-1&0&1\\-1&0&1\end{bmatrix},\quad G_y=\begin{bmatrix}-1&-1&-1\\0&0&0\\1&1&1\end{bmatrix} $$
+
+Sobel (centre weighted ×2 → 8 differences)
+
+$$ G_x=\begin{bmatrix}-1&0&1\\-2&0&2\\-1&0&1\end{bmatrix},\quad G_y=\begin{bmatrix}-1&-2&-1\\0&0&0\\1&2&1\end{bmatrix} $$
+
+Prewitt gives every row equal say; **Sobel** doubles the weight of the central row/column, so the closest neighbours matter most. Convolve with $G_x$ and $G_y$, then take the magnitude → clean edge map.
+
+## 6.  smoothing filters (killing noise)
+
+Swap the sign pattern for **all-positive weights that sum to 1** and the same convolution machine now averages instead of differencing → a **low-pass / averaging filter** that smooths noise.
+
+3×3 averaging (box) filter
+
+$$ \tfrac{1}{9}\begin{bmatrix}1&1&1\\1&1&1\\1&1&1\end{bmatrix} $$
+
+### Gaussian smoothing
+
+The most-used smoother sets the mask weights from a 2-D **Gaussian** centred on the pixel — nearby pixels count more, far ones less:
+
+$$ G(x,y)=\frac{1}{2\pi\sigma^{2}}\exp\!\left(-\frac{x^{2}+y^{2}}{2\sigma^{2}}\right) $$
+
+$\sigma$ (the width) controls how much blur; the mask must be big enough to hold the bump — e.g. a $9\times9$ mask with $\sigma=2$. Then $\;g = G * f$.
+
+noisy input (grainy)
+after low-pass / Gaussian → smoother
+
+### median filtering
+
+**⚠️ median ≠ convolution**
+Median filtering is **non-linear**: replace each pixel by the **median** of its neighbours (sort them, take the middle). It's the go-to for salt-and-pepper noise (random black/white dots), which an averaging filter would just smear.
+
+### one sliding mask + a weighted sum = blur, sharpen, or find edges — it's all convolution.
+
+difference weights → gradients (Prewitt/Sobel); positive weights → smoothing (box/Gaussian); median → non-linear denoise.
+
+### Self-check quiz
+
+1. What's the difference between the 4- and 8-neighbourhood?
+
+→ Answer: 4-nbhd = up/down/left/right only; 8-nbhd also includes the 4 diagonals
+
+2. Why is the Sobel mask considered more robust than a single $[-1,1]$ difference?
+
+→ Answer: it averages several finite differences (and weights the central ones ×2), reducing the effect of noise
+
+3. You have an image with random white/black speckles (salt & pepper). Averaging or median filter?
+
+→ Answer: median — it discards outlier speckles; averaging would just blur them in
+
+4. A mask whose weights are all positive and sum to 1 performs what kind of filtering?
+
+→ Answer: low-pass / smoothing (averaging) — it blurs / reduces noise
+
+— end of Lecture 2 notes ✏️
+
+# LECTURE 03 — Image Transform — Part I
+
+basis functions · orthogonal expansion · the Fourier transform · the DFT as a matrix
+
+🧠 the big picture, first
+
+So far an image lived in the **spatial domain** — a grid of brightness values. A **transform** rewrites that same image as a recipe: “how much of each building-block pattern do I contain?”
+
+Those building blocks are **basis functions** (waves, in the Fourier case). The recipe amounts — the **coefficients** — are the transform. Same image, different language, and some things (compression, filtering) are far easier in this new language. 🎚️
+
+## 1.  an image as a sum of building blocks
+
+Pick a set of **basis functions** $\{b_i(x,y)\}$. The idea: **any** image $f$ can be written as a weighted sum (a linear combination) of them:
+
+$$ f(x,y)=\sum_i c_i\, b_i(x,y) $$
+
+The list of weights $\{c_i\}$ is the **transform** of $f$ with respect to that basis. Instead of storing brightness at every pixel, you store these coefficients — an **alternative description** of the very same image.
+
+#### image = c₁·(block 1) + c₂·(block 2) + …
+
+[diagram text: f | = | c₁·b₁ | + | c₂·b₂ | + | c₃·b₃ | + | ⋯]
+
+The coefficients cᵢ tell you the mix. (We'll do 1-D first — 2-D follows easily next lecture.)
+
+## 2.  the trick that makes coefficients easy: orthogonality
+
+How do you find each $c_i$? If the basis is **orthogonal**, it's a one-liner. First define the **inner product** of two functions — multiply and integrate (using the **complex conjugate** $g^{*}$ of the second):
+
+inner product
+
+$$ \langle f,g\rangle=\int f(x)\,g^{*}(x)\,dx $$
+
+**📐 orthogonal & orthonormal**
+A basis is **orthogonal** if every different pair has zero inner product, and same-pair is some positive $c_i$:
+
+$$ \langle b_i,b_j\rangle=\begin{cases}0 & i\neq j\\ c_i>0 & i=j\end{cases} $$
+
+If additionally $c_i=1$ for all $i$, it's **orthonormal**.
+
+Now the forward transform is just an inner product against each basis function (divide by $c_i$; the division vanishes for an orthonormal basis):
+
+$$ c_i=\frac{\langle f,b_i\rangle}{c_i}\quad\text{(orthogonal)}\qquad\Longrightarrow\qquad c_i=\langle f,b_i\rangle\quad\text{(orthonormal)} $$
+
+**read it as:** “to find how much of block $b_i$ is in $f$, just project $f$ onto $b_i$.” The **forward transform** = compute all the projections; the **inverse transform** = add the blocks back: $f=\sum_i c_i b_i$.
+
+## 3.  the Fourier transform (a special basis)
+
+Choose the basis to be **complex sinusoids** $e^{j\omega x}$ (one for every frequency $\omega$). That choice gives the **Fourier transform**:
+
+continuous Fourier transform
+
+$$ F(\omega)=\int f(x)\,e^{-j\omega x}\,dx $$
+
+$$ f(x)=\frac{1}{2\pi}\int F(\omega)\,e^{\,j\omega x}\,d\omega $$
+
+The forward transform is exactly $\langle f, e^{j\omega x}\rangle$ — note the conjugate turns $e^{j\omega x}$ into $e^{-j\omega x}$. This basis is a **complete base**: its combinations can rebuild **any** function exactly.
+
+**🔑 completeness — why it matters**
+A subset of an orthogonal set is still orthogonal, but you may **lose** the ability to reconstruct $f$ fully. Only a **complete** base guarantees perfect reconstruction. The full Fourier set is complete.
+
+### cosines, sines, and even/odd functions
+
+Euler splits the sinusoid into real + imaginary parts:
+
+$$ e^{j\omega x}=\cos(\omega x)+j\sin(\omega x) $$
+
+The cosine set $\{\cos\omega x\}$ and sine set $\{\sin\omega x\}$ are each orthogonal, but **neither alone is complete** — cosines alone can't rebuild a general function. Except for special symmetries:
+
+#### even function → cosines only
+
+[diagram text: f(x)=f(−x)]
+
+symmetric about 0 ⇒ only cosine terms survive
+
+#### odd function → sines only
+
+[diagram text: f(x)=−f(−x)]
+
+anti-symmetric, f(0)=0 ⇒ only sine terms survive
+
+**Even:** $f(x)=f(-x)$ — the sine integrals vanish, so cosines suffice. **Odd:** $f(x)=-f(-x)$ (and $f(0)=0$) — cosines vanish, sines suffice. This single fact is what makes the DCT & DST possible next lecture. 👀
+
+## 4.  going discrete — transforms become matrices
+
+Images are sampled and finite, so sample $f$ at spacing $X_0$ to get a length-$N$ sequence, written as a column vector:
+
+$$ \mathbf{f}=\big[f(0)\ \ f(1)\ \cdots\ f(N-1)\big]^{T} $$
+
+A **discrete linear transform** is then simply a matrix–vector multiply:
+
+$$ \mathbf{Y}=B\,\mathbf{f} $$
+
+**🧱 the rows of $B$ are the basis vectors**
+Row $i$ of the transform matrix $B$ is the $i$-th basis vector $\mathbf b_i$. Multiplying that row by $\mathbf f$ is exactly the vector inner product (dot product) $\langle \mathbf f,\mathbf b_i\rangle$, which gives the $i$-th coefficient. Orthogonality now reads $\langle \mathbf b_i,\mathbf b_j\rangle = 0$ (for $i\neq j$). $B$ is invertible when it's square & its rows are independent — so an inverse transform exists.
+
+## 5.  the Discrete Fourier Transform (DFT)
+
+Sample the complex sinusoids to get the DFT basis vectors and the transform pair:
+
+DFT (forward & inverse)
+
+$$ F(k)=\sum_{n=0}^{N-1} f(n)\,e^{-j\frac{2\pi nk}{N}} $$
+
+$$ f(n)=\frac{1}{N}\sum_{k=0}^{N-1} F(k)\,e^{\,j\frac{2\pi nk}{N}} $$
+
+The $\tfrac1N$ normalization is parked on the inverse (the professor's convention — the forward result is proportional, reconstruction fixes the scale). Conceptually the DFT is the **Fourier series of the period-$N$ periodic extension** of your finite sequence.
+
+**📻 what the index $k$ actually means (frequency)**
+If the samples are spaced $X_0$ apart, the period is $N X_0$, so the **fundamental frequency** is $\tfrac{1}{N X_0}$. The $k$-th DFT coefficient is the **$k$-th harmonic**, whose physical frequency is $\tfrac{k}{N X_0}$. Dropping $X_0$, we call $\tfrac{k}{N}$ the **normalized frequency**. So low $k$ = slow variation (smooth), high $k$ = fast variation (fine detail/edges).
+
+In matrix form, with $F_N$ the $N\times N$ matrix whose $(k,n)$ entry is $e^{-j2\pi nk/N}$:
+
+$$ \mathbf{F}=F_N\,\mathbf{f},\qquad F_N^{-1}=\tfrac{1}{N}F_N^{H} $$
+
+i.e. the inverse is just the **Hermitian transpose** (transpose + complex-conjugate), scaled by $1/N$ — a consequence of the basis being orthogonal/orthonormal.
+
+**worked example — 4-point DFT of a constant (illustrative)**
+Let $\mathbf f=[1,1,1,1]$, so $N=4$. Compute $F(k)=\sum_{n=0}^{3} 1\cdot e^{-j\frac{2\pi nk}{4}}$:
+
+1. $F(0)=1+1+1+1=\mathbf{4}$
+
+2. $F(1)=1+e^{-j\pi/2}+e^{-j\pi}+e^{-j3\pi/2}=1-j-1+j=\mathbf{0}$
+
+3. By the same cancellation, $F(2)=F(3)=\mathbf{0}$.
+
+Result $[4,0,0,0]$: a constant signal is “all DC, no oscillation” — exactly what we'd expect. 🎯
+
+### generalized DFT
+
+Insert small **phase shifts** into the sampled sinusoids (shift in time and/or frequency) and you get a whole family of orthogonal bases — the **generalized DFT**. Two special cases are the **Odd-Time DFT (OTDFT)** and **Odd-Frequency DFT (OFDFT)**. These are the seeds from which the DCT and DST grow next lecture.
+
+### a transform re-expresses an image as coefficients on an orthogonal basis — and finding them is just projection.
+
+Fourier basis = complex sinusoids; discrete version = a matrix multiply $\mathbf F = F_N\mathbf f$, invert with the Hermitian transpose.
+
+### Self-check quiz
+
+1. Given an orthonormal basis, how do you get the $i$-th transform coefficient of $f$?
+
+→ Answer: project: $c_i=\langle f, b_i\rangle$ (inner product of $f$ with the basis function)
+
+2. Why can cosines alone reconstruct an even function but not a general one?
+
+→ Answer: for an even function the sine (odd) components integrate to 0, so only cosines are needed; a general function has both, and cosines alone aren't a complete base
+
+3. In matrix form, what are the rows of the transform matrix $B$?
+
+→ Answer: the basis vectors — row $i$ dotted with $\mathbf f$ gives coefficient $i$
+
+4. What is the DFT of the constant sequence $[1,1,1,1]$?
+
+→ Answer: $[4,0,0,0]$ — all energy at the DC (zero-frequency) term
+
+— end of Lecture 3 notes ✏️
+
+# LECTURE 04 — Image Transform — Part II
+
+DCT & DST · convolution–multiplication · circular / skew convolution · 2-D transforms
+
+🧠 the big picture, first
+
+Last lecture ended on a cliff-hanger: even functions need only cosines, odd functions only sines. This lecture **cashes that in** — by cleverly extending a finite sequence into an even (or odd) one, we get the DCT and DST — the transforms behind **JPEG and video compression**.
+
+Then two payoffs: convolution becomes plain multiplication in the transform domain, and 2-D transforms reduce to “do the 1-D transform on rows, then columns.” 🧮
+
+## 1.  symmetric & antisymmetric extensions
+
+A finite sequence isn't even or odd by itself — but we're free to define the samples outside its range however we like. Extend it to be **symmetric** (mirror) and it becomes an even function; extend it **antisymmetric** (mirror + negate) and it becomes odd. There are two flavours of each, depending on where the mirror sits:
+
+#### whole symmetry (WS)
+
+[diagram text: mirror at the END sample]
+
+centre of symmetry sits **on** the last sample
+
+#### half symmetry (HS)
+
+[diagram text: mirror HALF a sample past the end]
+
+centre sits **between** the last sample and its mirror
+
+**Antisymmetry** is the same but the mirrored samples are negated (whole-antisymmetry inserts an explicit 0 at the centre; half-antisymmetry doesn't). 2 ends × {symmetric, antisymmetric} choices ⇒ up to 16 different DCT/DST types.
+
+## 2.  so DCT & DST just fall out
+
+**💡 the whole reason DCT/DST exist**
+
+- **Symmetric** extension → even sequence → its DFT needs only **cosines** ⇒ **Discrete Cosine Transform (DCT)**.
+
+- **Antisymmetric** extension → odd sequence → only **sines** ⇒ **Discrete Sine Transform (DST)**.
+
+And unlike the continuous case, in the discrete world **every** finite sequence can be given cosine/sine transforms this way. That's why your textbook has them.
+
+The famous one is the **Type-II even DCT** — the “default” DCT used in JPEG image & video compression:
+
+Type-II DCT ( the JPEG one )
+
+$$ C(k)=\alpha(k)\sum_{n=0}^{N-1} x(n)\,\cos\!\left[\frac{\pi(2n+1)k}{2N}\right] $$
+
+$\alpha(0)=\sqrt{\tfrac{1}{N}},\quad \alpha(k)=\sqrt{\tfrac{2}{N}}\ (k\ge1)$
+
+its sine twin — Type-II DST
+
+$$ S(k)=\alpha(k)\sum_{n=0}^{N-1} x(n)\,\sin\!\left[\frac{\pi(2n+1)k}{2N}\right] $$
+
+same shape, cosine → sine (from an antisymmetric extension), $1\le k\le N$
+
+As a matrix it's the $N$-point DCT matrix $C_N$. Because it's **orthonormal**, the inverse is just the transpose:
+
+$$ \mathbf{X}=C_N\,\mathbf{x},\qquad C_N^{-1}=C_N^{T} $$
+
+Neat property used by fast algorithms: each row of $C_N$ is either **symmetric** (even $k$) or **antisymmetric** (odd $k$). Type-I even DCT is the other common one (period $2N$, defined over $N{+}1$ samples).
+
+## 3.  convolution becomes multiplication
+
+Remember convolution (filtering) from Lecture 2? In the Fourier domain it turns into simple **point-wise multiplication** — the **convolution–multiplication property**:
+
+convolution ↔ multiplication
+
+$$ \mathcal{F}\{f * h\}=F(\omega)\cdot H(\omega) $$
+
+**read it as:** “to filter, don't slide a mask — just transform both signals, multiply them, and transform back.” For big filters that's dramatically faster.
+
+**🔄 but finite sequences → circular convolution**
+Linear convolution assumes infinitely long signals. Finite sequences are handled by **periodic extension**, giving **circular convolution** (compute over one period $0..N{-}1$). The convolution–multiplication property holds for the DFT with **circular** convolution.
+
+Use an **antiperiodic** extension instead ($f(x{+}N)=-f(x)$, which is actually periodic with period $2N$) and you get **skew-circular convolution** — the version that pairs with the DCT/DST types. Each DCT/DST type has its own analogous convolution–multiplication property.
+
+## 4.  2-D transforms via separability
+
+Images are 2-D, but we only built 1-D machinery. The rescue is **separability**: pick a 2-D basis that factors into a product of 1-D bases,
+
+$$ b_{ij}(x,y)=g_i(x)\,g_j(y) $$
+
+Then a 2-D transform is just: **transform every column, then transform every row** (each a 1-D transform). In matrix form, for an image block $X$ of size $m\times n$:
+
+2-D separable transform
+
+$$ Y=B_m\,X\,B_n^{T} $$
+
+**🧩 when is a filter mask separable? ⇔ rank 1**
+The same idea decides whether a $2$-D convolution **mask** $M$ can be applied as two cheap 1-D convolutions. $M$ is **separable** $\iff$ it factors as an **outer product** of a column and a row vector, $M=\mathbf u\,\mathbf v^{T}$ $\iff$ $\operatorname{rank}(M)=1$.
+
+Quick test: compute the mask's **rank** (= number of linearly independent rows). If every row is a scalar multiple of one row → rank $1$ → **separable** (e.g. the averaging box, the 2-D Gaussian, and Sobel's $\begin{smallmatrix}-1&0&1\\-2&0&2\\-1&0&1\end{smallmatrix}=\begin{smallmatrix}1\\2\\1\end{smallmatrix}[-1\ 0\ 1]$). Rank $>1$ → **not** separable.
+
+#### transform columns → then rows
+
+[diagram text: image X | cols done | rows done | Y (transform)]
+
+$B_m$ multiplies on the left (columns), $B_n^{T}$ on the right (rows). Same idea gives the **2-D DFT** and **2-D DCT**.
+
+## 5.  why bother with transforms at all?
+| property | DFT | DCT (Type-II) |
+| coefficients | complex (magnitude + phase) | real |
+| basis | complex sinusoids $e^{-j2\pi nk/N}$ | real cosines |
+| main use | frequency analysis, filtering | energy compaction → **JPEG / video compression** |
+
+**🎯 the payoffs**
+
+- **Compact representation:** a few transform coefficients approximate the image well (low vs high frequency) → **compression**.
+
+- **Perceptual quantization:** throw away coefficients the eye barely notices (the heart of JPEG).
+
+- **Easier processing:** filtering, enhancement and restoration are often simpler in the transform domain (convolution → multiplication).
+
+### extend a sequence to be even/odd → cosines/sines only → the DCT/DST that power JPEG & video.
+
+convolution = multiplication in the transform domain; 2-D = 1-D on columns then rows ($Y=B_mXB_n^{T}$).
+
+### Self-check quiz
+
+1. Why does a symmetric extension of a sequence lead to a cosine transform?
+
+→ Answer: it makes the sequence even, and an even function's Fourier expansion needs only cosine terms → DCT
+
+2. Which transform does JPEG use, and why is it good for compression?
+
+→ Answer: the Type-II DCT — it's real and packs most of the signal's energy into a few low-frequency coefficients
+
+3. How does convolution (filtering) look in the Fourier domain?
+
+→ Answer: as point-wise multiplication: $\mathcal F\{f*h\}=F\cdot H$ (for circular convolution with the DFT)
+
+4. How do you compute a 2-D separable transform of an image block $X$?
+
+→ Answer: transform columns then rows: $Y=B_m\,X\,B_n^{T}$
+
+— end of Lecture 4 · end of Week 1 ✏️🎉
+
+==============================================================================
+PART: ASSIGNMENT SOLUTION
+==============================================================================
+
+# Week 1 — Fundamentals of Image Processing and Transforms — assignment solution
+(source: NPTEL, 7 PDF pages; fractions/matrices from the PDF may be flattened in this text)
+
+Nptel Online Certification Course: Computer Vision
+Assignment 1: Fundamentals of Image processing
+Number of questions: 10
+Total marks: 10 X 2 = 20
+QUESTION 1:
+Type:MCQ
+The probability of a normal variable P(z > 1.8) = 0.0359. A random variable X is normally
+distributed with mean µ = 50 and standard deviation σ = 10. Compute P(X < 68).
+a) 0.9641
+b) 0.0359
+c) 0.1800
+d) 0.8200
+Correct Answer: a)
+Detailed Solution:
+For X = 68, the z-value is:
+z = X −µ
+σ
+= 68 −50
+10
+= 1.8
+P(X < 68) = P(z < 1.8)
+P(z > 1.8) = 0.0359
+P(z < 1.8) = 1 −0.0359 = 0.9641
+QUESTION 2:
+Type:MCQ
+Consider the following 3-bit grayscale image:
+I =
+
+0
+1
+2
+3
+3
+4
+5
+6
+0
+1
+2
+4
+5
+2
+4
+6
+
+What is the optimal threshold according to Otsu method?
+a) 1
+b) 4
+c) 5
+d) 2
+Correct Answer: d)
+Detailed Solution: The histogram is divided into two classes at each possible threshold, and
+the between-class variance is to be computed.
+The histogram of the 3-bit image is:
+Gray level (i)
+0
+1
+2
+3
+4
+5
+6
+h(i)
+2
+2
+3
+2
+3
+2
+2
+Total number of pixels:
+N = 16
+Normalized probabilities:
+p(i) = h(i)
+16
+Using Otsu’s method, compute the between-class variance for each threshold.
+t
+ω0
+ω1
+µ0
+µ1
+σ2
+B
+0
+0.125
+0.875
+0
+3.57
+1.39
+1
+0.25
+0.75
+0.50
+4.00
+2.30
+2
+0.4375
+0.5625
+1.14
+4.67
+3.06
+3
+0.5625
+0.4375
+1.56
+5.00
+2.91
+4
+0.75
+0.25
+2.33
+5.50
+1.88
+5
+0.875
+0.125
+2.71
+6.00
+1.18
+Since the maximum between-class variance occurs at t = 2.
+QUESTION 3:
+Type:MCQ
+Consider two images each of size 40 × 40, namely I1 and I2. Image I1 has 900 foreground
+pixels and 700 background pixels. Image I2 has 600 foreground pixels and 1000 background
+pixels. One pixel is selected at random from one of the two images, and it is found to be a
+background pixel. Find the probability that it was drawn from image I1.
+a)
+17
+7
+b)
+10
+17
+c)
+7
+10
+d)
+7
+17
+Correct Answer: d)
+Detailed Solution:
+Let E1 and E2 be the events of choosing images I1 and I2, respectively. Let A be the event that
+the selected pixel is a background pixel. Since one image is chosen randomly:
+P(E1) = P(E2) = 0.5
+For image I1:
+P(A|E1) = 700
+1600
+For image I2:
+P(A|E2) = 1000
+1600
+Using Bayes’ Theorem:
+P(E1|A) =
+P(A|E1) · P(E1)
+P(A|E1) · P(E1) + P(A|E2) · P(E2)
+Substituting:
+P(E1|A) =
+
+700
+1600
+ 
+1
+2
+
+
+700
+1600
+ 
+1
+2
+
++
+
+1000
+1600
+ 
+1
+2
+
+Canceling common terms:
+P(E1|A) =
+700
+700 + 1000
+= 700
+1700
+= 7
+17
+QUESTION 4:
+Type:MCQ
+Consider the image patch:
+I =
+
+3
+3
+3
+0
+0
+0
+−3
+−3
+−3
+
+Which operator is most closely represented?
+a) Median filter
+b) Histogram equalization
+c) Prewitt operator
+d) Gaussian smoothing
+Correct Answer: c)
+Detailed Solution: Prewitt masks use uniform weights to estimate gradients and detect edges
+in specific directions.
+QUESTION 5:
+Type:MCQ
+Consider the image patch:
+I =
+
+1
+2
+1
+0
+0
+0
+−1
+−2
+−1
+
+Which kernel does it correspond to?
+a) Averaging filter
+b) Sobel operator
+c) Laplacian operator
+d) Median filter
+Correct Answer: b)
+Detailed Solution: This is the Sobel mask used for vertical edge detection by emphasizing
+intensity changes along the y-direction.
+QUESTION 6:
+Type:MCQ
+Which of the following is the primary purpose of histogram equalization?
+a) Reduce image size
+b) Improve image contrast
+c) Remove image noise
+d) Detect edges
+Correct Answer: b)
+Detailed Solution: Histogram equalization redistributes intensity values over the available
+range to enhance contrast, especially in low-contrast images.
+QUESTION 7:
+Type: MCQ
+Consider the following 4 × 4 image array:
+I =
+
+0
+1
+2
+4
+2
+3
+4
+5
+1
+2
+4∗
+6
+0
+3
+5
+6
+
+What is the value after histogram equalization at location (2, 2) shown with asterisk mark in
+the image array?
+a) 3
+b) 4
+c) 5
+d) 6
+Correct Answer: c)
+Detailed Solution:
+Histogram table:
+Pixel
+Frequency
+Cumulative Sum
+Normalized Sum
+New Pixel
+0
+2
+2
+0.875
+1
+1
+2
+4
+1.75
+2
+2
+3
+7
+3.06
+3
+3
+2
+9
+3.94
+4
+4
+3
+12
+5.25
+5
+5
+2
+14
+6.13
+6
+6
+2
+16
+7.00
+7
+The marked pixel value is 4, which maps to 5 after histogram equalization. Hence, the
+answer is 5.
+QUESTION 8:
+Type:MCQ
+Consider the following kernel:
+K =
+
+2
+4
+6
+1
+2
+3
+−4
+−8
+−12
+
+What is the rank of this matrix, and is it separable?
+a) Rank = 1, separable
+b) Rank = 2, separable
+c) Rank = 2, not separable
+d) Rank = 3, not separable
+Correct Answer: a)
+Detailed Solution:
+Each row is a scalar multiple of the second row:
+R1 = 2R2,
+R3 = −4R2
+Thus, only one independent row exists, so the rank is 1. A rank-1 kernel can be written as an
+outer product of two vectors. Hence, the kernel is separable.
+QUESTION 9:
+Type: MCQ
+Consider a binary image with a fully filled white square at the center on a black background.
+How does this image look after applying image gradient operation?
+a) Entire square remains white
+b) A thin line surrounding the square boundary
+c) Only the center pixel becomes white
+d) Entire background becomes white
+Correct Answer: b)
+Detailed Solution: The gradient highlights intensity transitions only at object boundaries.
+Since the square has constant intensity inside, only its edges are detected.
+QUESTION 10:
+Type: MCQ
+Find the Fourier Transform of the time signal
+x(t) = e−3tu(t)
+a)
+1
+3+jω
+b)
+1
+2+jω
+c)
+1
+1+jω
+d)
+1
+4+jω
+Correct Answer: a)
+Detailed Solution: Using:
+X(jω) =
+Z ∞
+0
+e−3te−jωtdt
+=
+Z ∞
+0
+e−(3+ jω)tdt
+=
+1
+3 + jω
+
+==============================================================================
+PART: LECTURE SLIDES
+==============================================================================
+
+# Week 1 — lecture slides
+(source: NPTEL, 67 slides; text layer, plus OCR on 24 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Fundamentals of Image
+Processing – Part I
+(Week-01, Lecture # 1)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+Indian Institute of Technology, Kharagpur
+
+### Slide 2 (OCR)
+How | ted |
+computer?
+lah!
+a. © Bs a
+re
+; wk
+= a a 1 1
+— || 4 = hh
+rent es * ht: 384
+iii e - a in e€lg 1.
+as he +
+t q a ome i
+™. 407 90 103'118 122 115 99 85 78 81°91 97 100/97
+en) =p 81 | 67 84 126 125 :111 96 | §
+> bier 7 idea
+= F i J4) / 0.102 :104:100'93 +84 72/69 |87 422 208 225 213/185,
+0.110 122°4414 111 108 103: 101:95 81 73 79 105 4190/2
+3.119 427 125 121 117 114.111 108 107 103,92 83 83 |:
+A 2D A f . t 3:423 427 122.121 121.119 1141131110
+rray O in egers 7 426 127 126.123 123 1
+
+### Slide 3
+Color images
+
+### Slide 4
+Image File
+width height # Comp.
+# bytes/pixel
+Header
+Stream of pixels
+100
+101
+88
+EOF
+Standard File Formats:
+TIFF, BMP, GIF, PGM, PPM, JPEG, DICOM,  ….
+
+### Slide 5
+Image formation in optical
+camera
+P à p : Projection
+E(P) à I(p) : Stimulation
+
+### Slide 6
+Rules of projection
+Center of
+projection
+Image plane
+Image points formed by intersection of the ray from a point P
+passing through the center of projection O with the image
+plane.
+Perspective
+projection
+
+### Slide 7
+Other imaging principle
+Image points  formed by intersection of parallel rays
+with the image plane.
+Parallel
+projection
+
+### Slide 8
+Other imaging principle
+Tx
+Rx
+Scan radially / translating Tx-Rx
+along a direction.
+
+### Slide 9
+What is an image?
+n Impression of the physical world.
+n Spatial distribution of a measurable
+quantity, encoding the geometry and
+material properties of objects.
+
+### Slide 10
+A few concepts and operations
+
+### Slide 11 (OCR)
+aetsre are x 10
+ee Yeris. — Siey Beal BITE wR cH catcES BRAS HEPA | 16
+Ae SIL AMTITS | ares arate why are aizates 0
+TART famia era RF caret a2 fF Bt4 Z5eH |
+Be AM CHT AIT W eerTH SMITE SAAT SGA
+seal catsica  atetfeat ata serge 4% 1 AEA | 14
+Gorm BIH ICA 91H | aifient Bea ein aces Bera
+we aif ict SIL ICH aT a4 228 Ine Gia BIG Cal |
+wartafe 2a aCe parietal Sica cela Sila ve
+we frettoa ore afr AaraITT weet BA ives | ~ 12
+‘zereths 24 a7a! after sara @fs Gara | x
+mE Tita BG Fz a BING aera Bifeal Ora CAE AMAA ( )
+Weel co eizt74 atari BA, al @ayl atae 10
+aieateas arena etal cals aatae aif ane ce
+aff os sara | ary (eal ota ire @faar ataa 1
+satfieetca feafea era fae rare wire ara ofA 4 | wet (aD)
+ital 1 aie 2H aifSal Ba oi4 to Sta BAT a 8
+8 aries ae FRaiora ara frzate af BS FeECA ETS. =)
+OAs aad aff | AB a 4H CIA form Ora FIC
+ata DUST aewa faa wie fan acu CAR CRA BATS | oO
+famtars ara @fA wars Bre Cam Sere ASS 6
+A STA HAA TEA ora frrzata af attra gata | (oD)
+aioe 3 sigata | era alfa sa of ‘ala ata? \ LL
+CATA CH CATA CA CNA TH COTA CH SrA caifsterntia cAlzstal aff | 4
+ala al afer aire a Wafaw 22m aE aalafs 0 LL
+ay Ha at aff cata 44 BGS BAH AltA HA GET |
+sferere ata 14 | act of& wis site +fAA H1aa
+A ata ata ala Sitar faa Gea ei ai 2
+at atta fag ata o arena BEA Ste BAR
+RS ABTA DIA aaa wr AR faiatton FORA ALF |
+atom ceria Sra | fom ofAdia Ya Stalea acy w Qa
+afean wa atemataca Atal gre Beufeal el Bae | alee), a
+oral Barer 404 apfanwre fea frratoca fire 0 — «42C«CF
+Gl CMT URED ACA TB | tel caf te a4 ater Cie! ] 0 3
+aifacar ott aml ora BHA A 48 de Off acd AE SAR
+fagata S1fA wire @Ahacgata | rd AF fea “ays | 50 100 150 200 250
+xy teal As ae Cea TIeTTA Farcenet ara AUT EO |
+ara aff eels ‘frrafatiaa | faratbone FRR Sel Are HAR rl al eSS X
+| acre TEeVIes Beis lb HAT BIG Ha RO
+wreta erates axis fer eA SrA Fae Bare fataw atfarxs |
+ameotla 1re Tze BA aq BAT GF ASS 48ST
+Normalized Histogram > p(x)
+
+### Slide 12
+Binarization (Thresholding)
+n Separation of foreground from
+background.
+n Foreground: Dark pixels (text)
+n Background: Bright pixels (white region)
+n Pixels in a binarized image set to one of
+the two values (e.g. 255 or 0).
+n 255 for background.
+n 0 for foreground.
+
+### Slide 13
+Binarization (Thresholding)
+n A simple algorithm
+n Choose a threshold value T.
+n A pixel greater than T is set to 255
+(background), otherwise to 0 (foreground).
+
+### Slide 14 (OCR)
+= 3 x 10°
+arcane ae 0
+a “Tio ia) 50 100 150, 200 250
+aerate are ata ae
+cae atoics «eter wiral Re TRI HAR caetrotS sie HAA | 5 Gee afdetiow. — -etem-attal atee —wtel aR coTOEE BEG AIA |
+Bw SIR MMTAITS | are arate BFR ace ITAA H & He SICH UTAITS | wes errata AR are TATE eS”
+waa famed ara rR atl a2 fa a Z9Ba q HTT fawrat ete OR RH Be BFR aI TERA | 2
+ae ait CoB RtCW wrrcma SrmsIC BAR GA y qa oie ae erect ART RGA
+wrecal cgi | ateifeat aca eS AR ci eH A! P seal cetera ater aia ere AIR oH eM Ca |
+care ah ICAI IEF | after! Bf 1a area Barca 0 i care EH tea IC | anifient Bim ere ace Borah
+cme aa aie ITH SIAL are aq BB08 INS WIA BS Cea | RE aR tet WIC ICA Ate. Bq BETS HWS SIT BS CoML |
+Fartate BE ATH paspiara wie cata wif v Ferrate Ra AT 9 - patois tea cater etfs
+as faetoa orf eafins ates aaa wFH cima | a a Ou 5 we fietor fe afee tatetce wees ae
+ztwrat 24 a4 | aifiren wana @Fa yaa | \ . ’ ‘aerate a4 sca! aifient aera ft Gara | \ .
+HE RICA BT BE a BIG wwrag BIfGal ST CAF AMMA | RE ATCA BT Ea OTS sara UTfBRl wT CAR ABH | .
+WES cae atztrH elarin Sia vee] @fayi ata Wa coz aiztea arsed Simao Sal wae +
+sromtews seen teh ene aatae tifa Soe au te mM rome aren tel cohen aa
+aff ae afiyara | aap fval old 97s Sia ataa 9 aff ae shaca . are (al ota size whim ater
+weatfigctera feafen ora fees aeons wir ora BA 4 | 7 wsarfierca |. fenfen aca Fee ars wiea Be AR AFF
+Bical aI BAH eifGel aBa ia ao BIA BAT pa = Ica SY aT RCA aifeal Ra Sta tot Sta eA “ xe
+oe water ee faeisra ort frzary ala afe egert re OR ETT ae Fetter wea fray Bh ae agen RT
+rae ata aff | FF ae 474 IA fom IA A IS 4 wae tae AFH | GE ay AH HLA fe OIA
+ata bua aewa fain ree fax BeH CAE CRA BAATW | ata BU wewa fey ree fen men CARA BAS
+fate ara #f% 1 ators 28re Cea Sara ASS 1 ‘ Faatacn ace FF 0 arent BRoe Cam BeCI SSH
+HH FIN Aaa MEA ora firzate BF ails Fata | m . ? a SIA aacd aig | eta finzata ‘aha pata | .
+Bred BEA STGATA pera aaa 7 ofA Sala ara? \ O e fa tC | O a BIT SH SPAT i pacer atin 7 BFR ‘ata ata ee” \
+CTA HATA OA TA CIA CH Sra cmifstersmcta calzstal ofA | . CAH CAT, CH TA CT CH Sea catformata colestet AFF | .
+ata at after atte a Bags BRA sae calaft 1 ora at afer cits Bahn eae ora eaten
+a Fa a aft cata ta Ase BA AIT SIH GEA J a9 daa aft cata wa ofan BAP ATC IT BRAT |
+aferere ala aa | aca BAG wid ice FAA Hla W afQrwre aH Aa ace ofS Oia ICR BAHT MATH
+HE ata ara ala ata FAR geaIa wt cate YD HH TA ATH HT Sitar FRfae wea ot cra
+at athe faxy ata a aetna EAI Hivta BTM W at athe fay ota wrens YEO Hotere
+aS CITA gas aaa ora AR fasten fas ACH I 6 CRRTH Bae AH wa AE Fatton fSaaa ACH
+wife cotcta Bra | foa aida ye STalya ACF aif cetera Sta | . fon shai Te Stalen aC 1
+afer we ate ett atat 7 Berfyal Sh feaga deeb gieatn we ate tal ys Benfoat wf feta =” Oley
+oral ziatera ara a ‘pfanere fa frtioca farmeviel j orl Beater Bea afirwce fea faetocs fcr 0 :
+ota aces ae) ATH Fat | otal aft aust Af ae Ia, “ Or MCAT URS ICH FTE | rel CAA yr AFH AEA CT
+wifes atte stat erra Bria ag 46 EH BIC5 AE GRA atficors stip stmt wert Bota te de Sf BE OE PRT :
+fagara 41 wicz @Aagate | word FF FeATA MTL | fagatn St Sieg ergata | era CHE fas TANT | .
+ay teal Als gar Cea SILTTA Fame BLAH AUGAFIOA aR Cent Ay fee a VATA FACE SAA ALTA TOA | 3
+ara aR meta FARRAR | Sabon aefaal ytree art | ara af amet fefafaea 1 faearres fat Behe HCA pate
+| aire sa oRae Bera a BA OF AE BITS a AR RL miftore wae laae Sta wien ot Ae ING a a EA a
+wrt eretca atte FRET SF | era aa Bitar faren arfergs | eter etetca cette oFaerto FH | era ae Bary fale atfrge
+ame daa TG TEE BAF aq SAH GF ASS SS I aah oc ge Bef a 44 FA TEST
+
+### Slide 15
+Bayesian Classification of
+foreground and background pixels
+Pixels belonging to two classes:
+w1: Foreground
+w2: Background
+Bayes’ theorem:
+Bayes’ classification rule:
+Assign x to w1 if p(w1|x) > p(w2|x)  else to w2.
+To check whether p(w1)p(x|w1) > p(w2) p(x|w2)
+p(x)
+p(x|w1)
+p(x|w2)
+Compute p(w1|x) and p(w2|x).
+
+### Slide 16
+Expectation-Maximization
+Algorithm
+Th
+1. Compute p(w1) and
+p(w2) from proportional
+areas of each region.
+2. Compute parameters of
+p(x|w1) by assuming it
+Gaussian.
+3. Compute parameters of p(x|w2)
+by assuming it Gaussian.
+
+### Slide 17 (OCR)
+Expectation-Maximization
+Algorithm mh
+ape “'gorithr powl)= > px)
+x=0
+f P(w2)=1- p(wl)
+Q = S x.p(x)
+x=0
+th & op => x’.p(x)- ue
+4. Compute new threshold —
+value so that for x<7h, Ly = > x-p(x)
+P(w1|x)>p(w2|x), and vice x=Th+1
+versa. > 8, ;
+5. Iterate till the value of Th 90) = x. p(x)- ue
+converges. x=Th+l
+
+### Slide 18
+Otsu Thresholding
+n Choose a threshold value, which maximizes
+between class variance (σ2
+Th
+p(x)
+
+### Slide 19 (OCR)
+ef x10°
+“4 8
+12 7
+10
+f\ 2
+o 50 100 150 200 250 oO 50 100 150 200 250
+. state x aerate ee
+ee eerie «wee wIral RIT AA BIOS BPS HEPAT | a
+“ i sie ema aa aon es ae rater . coe etc «eter ical Ate TR CHAR catrAS BFA HEPA |
+Ots . 1 57 waa fama aca RE US BB BEF BI TEER Bayesia n mae aren a ache va a wa
+u: Ae AP CAB AIC SFCHH SHES BHAA BG oe mR Cre CARE FE ROM aA |
+areca catetca | itetfut atc ree 1% oo eR EH | 6 157 qe AM CAB ATC STH SHAT BAA RGA Ni
+Gorm Bh Steal 16H | arfes! Bia era aaa Bea 0 . wrercal catgiea  siretfeat aie aeRSTE AE OF AFA |
+mE ATARI SIC SICAL Are 4 B08 C@lNS Sta BIG ema | coi oh teal ee seg! fet ts aces Soca
+aeriafa eer b pastor wien cata tat v mE TIAA aCe SIT SIAL aTe aq BBre colNS GIA AG Cea | v
+as fi gifs aime craters seta ef emma | wertafe a ATE pasprercn Sica cafe wt frat
+zteret(® a4 aca | afte ara AR Gara | \u. ae frsitoa ‘a orf am ras we \
+ESIC BS Creal sine warm BIfGal ora CAB EMMA nan 9 3 | aise ten bse :
+aBa coe aetna i catasrat Bf, aga faut ata» cre mica 5e eR at OTe Urs IfEA Ore CHE FEMA |
+arenGaa cotel cata metan aire aaa | WBS co a1z178 alae Bia a Saal aad >
+‘a “ae @fara | ae fal ota pa ain tiand Aeatera aren ina ret caf aR Ia Afra AREA
+wantfietetca eaten ara fee Hears otra ara aA AD af ae afara | . arp (wal ola ATS Bhar alan A
+mr an fate aa 4 ° sifeat aba ai ‘ten waza t er satfreatca feafon ara freee qrans ira Bra BEA af eT
+. ae A fieeaty ala af N ws ‘ater Bi aie Bra sifeal aa sta Aol BIA wal ae
+CA BANA ae faaitera ord [RBA Fla BS FORMA oe fretera 74 FeEA fa ate as ets
+eae ata aff! RB a 47 Cat for! Ora SIN sera ae raat oa TRAIT B18 SS TEE
+aca vow aesa fa arce fem scatter’ | eae aaa offs | AF Ae 47H CIA Frm OIA IA
+° ara af caters wars Senora ‘ atta bus aawa fr wre far Bea CAR AA BAAS |
+a aa “a featara at 34 1 aierd Bare Ce Ser MASS ,
+ame TA aA TEA ora Finzata Fa ales Bats | erata afi anna
+ae hh gata i pore ata 7 al “ wien SY amt YAM Aaa TSA wera Preeate BFR <i Baa | \
+CATA CH CTT HCA TH CTA CH era caiftoredia calzial aff wie wT ara i ere at we fa a aT
+eta al afta atta 4 Bafa 2a sae aalafa CTA CH CATA HON TOOT Ct Ord cHiSITR aA CAA fat
+ay aa 74 aff cata #4 AGS BAM AIA lA GBS | a at afer an " Bahew 2am RH ara r
+efeqore ata aa | ace of wia 102 BFA Mia wa 18 cata 24 weneen we wea
+Cre! ata ata ata tae fARRa geal el aia YD eferere aa ata | Hea Diy Wik FIC FIA Alea \
+wt atte fi sta 8 caer Bet Gtr sf 8 AR ata ata ala Bitar fae yeaa ol caizal |
+oes oica gaa mara ora at fi ata foama ACF | at atfea fas cata w mataa BEA iuter at 8
+aiferl cetera Sta | foa ada ya ataler 307 ae ifm cetera a lel fa oR Reon & ‘a ad
+afeata ea atmaetaca atal ae Seiten eh feast deo fem a cain ; wet g Sees i pa ' deo
+cra Barer era fanere fea frettora farseviel u * ct ater wa et a f aa al caren f a ‘
+Ola ALT TERY ates Fett | wrel cafe al a4 aT SIRE . cue A STIWCOC Fa APMTFER FSEWOT .
+iRaCOT AIG stat eee Beta A 46 de 6G 4105 AE aeRBE FRACS TR CH Ft | ore cela aya a4 eT IEE |
+fegata Sih wicx @Agata | wre CHF Foam “Tega | ‘on SE int ire Beta a9x8 Fh bilieahe bitiele
+ee teal A fst Ba LTA Five car AYER t fegata Sif wice ohergaia | ora AF FSA ATA |
+aa AFR mata RATA | fade Fit yt ar | ee taal As ass Ce TATA Facet eran ager gos |
+1 RCE AEP ORVe Ba a aia 7a aii Ha ae AE wae sees rea | fees ea aA a
+© tata crate ee faerie FR wr Mae itaee Faten atPIS | | sien aarins Bene wife oF 3a RIG a eA
+ARPT TS TAA Bef Ge FA VR ASS SS 5 wreta efatca etre iffreset FA | Sra aoe Bitare farm afergS |
+° 2 ama ATS AAAI BaF Gq SAH YF ASS ASS
+
+### Slide 20
+Contrast Enhancement:
+Pixel mapping
+Input pixel (x)
+Output pixel (y)
+255
+255
+Dynamic Range
+Function is monotonically increasing.
+255
+
+### Slide 21 (OCR)
+5000
+4000
+3000
+2000
+1000
+oO
+3 oF a Gee + p
+ae, Le ee arin,” 2000
+5 a a 1000
+y Soe Bee
+pee Fe . 0 50 100 150 200 250
+
+### Slide 22
+Fundamentals of Image
+Processing- Part II
+(Week-01, Lecture #2)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+Indian Institute of Technology, Kharagpur
+NPTEL
+
+### Slide 23
+Segmentation
+n Partitioning image pixels into meaningful
+non-overlapping sets.
+n Binarization: A special case.
+n Can be extended to group pixels in more than
+two labels.
+NPTEL
+
+### Slide 24 (OCR)
+a a
+Multilevel thresholding:
+oa | Ro Bae oe bg peor ae FN
+fea} Ne t , ee ~ tee 4 ‘ sae
+gx OE —— “aS * , eae es = “ae oo Pa” RE A ys
+ee ee sos, Sie my csaleiga
+p 5 a St] we id ; Ee ae a Bip ass %
+Sy Fee ne BS _ . = ~~
+500
+—. - Intervals: [0,60], [61, 119], [120,255]
+Blue Green Yellow
+
+### Slide 25
+Component Labeling
+n Partitioning connected image pixels into
+meaningful non-overlapping sets.
+n Neighborhood definition.
+n 4-neighbor, 8-neighbor
+4-neighbors
+8-neighbors
+NPTEL
+
+### Slide 26
+Component Labeling
+n Form a graph with edges between
+neighboring pixels having same labels.
+n Compute connected components.
+n Graph traversal algorithms
+20
+20
+50
+20
+20
+20
+50
+100
+50
+50
+50
+100
+100
+100
+20
+20
+NPTEL
+
+### Slide 27
+Component Labeling
+n Form graph with edges between
+neighboring pixels having same labels.
+n Compute connected components.
+n Graph traversal algorithms
+20
+20
+50
+20
+20
+20
+50
+100
+50
+50
+50
+100
+100
+100
+20
+20
+Do you require
+an explicit
+graph
+representation?
+Can you
+compute using
+only the image
+array?
+NPTEL
+
+### Slide 28 (OCR)
+rae, \it) See, © 3 : te 4 e
+avr .),
+Ee tS pig) = % 3” ead
+, i A ees aca gag
+COMPONENTS maw « bd
+* _—s =) s «
+adap
+rai a ig:
+ep a
+ee
+
+### Slide 29 (OCR)
+Sm \i | Ge baae” cae 2. a :
+ie , eek oe sy cei fA Rn ey %,
+ee ee Se y PPT MN ey con é Fs 2 ts ae bE:
+F oe 6} © Sareea gt a” a ap ae, 2 algae Ps, ;
+ae es me Ie SS a ‘3
+Nee a a =  » aa = Ra ie \ ee ~ \
+Ce: 3 z , ~ a BAN, Soe -_ .
+Ps Vis bode :
+Wh t of ri h | is missing?
+Y a part OF river Cnannel IS MISSING:
+
+### Slide 30 (OCR)
+4 Gradient Operations
+Consider the image as a 2D function: f(x, y)
+se TED — ferry) S63)
+, a IY) = f(x,y+l)— f(x y)
+oy
+Vile) = FEED)
+
+### Slide 31
+Computation with mask
+1. Scan the image top to bottom
+and left to right.
+2. At every point (x,y) place the
+mask  and compute the
+weighted sum.
+g(x,y)=(1).f(x,y+1)+(-1).f(x,y)
+3. Write the value g(x,y) at (x,y)
+pixel position of the processed
+image.
+Weights
+NPTEL
+
+### Slide 32
+Robust gradient computation
+Prewitt operator
+Averaging  neighboring gradient values
+(6 times of the gradient value in any direction)
+NPTEL
+
+### Slide 33
+Robust gradient computation
+Sobel operator
+Weighted average of  neighboring gradient values
+(8 times of the gradient value in any direction)
+1x
+2x
+1x
+NPTEL
+
+### Slide 34
+Results of gradient
+operations
+Vertical
+Horizontal
+Resultant
+NPTEL
+
+### Slide 35
+More on computation with
+mask
+w1
+w3
+w2
+w4
+wc
+w5
+w6
+w7
+w8
+Convolution operation
+Filtering
+Maskà Filter Response (h(x,y))
+h(x,y)
+f(x,y)
+g(x,y)
+NPTEL
+
+### Slide 36 (OCR)
++ Noise Filter
+eters ion Piece ronan eae FE
+ER Tea ka OS Bi coe I ope ti. XR OR
+Bee Age oe 1 ge cE
+sad et, .. % {ip " e
+Cc pe Be ses eee ~ rey poo
+‘hy SS 2 RA ee : x 7 eas at
+a=0.5, b=0. 3/4,
+and, c=0.25/4
+
+### Slide 37 (OCR)
++ Gaussian Smoothing
+1 Gre He) Se
+GO y= se ee |
+g(x,y) = f(x, y)* G(x, y) ae
+o=2
+Mask size: 9x9
+
+### Slide 38
+Median Filtering
+g(x,y)= the median value among
+the neighbors.
+NPTEL
+
+### Slide 39
+Summary
+1. Images formed by optical camera through
+perspective projection.
+2. Discussed different operations in image
+processing.
+o Binarization
+o Thresholding.
+o Contrast
+enhancement.
+o Segmentation
+o Component
+Labeling
+o Gradient
+computation.
+o Computing edges
+o Convolution operation
+o Filtering
+o Median filtering
+NPTEL
+
+### Slide 40
+Image Transforms: A brief
+introduction
+(Week 01- Lectures 3- 4)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+“Image and video processing in the
+compressed domain”, CRC Press, 2011.
+NPTEL
+
+### Slide 41 (OCR)
+fuN= >. > ayby Gey)
+Image Transform re
+a Image in continuous form: f(x,y): A 2-D
+Properties of
+function, where (x,y) in R?. bone functions
+: 7 » can be extended
+a Let B be a set of basis functions: ©" > analysis.
+B={b(x,y) | i=..,-1,0,1,2,3,....$, by) in R or C.
+a Let fx,v) be expanded using B as follows:
+f(x,y) = ». A,b;(x, y) _ Coefficients of
+. / transform
+The transform of fw.r.t. B is given by {A;|i = ---. —1,0,1,2,3,... }.
+Indexing may be multidimensional say, 4;;.
+
+### Slide 42 (OCR)
+Orthogonal Expansion f() = >. Aibie)
+{ and 1-D Transforms
+a Inner product: <f,g>= | Fear @ax
+= Orthogonal expansion: If B satisfies :
+(b;,b;) =0, fori #j
+= c; Otherwise (for i = j), where c; > 0
+= Transform coefficients in O.E.: ,Aj = a: b;)
+= If c=1, it becomes orthonormal expaniion
+Forward transform © A; = (f,b;)
+=» Inverse transform: f@) = [__Ancoa
+
+### Slide 43 (OCR)
+. Complete base
+Fourier J
+B= {e J®*|—c <w < oo}
+transform “tim |
+¢ pulse function
+tyre [ax 7. . (206(x), forw=0
+Orthogonality: [. eloxdy = 0 otheniwe
+Fourier Transform: #(f(x)) = fiw) = | ° f (x)eJ°*dx
+Inverse eye fo) = 4 ime lox dy
+Full reconstruction e~Iwx — cos(wx) —jsin(wx)
+fGw) = [re costox) — jsin(wx)) dx
+C = {cos(wx)| -— 0 <w < o} S = {sin(wx)| — 2% < w < co}
+\ Orthogonal / But not complete!
+
+### Slide 44
+Even and odd
+functions
+n Even: f(-x)=f(x) for all x.
+n Odd: f(-x)=-f(x) for all x. à f(0)=0.
+n For even f(x) :
+n For odd f(x) :
+n Full reconstruction possible with cosines
+(sines)  only if it is even (odd).
+NPTEL
+
+### Slide 45
+Discrete representation
+n Discrete representation of a function:
+n Can be considered as a vector in an infinite
+dimensional vector space.
+n In our context, it is of a finite dimensional
+space, e.g. {f(n), n=0,1,..N-1}, or
+n f=[f(0) f(1) … f(N-1)]T.
+Sampling interval
+Set of integers
+NPTEL
+
+### Slide 46
+Discrete Linear Transform: A
+general form
+n For n-dimensional vector X any linear transform,
+n e.g.  Ymx1=BmxnXnx1
+n Xnx1: A column vector of dimension n.
+n Ymx1: A column vector of dimension m.
+n Bmxn: A matrix of dimension mxn.
+n Has inverse transform if B is a square matrix and
+invertible.
+NPTEL
+
+### Slide 47
+Basis vectors
+n B is the transformation matrix.
+n Rows of B are called basis vectors.
+n Y(i)=<bi
+*T. X>
+n Orthogonality condition:
+dot product or inner product.
+NPTEL
+
+### Slide 48 (OCR)
+Discrete Fourier Transform
+| 1 wok
+b(n) = —¢)°™N", forO<n<N-1, andO<k<N-1.
+f(k) = d f(n)eP* 8" forO< kN -1. f(NW +k) = fk)
+N-1 ee k/N: Normalized frequency
+f(n) = y S- f(k)e?™ 8" for0O<n<N-1,
+™ Fundamental
+A single period frequency: //(NX,)
+alll ~llullllillll fen
+DFT: Fourier series of a periodic function
+
+### Slide 49 (OCR)
+DFT: Alinear _
+transform w= r@e""F  forosk<n-1
+1 1 |
+FO) jon ve IP £O
+Fa) [ijl e "NL ema |) FG)
+FIN-D] | y j-ient jotta? IFW — D)
+Fy = Leite men 1
+F=Fyf
+Hermitian transpose
+f= Fx'F —1 iy
+Fy = in
+
+### Slide 50 (OCR)
+Generalized Fag = [e-Pitn40)] |
+Di F . 0<(k,n)<N-1
+Iscrete Fourier Pop = $Flo = Ho
+10 ~ N*io ~— N~ 0,3?
+Transform (GDFT) on ener
+1 - kia .
+B-9) (n) = Fen nt, forO<n< N-1, andO<k< N-1
+AY
+N-1 k
+fa,a(k) = S- f(n)e F247 WM) for0<k<N-1
+n=0
+1 vs k
+A . ct+a
+f(n) = WV S- fa g(kjel?™ (Mn +8), forO<n<N-1
+k=0 ». . ,
+a Bs Transformname i (assti(‘i;CCOCOCOCOC CUNO tation
+0 O Discrete Fourier Transform (DFT) f(k)
+0 3 Odd Time Discrete Fourier Transform (OT DFT) fo, 1 (k)
+5 0 Odd Frequency Discrete Fourier Transform (OF DFT) f a o(k)
+
+### Slide 51
+Symmetric / Antisymmetric
+extension of a finite sequence
+Original sequence
+Whole symmetry (WS)
+Half symmetry (HS)
+Whole antisymmetry (WA)
+Half antisymmetry (HA)
+Even function
+Odd function
+DCTs and DSTs exist for
+any finite sequence.
+NPTEL
+
+### Slide 52 (OCR)
+Discrete Cosine / soya Yh fepanee
+‘ Sine Transforms semen
+= Types of symmetric / antisymmetric
+extensions at the two ends of a sequence
+and a type of GDFT> DCTs / DSTs
+Fo0
+| | | a, Type-I Even DCT
+Cie(x(n)) = X7e(k) = \/ 20%) Yan) cos (=) ,O<kK<N.
+
+### Slide 53 (OCR)
+Discrete Cosine / =| V3 for p=0 or N,
+. 1, otherwise.
+Sine Transforms
+HSHS Foi
+—~ N-1 (n 1
+Cae(e(n)) = X1ze(K) = yf 2a(h) > a(n) 0s (SS). osksw1
+WAWA iF),
+— — Type-1 Even DST
+9 V2 2rkn
+Sie(z(n)) = Xere(k) =4/ = xr(n)sin | ——],1<k<N-1
+1e(t(n)) = Xre(k) Vea) (==)
+
+### Slide 54
+Discrete Cosine /
+Sine Transforms
+jF0,1/2
+Type-2 Even DST
+There exist 16 different types of DCTs and DSTs.
+HAHA
+Type-II Even DCT is used in signal, image, and
+video compression.
+NPTEL
+
+### Slide 55 (OCR)
+Matrix form of om={ ys mr=oe%
+} Type-II DCT
+=» Matrix form Cy = V5 (hens RA] .
+N-point DCT oS (kim)SN—1
+= Each row is either symmetric (even
+row) or antisymmetric (odd row).
+; _\  f Cn(k,n) fork even
+Cw(k, N —1—n) = eee for k odd
+X =Cy.x Cy’ = Cyn
+
+### Slide 56
+Convolution Multiplication
+Property (CMP)
+f(t)
+h(t)
+CMP for Fourier Transform
+NPTEL
+
+### Slide 57
+CMP for DFT
+f(n)
+h(n)
+Linear convolution
+o Periodic convolution: Convolution between two finite
+sequences with periodic extension.
+o It is defined if both have the same period, providing a periodic
+sequence with the same period.
+Circular Convolution
+CMP for DFT holds for
+circular convolution.
+NPTEL
+
+### Slide 58
+Antiperiodic extension and
+skew-circular convolution
+n Antiperiodic function with an antiperiod N,
+if  f(x+N)=-f(x).
+n An antiperiodic function of antiperiod N à
+a periodic function of period 2N.
+n Skew-circular convolution: convolution
+between two antiperiodic extended
+sequences of the same antiperiod.
+NPTEL
+
+### Slide 59 (OCR)
+u(n) = 2(n) @ y(n)
++ CMPs for DCTs“) = *(79u")
+Cie (u(n)) = vV2NCie (x(I)) Cre (y(m))
+Cre(u(n)) = V2NOre (2(0)) Cre (u(m))
+Cre (w(n)) = V2NCre (x(l)) Cae (y(m))
+
+### Slide 60
+2-D Transforms
+n Easily extendable if basis functions are
+separable, i.e. B={ bij(x,y)=gi(x).gj(y)}.
+n B: Orthogonal if G={gi(x), i=1,2,..} is
+orthogonal.
+n B: Orthogonal and complete if G is so.
+n Reuse of 1-D transform computation.
+1-D basis function
+They could be from two different
+sets, say b(x,y)=g(x).h(y).
+NPTEL
+
+### Slide 61
+2D Discrete
+Transform
+n Use of separability:
+n Transform columns.
+n Transform rows.
+n Input: Xmxn
+1-D Transform Matrix: B
+n Transform columns: [Y1]mxn=BmxmXmxn
+n Transform rows: Ymxn=[BnxnY1
+T]T
+=Y1Bnxn
+=BmxmXmxnBnxn
+Ymxn =BmxmXmxnBnxn
+NPTEL
+
+### Slide 62 (OCR)
+rn Image Transform: DFT
+Image: f(m,n), of size M x N
+M-1 N-1 km in
+F(k,l) = fim ne 7" Me ?™N
+1 ees} 9 km ‘9 in
+f(m,n) = —— F(k, De?" Me?" N
+Property of separability
+F=F,,fFi y . ey In
+mn Fk, = >) e?™™ > f(m,nje?"N
+m=0 n=0
+
+### Slide 63
+DFT Examples:
+Magnitudes
+and phases
+are shown
+by bringing
+them into
+displayable
+range, and
+shifting the
+origin at the
+center of
+image.
+Magnitude
+Phase
+NPTEL
+
+### Slide 64 (OCR)
+o(p) = rE for p=0 or N,
+AD DCT 1, otherwise.
+a Type-I:
+Xr(k,l) = Fa (k).@ (I). Do Sn—o(x(m, n) cos("47*) cos("")),
+O<k<M,O<1<N.
+= Type-II
+Xir(k,l) = %.a(k).a(l). Oyo Dnzo (elm, n) cos( 2 5P™*) cos( 5),
+— O0<k<M-1,0<1<N-1.
+=» Matrix Representation:
+X = DCT (x) = Cyy-x.Cy
+
+### Slide 65
+An example:
+Discrete Cosine Transform
+There are 16 different types of DCTs and DSTs.
+Input image
+NPTEL
+
+### Slide 66
+Why image transforms?
+n Alternative representation provides other insights of
+structure of images.
+n low frequency and high frequency components.
+n May become useful for providing more compact
+representation.
+n A few transform coefficients.
+n Selective quantization of components, considering their
+effect on our perception.
+n Image compression.
+n Sometimes convenient for processing.
+n Filtering, enhancement, ….
+NPTEL
+
+### Slide 67
+NPTEL
+
+==============================================================================
+PART: LECTURE TRANSCRIPT
+==============================================================================
+
+# Week 1 — Fundamentals of Image Processing and Transforms — lecture transcript
+(source: NPTEL, 82 PDF pages; [p.N] marks the page in the PDF)
+
+## Lecture 1 — Fundamentals of Image Processing – Part I  (transcript PDF page 5)
+
+[p.5] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture – 01 Fundamentals of Image Processing – Part I In this lecture we will discuss about, different Fundamental operations of Image Processing and an overview of image processing.
+
+(Refer Slide Time: 00:26)
+
+So, let us understand first how images are represented in computer. Let us consider an image which is displayed on your screen; and consider a small portion of the image as it is shown by this rectangle, if I zoom this portion then you will find the enlarging portions of the image. And you can see that some of the details are more visible here and, but there are certain kind of rectangular regions of the pixels regions which are also visible. And, if I further zoom this area, then you will observe that further zooming those areas there are small squares of uniform illumination, those values are shown here by the numbers in those squared. So, finally, as you can see that, in the image at the very bottom level of representation, every point has a number and that number is representing the brightness value at that particular point. However, while displaying it on a screen it is a small area which is represented; which is representing that point and this brightness value is also shown at that point. 1
+[p.6] So, the image is represented as a 2D array of integers. So, these numbers are all those integers; and in a 2 dimensional array as you know you require to also mention the array size. So, those array size will be the width and height of the image for example, in this case for this image the width is 256, which means there are 256 points along its width and height is 384, there are 384 points along its height.
+
+(Refer Slide Time: 02:26)
+
+When we consider representing a colour image, there would be three such 2 dimensional arrays each for representing one of the primary colours like red, green and blue. If you consider any particular point of these array, all the respective locations all the respective array elements corresponding array elements with the same array indices, they will represent a combination of colour by this three primary colours. So, you will have a red component of the colour, if I can display only with the red colour in the screen. And a green component of the image, which is displayed here by the green colour; and the blue component of the image which is displayed by blue colour. Now, once we super impose all these colours on a screen, then you can get the colour representation of the image itself. So, an image in this case is represented by three, 2 dimensional array. 2
+[p.7]
+(Refer Slide Time: 03:30)
+
+And when this information is stored in a computer hard disk, in the secondary storage you know that any information in the secondary storage is stored as a file. Similarly, image has to be stored as a file and a file it consists of a stream of bytes. So, in this case every byte or a collection of byte will represent a pixels and we can consider that is as a stream of pixels. However, to represent the image in the in your program in your computation, you require other associated information’s of the images of that image and which has to be stored also with this stream. Usually, they are stored a head of the stream in a very predefined format and which is called header of the image file. For example, a header can consist of this kind of information’s like, it could it should contain the width information, height then number of components which means in this case for a colour channel it should be three for a colour image. Number of bytes per pixel as I mentioned that, a pixel could be represented by number of bytes; in a very elementary representations usually it is 1 byte per pixel. And where the values it you know unsigned integer values vary from, 0 to 255 per pixel. of course, there should be an end of file representation for a file. And there are different standard file formats which are available for an image representation, they are very much standardized and documents are available. So, when you get an image file in these formats, you should know the corresponding format and you 3
+[p.8] should parts the header and get the images. So, these are some example formats like TIFF, BMP, GIF etc.
+
+(Refer Slide Time: 05:31)
+
+So, let us consider, how an image is formed in an optical camera? Let us consider in a camera which is represented here, a lens of the camera which plays a very critical role. And, there is a plane where the image points are projected where the points of the 3 dimensional scene, they are projected on a 2 dimensional plane and that is actually the focal plane usually of these particular lens. And where the images are found and those points are finally, sensed by corresponding sensors and they are digitised and you get a digital representation. So, if I consider that, how a point in a 3 dimensional space is mapped to an image point; so, let us see how it can take place, if you consider a point P where a light is reflected and that light is passing through the centre of the lens and intersecting at the plane of projections or the image plane. So, this point which is represented here by small p is a image of the scene point which is represented here by this capital P. So, image has been in this case image formation, has taken place due to the phenomena of reflection as you can see. So, there is another information, which is also encoded at this image point that is a amount of reflection that amount of energy that is received at this point which is reflected from the point P. So, that is the action of lens, which takes care of this particular but it tries to get 4
+[p.9] as much as energy reflected energy tries to put them together on this plane p, collects it and focused it on this point p and that is what is called also focusing. And that is why you get a very sharp picture if it is properly focused, a sharp point representation of the same point. So, this is another encoding. So, the amount of energy which is reflected from this point that should be received here and that is sensed. So, the interpretation of this image is that it keeps a brightness distribution in this 2 dimensional plane; where at each point you get the corresponding it is proportional to the amount of energy reflected from its corresponding same point. Let us look at minutely that once again; what is a rule of projection that I mentioned here and that provides you a very simple mathematical tool to compute given a point P in the 3 dimensional world, what should be its corresponding image point in a 2 dimensional plane. So, as we can see in this case that, this can be formed if I draw a line from this point through a particular fixed point O which is here the centre of the lens and extend that ray which hits the corresponding image plane and that intersection point defines the image point of the 3 dimensional scene point.
+
+(Refer Slide Time: 08:53)
+
+So, this is a centre of projection as I mentioned and this is the image plane. And so, we can summarize this rule as image points formed by intersection of the ray from a point P 5
+[p.10] and passing through the centre of projection O with the image plane. This kind of projection is known as perspective projection.
+
+(Refer Slide Time: 09:14)
+
+But, this is not the only way images are formed there could be other kinds of imaging principles other rules of projections can take place. For example, in this case what I am going to show here, there are image formed image of this cube where you know one of the planes of the cubes have been projected here. And, as you can see all these points are parallely projected to this plane, there is a particular direction which has to be considered in this case for this projection it could be normal to the plane, it could be any other directions in a 3 dimensional plane. So, this rule we can summarize in this way that image points formed by intersection of parallel rays with the image plane. And, this kind of one example of this kind of imaging is X ray imaging where X ray beams parallel X ray beams, it passes through our know body through bones through tissues. And then it intersects the corresponding X ray plate, which acts likes a image plane in this case and forms the image and this projection is known as parallel projections. 6
+[p.11]
+(Refer Slide Time: 10:20)
+
+Let us take another imaging principle. Let us consider you have a surface of an object and your imaging sensor there is a transmitter, which transmits the transmits a electromagnetic wave or some acoustic wave and then, the reflected wave is received by receiver. So, the duration the time interval between transmission and reception that can be measured and if you know the velocity of the wave you can compute the corresponding distance from this point. And consider it scan radially, you are taking this at every regular interval and you are scanning it radially over the surface points. And you can get or you can consider also, you can translate this transmitter receiver transmitter receiver along certain directions and performs its action repeatedly. So, for every surface point in that path you will get a distance. So, you can measure the distance not only that the amount of reflection, what you get from the surface that would also determine the orientation and surface property of this particular material. So, one example is this echocardiograms, where acoustic waves are used and ultra sound waves are used and so, this is one kind of example. 7
+[p.12]
+(Refer Slide Time: 11:43)
+
+So, if I summarize that how what is an image, how do I define an image? It is in a very short sentence we can say, it is an impression of the physical world. And just to make it a little more just to elaborate it we can say that, it is a special distribution of a measurable quantity encoding the geometry and material properties of objects.
+
+(Refer Slide Time: 12:14)
+
+So, now I will be discussing a few concepts and operations, which are which are there in the image processing. And in this course we would require some of these concepts as I mentioned earlier that know you do not required to go through the first level image 8
+[p.13] processing course to attend this particular computer mission course, these are the primers that I will be discussing here. However, it would be better if you follow some image processing textbooks and know further know more details about this concepts.
+
+(Refer Slide Time: 12:50)
+
+So, let us consider the first a very simple concept of images a very first level statistics of the distribution of this pixel values and, which can be captured in the form of a frequency distribution of the brightness values in this particular image. Here I have shown an image of a scanned page we can say this classes of images are document images. Once again in this image also you have those brightness values at every pixel. And as you can see there are two types of pixels are there mostly, one is one is a text it depicts a text of the document the other one belongs to background. Usually in the histogram you should have found the this you should have obtained, a bimodal kind of characteristics. But in this case since you get so many white pixels, so it is more skewed and particularly the distribution in the text zone it looks little flat. So, we will come to this point know how this could be processed further to make it more bimodal, but presently let us consider this is the let us concentrate on this fact that a. An image histogram is nothing, but the frequency distribution of this brightness value. And from this frequency distribution you can get the probability distribution you can convert it into a probability distribution of the brightness value. 9
+[p.14] If I normalize the histogram; that means, all this frequencies should be divided by the total number of pixels of the image, then you get the probability distribution of the brightness values.
+
+(Refer Slide Time: 14:29)
+
+So, one of the problem of document image analysis is to separate the foreground from background and this process is called binarization process. So, and one of the simple technique of binarization is using a threshold value to declare that, whether a pixel is foreground or whether it is background ah. So, in our present context the example what I have given here foreground is the dark pixels and background is the bright pixels; so which are white region of the document. And pixels after binarization, it could be set to one of the two values for example, we can consider 255 represents the white region and 0 represents the text portions or dark pixels say this is what we can consider. 10
+[p.15]
+(Refer Slide Time: 15:30)
+
+One of the simple algorithms at of this you know binarization could be as follows. Say, you can choose a threshold value T that is one of the brightness value in that intervals some value in the brightness interval. And a pixel greater than T is set to 255 otherwise it is set to 0.
+
+(Refer Slide Time: 15:55)
+
+So, this is a very simple algorithm and let us see, what is the affect of this algorithm. Say, you consider that know this document and this is represented this is displaying the particular a histogram. Let us consider a particular value say 156 where you perform this 11
+[p.16] thresholding and then you get an image like this. So, you see that there are only two types of pixels, pixels with the value 0 and pixels with value 255 in this case when your threshold value is 156. If I choose another value say 192 you get also another kind of binarized image; and you can see the difference between these two images. So, if the threshold value is higher than you get more foreground pixels your text becomes sharper here, but then there are more spurious noise in your in your document also which is not desirable. So, what is the optimum threshold value? What is a desirable threshold value which will make my text sharper which will look the foreground also sharper or they take the proper program pixels and also it should not contain the it should remove the noisy part of the pixels also. So, this kind of manual choice of thresholding may not help when you are trying to process various documents. And one of the objective would be that to automate this operation of this thresholding ah.
+
+(Refer Slide Time: 17:26)
+
+So, one of the techniques, that I would be discussing here, is a Bayesian classification of foreground and background pixels of a particular image. In this case we consider that our histogram of the image is a bimodal histogram, a schematic diagram is shown here it is. Say, there are two modes, there are two peaks in this histogram and we our assumption is that most of the pixels which are around this mode around its particular peak, those pixels are they are coming from the foreground pixels. 12
+[p.17] And the and the pixels, which are coming from the background they are centered around this particular mode. So, we consider there are two classes of pixels and these are the know symbols of this class these are the notations of this class in this case say it has considered w 1 and w 2 just for the abstract representation of this problem. So, what we need to do in this case? We need to compute the probability of a class w 1 given x, 𝑝(𝑤1|𝑥) and probability of a class w 2 given x, 𝑝(𝑤2|𝑥) So, this is because you know in Bayesian classification rule, we can assign the pixel x to class w1, if 𝑝(𝑤1|𝑥)  > 𝑝(𝑤2|𝑥) otherwise we assign it to w2 that is a base Bayes classification rule. So, how we can compute this know this particular probability, which is called incidentally posterior probability. In this case, so we can apply Bayes theorem there and in the Bayes theorem you can see that in this case I have described the theorem. So, consider this pixel x, so probability of a class given that pixel x, can be computed from this three quantities. 𝑝(𝑤|𝑥) = 𝑝(𝑤)𝑝(𝑥|𝑤) 𝑝(𝑥)
+
+And it is simpler to compute 𝑝(𝑥|𝑤) than 𝑝(𝑤|𝑥) directly because 𝑝(𝑥|𝑤) is called likelihood. And we can assume that the pixels which are around, this part they form a distributions which are coming a class distribution which are coming from the foreground pixels and can assume they are Gaussian distribution. Similarly, the pixels, so this is this is the probability distribution 𝑝(𝑥|𝑤1) And similarly for the background class also we can consider another probability distributions, for the background class and that would be the probability distribution 𝑝(𝑥|𝑤2). So, these 13
+[p.18] probabilities are called likelihood that could be easily that could be computed easily rather than computing this directly. And also you can compute class probabilities 𝑝(𝑤), if I assume that know some threshold value is chosen then these proportional areas can give me those two probabilities. I will describe it in the subsequent slide, but what is interesting to note that actually you may not use 𝑝(𝑥) at all in this computations. Because after computing 𝑝(𝑤1|𝑥) and 𝑝(𝑤2|𝑥) you need to compare only 𝑝(𝑤1|𝑥) > 𝑝(𝑤2|𝑥) that would, because this is proportional to  given a particular x, 𝑝(𝑥) is you know already given by the data itself.
+
+(Refer Slide Time: 21:11)
+
+So, let us see how these computations can be carried out? And there is a algorithm by which we determine this thresholds, we call this algorithms as expectation maximization algorithm. So, let me explain this algorithm here. So, let us consider that histogram once again histogram of the image or probability distribution of the pixels. And let us assume and a threshold value initially say at this point. So, this value divides the intervals this brightness interval into two halves. So, one we can consider this half belongs to say foreground region and this half belongs to a background region. And so, this is a representation for the foreground part and say 14
+[p.19] this is a representation of background part. So, what we can do? Given this threshold this threshold we can compute 𝑝(𝑤1) and 𝑝(𝑤2) why computing the areas area of this part and also areas of this part and take the proportional know areas of which region to compute that values. So, this is how the probability of class probabilities could be computed, ones given a threshold value. And then, after that we can consider only concentrate only this values these classes only and from there we can compute the parameters of say 𝑝(𝑥|𝑤1) by assuming it Gaussian. And similarly we can also compute parameters of 𝑝(𝑥|𝑤2) by assuming it Gaussian. So, if I relook at the Gaussian distributions function, it is a Gaussian distribution function as you can see there are two parameters; one is µ which is a mean of the distribution another one is σ which is the standard deviation of this distribution. So, what you need to do in this case to compute the probability this likelihood probability 𝑝(𝑥|𝑤1), you just simply you need to compute this parameters then you can compute the probability of any value x given those parameters. So, let us assume that we call the parameters corresponding parameters for the class w 1 as µ1 and σ1 and corresponding parameters of w 2 as µ2 and σ2.
+
+(Refer Slide Time: 23:34)
+
+So, next what we will do that we will be considering the and this is how the corresponding parameters are computed in this case. 15
+[p.20] 𝑝(𝑤1) = ∑𝑝(𝑥) 𝑇ℎ 𝑥=0
+
+𝑝(𝑤2) = 1 −𝑝(𝑤1) µ1 = ∑𝑥. 𝑝(𝑥) 𝑇ℎ 𝑥=0
+
+𝜎1 2 = ∑𝑥2. 𝑝(𝑥) − µ1 2 𝑇ℎ 𝑥=0
+
+µ2 = ∑ 𝑥. 𝑝(𝑥) 255 𝑥=𝑇ℎ+1
+
+𝜎2 2 = ∑ 𝑥2. 𝑝(𝑥) − µ2 2 255 𝑥=𝑇ℎ+1
+
+So, we are computing the variances with this of this values and main of these values. And these are all simple mathematical arithmetic expressions of weighted means and weighted variances. So, if you look at the statistics, book of statistics it will be very clear how these values are computed by this expressions are there. So, once we get these values then we are determining a new threshold value such that, the 𝑝(𝑤1|𝑥) > 𝑝(𝑤2|𝑥) So, as soon as it becomes less, then we choose that threshold values, still choose that threshold value and that value would be a new value. So, we expected this should be a threshold value, but after computing this parameter after maximizing the probabilities of occurrences of these pixels then we found there is a better threshold value which will be giving in a bettered better probabilistic occurrences of this observations. So, we iterate this process, so that would be my new threshold value and we will be iterating this process till the process is converged. So, this is what is your Bayesian classification based binarization method. 16
+[p.21]
+(Refer Slide Time: 25:44)
+
+And there is another method also we can consider here, which is almost similar and which also defines an optimization function by which you can get the threshold value. So, this optimization function is the between class variance of the particular two classes. So, between class variances are also as you can see it is defined by those by those parameters which I have discussed earlier. 𝜎𝐵 2 = 𝑝(𝑤1)𝑝(𝑤2)(µ2 −µ1)2 So, given a threshold value I can compute this 𝜎𝐵 2, like p(w1) from this part p(w2) from this part then µ1 can be computed from here and µ2 can be computed from here. So, you consider that you are computing thee value at every pixel value from in your intervals say 0 to 255 for example, and you are you consider the that pixel value where the between class variance is maximum and that has been that you consider as your threshold value. So, this thresholding principle this thresholding technique is proposed by Otsu and it is known as Otsu thresholding technique. 17
+[p.22]
+(Refer Slide Time: 27:03)
+
+So, the example of these particular processing, you can see that with that particular document image. We have computed this Otsu thresholds and which is 157 in this case and it gives know this kind of image. And, if I consider the Bayesian thresholds, then we find an another image incidentally though the threshold values are same you can see that there is little bit of difference between these two images though quality of this two images are almost similar; this difference happens because we would like to make this histogram bimodal. So, before applying Bayesian classification, we process the image so that, the histogram has a sharper modes also in the foreground zone. So, how we are processing it I will discuss in the you know next part. 18
+[p.23]
+(Refer Slide Time: 27:58)
+
+So, in this case, so this is what is the method which I was referring at it is a contrast enhancement method and here the concept of pixel mapping is used. The pixel mapping concept is that you have an input pixel and which will be mapped to an output pixel in such a way that dynamic range of the input would be expanded. That means, suppose in this case dynamic range is from 0 to this value which could be say half of the interval approximately. But in the output we are converting that dynamic range from 0 to 255 that makes the pixels sharper I mean contrast sharper. And one of the property of course, that you need to mention that you need to you know preserve that this function has to be monotonically increasing because, if you have two pixels x 2 and x 1 If 𝑥1 > 𝑥2, then  𝑦1 > 𝑦2 So, that keeps a consistency of displaying you know brighter pixel brighter and darker pixel darker, so that is why you require this property. One of the popular function which is used in particular in this case, is this function from the probability distribution of the you know pixel itself. So, this is a cumulative distribution and 19
+[p.24] 𝑦= 255 ∑𝑝(𝑡) 𝑥 𝑡=0
+
+(Refer Slide Time: 29:28)
+
+So, if I do this operation we can see that, we get a contrast rate image where the features are more visible in this are more prominent here. You can also look at this histogram this histogram has similar shape, but the dynamic range has been expanded modes are more clearly visible. In fact, this is a technique what I was referring at this is a technique we applied in the document which has been processed for binarization. So, with this let me stop here, this is a first part of this particular talk, we will start further we will go for the next part in the next lecture. Thank you very much for your listening. Keywords: Images, projection, histogram, thresholding, expectation maximization, Bayesian, equalization
+
+20
+
+## Lecture 2 — Fundamentals of Image Processing – Part II  (transcript PDF page 25)
+
+[p.25] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur
+
+Lecture – 02 Fundamentals of Image Processing – Part II
+
+We will move to the next part of this particular topic. We are still over viewing some of the Fundamentals of Image Processing.
+
+(Refer Slide Time: 00:25)
+
+And we will start with the concept which is called Segmentation. Now, a segmentation is partitioning of image pixels into a meaningful non-overlapping sets. The binarization process what we discussed earlier, it is a special case of this segmentation. In that case, we have only two such sets that we discussed; one is of the background, another one is foreground. But it could be extended to groups of pixels, which are more than two levels. 21
+[p.26]
+(Refer Slide Time: 01:01)
+
+For example we can consider a multilevel thresholding scheme. In the previous case, we have just only single thresholds. In a multilevel thresholds, we can have more than one threshold. Say consider this particular image and its histogram and let us consider we have selected these two thresholds. We can use a similar computation what we discussed earlier, particularly the Bayesian classification methods that can be extended further and we can determine this thresholds automatically also or manually by visualizing the modes, you can also select this thresholds. In this particular case, let us consider there are three such intervals and for each interval, we assign a particular colour to those pixels. There are 3 colours you can look at this particular image and they are blue and green and yellow and each colour represents a segment of the image. As we can see from the intervals say there are 0 to 60 and 61 to 119 and 120 to 255. 𝐼𝑛𝑡𝑒𝑟𝑣𝑎𝑙𝑠: [0,60], [61,119], [120,255] 𝑓𝑜𝑟     𝐵𝑙𝑢𝑒, 𝐺𝑟𝑒𝑒𝑛, 𝑌𝑒𝑙𝑙𝑜𝑤 These are the definitions of those non overlapping intervals and this is how the pixels are grouped into this particular image into 3 different segments. You can note that 0 to 60 corresponds to the darker values which is the water channel here. 61 to 119 is a middle values. Usually, these are the points which corresponds to this 22
+[p.27] interval and 120 to 255, they are the brighter values and they corresponds to the yellow portions of the image. So, this is the blue zone. This is the green zone and this is the yellow zone.
+
+(Refer Slide Time: 02:57)
+
+So, one of the task of segmentation even after grouping the pixels into different intervals that is still remaining and that is called component labelling. So, in this case, we need to also partition the image pixels in the plane itself. So, it is a connected image pixels into meaningful non overlapping sets that is what is our objective. So, there we can use various neighbourhood definition to define this connectedness. For example, we can consider the 4-neighbourhood definition or 8-neighbourhood definition in this respect. Say 4-neighbours are defined in this fashion. Say given a pixel, these are the positions of the neighbouring pixels and out of them, these are the pixels which are called 4-neighbours. Suppose, this is a location x and y. This is a coordinate location. So, this could be x, this should be x plus 1 y. So, this is x right neighbour. Similarly, x minus 1 y, this is its left neighbour. x y plus 1, its top neighbour. x y minus 1, its 4-neighbour, its bottom neighbour. So, these are the 4-neighbours of this pixel and this neighbourhood is called 4- neighbourhood whereas, now if I consider also the diagonal pixels, diagonal positions are also their neighbours. So, then this definition is an 8-neighbourhood definition. So, you 23
+[p.28] can have different such neighbourhood definitions and accordingly, this connected, connectivity will also be defined between 2 pixels.
+
+(Refer Slide Time: 04:35)
+
+So, let us discuss a particular case when you want to get the components preserving the 8 connectivity of pixels. So, let us take this particular example. So, this is a small image and each pixel value is represented by these numbers. So, this is a 4 x 4 image for example. So, what we do, we can form a graph with edges between neighbouring pixels having same labels which say you consider every pixel is a node of this graph and you form the edge when their neighbour, the neighbours have the same pixel values. So, for example, this is 20, 20, 20, 20. So, you can see that all these pixels, they form edges among between themselves and similarly, we can form edge between 50, 50 and this pixels in this form and also say for 100, 100 this is a edge. For another case this 20, 20 form an edge and 100, 100 another edge. So, it gives graphical representation of this particular image following the neighbourhood definitions. So, now your task would be to find out the components of these graphs, you can use any graph traversal algorithms like breadth first search or depth first search and by which you can find out each component and declare them as a segment. So, I have displayed here by different colours, those segments. They are showing different components in this case. One of the interesting question, what could be asked here that whether you required explicit graph representation in this case. 24
+[p.29] Because we have already the image array and the neighbourhood definitions are merely précised, where they have a well organised structure. So, actually do not require any graph representation. You can compute everything on this array itself to get these components. So, you can compute using only one image array itself.
+
+(Refer Slide Time: 06:59)
+
+So, some of the examples of this processing let me show you. Say these are the two images which we earlier displayed. So, this is the original image and this is the segmented image into 3 segments, 3 classes of intervals. Now, we are forming the connected components from each segments. So, I will show you some of the prominent components in order of their number of pixels in those components. So, this is a largest component and you can see that in this component, we could recover we could get the river channel into one component itself. Similarly, you can have various other components. So, this should be corresponding to this part of the zone. This is a green segment. So, connected green segments are shown here. This is mostly showing you connected regions in this part, yellow segment part. So, you get brighter pixels, yellow segment parts from here and in this way there are various other components could be also retrieved. I have shown only 6, but there are many other components which are possible in this image. 25
+[p.30]
+(Refer Slide Time: 08:15)
+
+One of the interesting question that I can ask you from this results itself; you need to be carefully observing particular, you should observe this results. See you can find out that though in the original image, there is a river channel, this is a river channel and in the largest segment also you can get the corresponding pixels to river channel, but part of the river channel is missing in this segment. So, can you tell why this part is missing? So, this is a question you need to find out by yourselves and you check why this information is missing in this part.
+
+(Refer Slide Time: 09:05)
+
+26
+[p.31] So, let us now discuss another operations for this with the images and we called this operations are computation of gradient values in the images. So, a gradient operation could be is defined in this way. So, image is a 2-dimensional function. So, in a 2-dimensional functions a gradient vector is defined by the corresponding partial derivatives along two principle directions. So, this is a partial derivative with x 𝜕𝑓(𝑥, 𝑦) 𝜕𝑥 = 𝑓(𝑥+ 1, 𝑦) −𝑓(𝑥, 𝑦) and partial derivative of function with y 𝜕𝑓(𝑥, 𝑦) 𝜕𝑦 = 𝑓(𝑥, 𝑦+ 1) −𝑓(𝑥, 𝑦) and they form a vector Δ𝑓(𝑥, 𝑦) = 𝜕𝑓(𝑥, 𝑦) 𝜕𝑥 𝑖̂ + 𝜕𝑓(𝑥, 𝑦) 𝜕𝑥 𝑗̂ and that is a gradient vector. So, computation of this gradient is quite simple and direct. We can use finite difference method by which you can compute gradient along the x direction which is simply the difference between the right neighbour and the pixel itself and similarly, we can compute the gradient along y direction. It is a difference between the top neighbour and the pixel itself. So, functional values at those positions is a difference. So, with these simple computations, you can compute these gradients and you can get the gradient vector. 27
+[p.32]
+(Refer Slide Time: 10:21)
+
+These computations, so let me discuss in a more general framework. There is a motivation behind this that would be understood later on. Let us consider that these difference operations could be performed by a computation with mask. So, let us define a mask. In this case its a mask 1 x 2 elements. Mask is a kind of array. In this case, it happens to be 1-dimensional array. So, the dimension is that there are 2 rows and number of column is 1 in this case. And these values in the mask, they represent the weights. So, what you need to do for computing the gradient all on the vertical direction, you place this mask at every pixel positions. So, this particular one of the points in the mask is corresponds to the central pixel positions and that is shown here by this particular coordinate (x, y). So, you are placing this mask in the (x, y) positions and then, what you are doing you are performing the computation. So, you are performing the weighted sum of the pixel values of the corresponding with its neighbours, where this mask is also present. So, once you place a mask here (x, y). So, this should be my multiplied by - 1. Then, the functional value at (x, y +1) should be multiplied by 1. So, effectively if you take the sum that would be the difference between (x, y+1) and (x,y). So, the algorithm for these mask would be that you scan the image top to bottom and left to right, then at every point (x, y) place the mask and compute this weighted sum which means that as I mentioned that you multiply the weight with a corresponding functional values at those locations and then, 28
+[p.33] you take the addition. Take the sum of them and that would give you the weighted sum and then, you replace the central value by this weighted sum. 𝑔(𝑥, 𝑦) = 1. 𝑓(𝑥, 𝑦+ 1) + (−1)𝑓(𝑥, 𝑦) So, in this way you can compute the finite differences along the vertical directions. Same computations can be carried out with this mask also which computes that difference along the horizontal directions.
+
+(Refer Slide Time: 12:37)
+
+So, to generalize this computation for making a robust gradient computation, what we can do instead of computing the difference only with the right neighbour or top neighbour, we can consider a neighbourhood region and find out this statistics of this finite differences in that region and take the mean of those know mean of that distribution. So, in this case particularly we are representing the mask value. So, we are taking a 3 x 3 mask and this is a central positions, these (x, y) positions. So, with respect to these position, so we can compute finite differences along using these two pixels also. So, , we are computing these finite differences 6 times around its neighbourhood and each one would not be the same; they are different values. But it is expected that if there is a gradient directions statistically I mean they if you take the average, then the noise or the error would be reduced, if you take the average of all these values. So, which is equivalent this computations since these are all linear 29
+[p.34] combinations, this computations can be carried out by single mask computation itself, when the mask is designed in this fashion. So, we can note that what we are doing at every cell of the mask, we are simply adding the weights. So, 1 - 1 becomes 0 here. This one is 1. So, in this way this is a distribution of weights in the mask and we can carry out the same computations with this mask and compute the corresponding. So, horizontal gradients in this particular case, in the gradient in the horizontal direction.
+
+(Refer Slide Time: 14:37)
+
+Similarly, gradient in the vertical direction also could be computed by this mask. Incidentally this masks two masks are called Prewitt operator in image processing and as you understand that 6 times you have computed this gradients in a particular direction. 30
+[p.35]
+(Refer Slide Time: 14:59)
+
+There is another example of robust gradient computation. In this case, what we are doing we are giving more weights to the central gradients than the off centric gradients. So, for example, in the horizontal directions when we are computing this gradient, we are giving weights of 2 here. So, weights are doubled compared to the off centric rows and once again as I mentioned that every value of the cell can be computed by the sum of these corresponding values and if I multiply them with the weights. So, the distribution of the weights in the mask will look like this. This is for the computation on the horizontal directions and similarly, for the vertical directions, the distribution will be here in this case and so, this is a Sobel operator and this gradient has been computed 8 times in this case. 31
+[p.36]
+(Refer Slide Time: 15:57)
+
+So, the results of these gradient operations, let me show you here. Consider the image on right top is your original image and if I compute the vertical gradients, I am showing those pixels by vertical gradients are very prominent. You can see those vertical bars of the fences; they become prominent in this particular image. For horizontal gradient again the horizontal directional fences which are parallel to the ground in those directions, those fences are becoming more prominent. But if I consider the resultant of this two vectors by taking the magnitude of the vector itself, we will get all the edge pixels in every direction and the corresponding edge points or boundary points of different object services, they become prominent in this particular image. This is how you compute that gradients. 32
+[p.37]
+(Refer Slide Time: 16:53)
+
+Let us generalize these computations with any arbitrary mask; that means, we consider any arbitrary weight distribution and this is an example of a 3 x 3 mask, but it could be of any dimension itself. So, if I consider weighted sum of the pixel values around the neighbourhood of the central pixel and we can represent this computations in the form 𝑔(𝑥, 𝑦) = 𝑤1𝑓(𝑥−1, 𝑦+ 1) + 𝑤2𝑓(𝑥, 𝑦+ 1) + 𝑤3𝑓(𝑥+ 1, 𝑦+ 1) + 𝑤4𝑓(𝑥−1, 𝑦) + 𝑤𝑐𝑓(𝑥, 𝑦) + 𝑤5𝑓(𝑥+ 1, 𝑦) + 𝑤6𝑓(𝑥−1, 𝑦−1) + 𝑤7𝑓(𝑥, 𝑦+ 1) + 𝑤8𝑓(𝑥+ 1, 𝑦+ 1) + So, we are assuming that we are considering the functional values at the corresponding locations and then, multiplying its weights and we are taking the sum of all these values and that gives you the corresponding weighted sum and which would replace the functional values in the processed image. So, this computation is nothing but a convolution operation, where at every pixel you are placing this mask and you are computing this weights and then, replacing that functional value with this processed value. So, it is the convolution operation. It is an operation meant for a computing outputs given an input of a linear shift invariant system in this case and this is an impulse response. So, these weights they define the discrete impulse response in this case, which is also called filtering because there is a frequency domain, transform domain interpretations which i will discuss in the next lecture. So, this mask is sometimes called also filters. So, this is the filter response h(x, y). 33
+[p.38]
+(Refer Slide Time: 18:39)
+
+One example of this kind of filtering is noise filtering, where the mask values are shown here. You can see that every value is positive and its weighted combination of the neighbouring values. Finally, sum of all these weights is equal to 1. So, this gives you a kind of low pass filtering action and if I apply this operation, these convolution operations on this image with the same mask computations what we discussed that is weighted sum of the weighted sum of pixel values around its neighbourhoods. And from there, replace the original pixel value by the processed pixel value, we will get an image something like this, where you can see that this noisy structures look little reduced in this case.. 34
+[p.39]
+(Refer Slide Time: 19:33)
+
+A special case of this kind of filtering operation often used in the image processing tasks is called Gaussian smoothing. 𝐺(𝑥, 𝑦) = 1 2𝜋𝜎2 𝑒−((𝑥−𝑥𝑐)2+(𝑦−𝑦𝑐)2) 2𝜎2
+
+When the filter or the mask is computed, the weights of the mask is computed following a Gaussian distribution. So, you consider the origin of this distribution at the central pixels and there is a width of the Gaussian distribution or standard deviation of the Gaussian distribution. Accordingly, the mask size also has to be determined to capture the Gaussian most of the functional values, significant functional values around its mask. So, * is a symbol which is usually used for convolution operation. We denote this computation of with the mask this is what is a convolution operation. 𝑔(𝑥, 𝑦) = 𝑓(𝑥, 𝑦) ∗𝐺(𝑥, 𝑦) 𝑤𝑖𝑡ℎ 𝜎= 2, 𝑚𝑎𝑠𝑘 𝑠𝑖𝑧𝑒: 9𝑋9 So, in this particular case, if the mask size is 9 x 9 and your σ is 2; then, using this know Gaussian mask by using this convolution operation, you can get a result like this. 35
+[p.40]
+(Refer Slide Time: 20:43)
+
+Median filtering is another kind of computation which is not which does not use convolution rather it is a very simple to describe. What it does, it computes the median value among the neighbours among the neighbouring pixels and replaces original value by this median value. It is a kind of non-linear filtering operations, but this is a very effective method to reduce a noise like spot noise kind or salt and paper noise kind of noise which are randomly the random dots which can be scattered over the images and those could be minimized, those could be reduced using mitigated using this kind of filtering. 36
+[p.41]
+(Refer Slide Time: 21:35)
+
+So, here we are at the end of our lecture on this fundamentals on image processing and so, as a summary what we discussed in this particular lecture that we can summarize it. That images they are formed by optical camera and we see that the mapping of 2-dimensional, 3-dimensional points, 2-dimensional points that takes place through a kind of projection which is known as perspective projection. So, we discussed rule of projection. That in this case, a point from a scene point a 3- dimensional point, you have to draw a straight line which passes through a particular point which is known as centre of projections and which hits the image plane that is point of intersection defines the corresponding image point that is what is perspective projection. Then, we have discussed different operations in image processing. Some of them are say binarization and in binarization particularly, we discussed the thresholding operation. Then, we discussed also contrast enhancement, we discussed segmentation and special task of segmentation say component labelling. We also discussed gradient computation where we have discussed how edges could be computed and convolution operations. In the convolution operation, we also introduced the concept of filtering which is equivalently called filtering and it is a computation with a mask; a mask consist of weights in its cells and that weighted sum gives you corresponding distribution and then, we also discussed median filtering at the end. So, here let me stop. 37
+[p.42] Thank you very much for your listening. Keywords: Binarization, segmentation, gradients, convolution, filtering. 38
+
+## Lecture 3 — Image Transform – Part I  (transcript PDF page 43)
+
+[p.43] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology Kharagpur
+
+Lecture - 03 Image Transform Part - I
+
+In this lecture I will introduce Image Transforms.
+
+(Refer Slide Time: 00:21)
+
+Let us consider image as a continuous function; it is a two-dimensional function and a point is in
+
+the two-dimensional real space and let us consider set of basis functions which are also a
+
+two-dimensional functions, we can represent it as a set where each function is given by
+
+say b​i ​(x,y) . you should note that this could be the functional value, could be either in real or in the
+
+complex domain. We can represent, we can expand the two dimensional function f(x,y)
+
+using B as a linear combination of this basis functions as it is given here in this form that
+
+λ​i​ × b​i​ (x, y) and where i is the indexes of the basis functions as given in the set. 39
+[p.44] So, the transform of f with respect to B is given by the set of set of this coefficients which are λ​i
+
+these are called coefficients of transform and we can represent the function as the linear
+
+combination of this basis functions where the coefficients of the linear combinations are
+
+listed here. So, you can see that this is an alternative description of the image instead of
+
+representing the image by the functional form of f(x, y); I can simply represent it as a list
+
+of coefficients or even these coefficients can be a function of indexes. So, indexing maybe multidimensional, for example for a two-dimensional function indexing
+
+we can use two such indexes to denote a coefficient and in that case we can say that this
+
+function can be expanded in the form of a linear combination of two dimensional
+
+functions and we can have this double summations in this representation. So, one of the
+
+advantage of image transform is that this properties of basis functions this can be
+
+extended in the analysis.
+
+(Refer Slide Time: 02:37)
+
+. Let us consider a particular type of property which is very useful when this basis functions they
+
+have this property. This property is called orthogonality property and if I expand the
+
+function in terms of this orthogonal basis functions then we call that expansion as
+
+orthogonal expansion. We will consider our discussion following up the discussion on
+
+40
+[p.45] this image transform, we will restrict our discussion to one-dimension first and later on
+
+we will see that now these properties can be easily extended to two dimension. So, we
+
+will understand the one-dimensional transform initially. So, one of the thing that we would like to define here this operation inner product. So, inner
+
+product is a binary operation where two operands are two functions you can see that this
+
+function f(x) and the another function g(x). So, it is the product of this two functions and
+
+integral of this product values at every point in the space x. Now of occurs in this product
+
+there is a there is there is something we should note that it is not a simple product, it is a
+
+product of function f(x) with the complex conjugate of g(x) and that is we are considering
+
+here. If both f(x) and g(x) functional values are in the real domain then complex
+
+conjugate itself will be the same functional value, so then we can write it as f(x) g(x) dx. So, orthogonal expansion it is possible when the basis functions this satisfies certain property,
+
+that means the set of basis functions it satisfies this particular property of a orthogonality.
+
+What we can see that inner product of any two different basis functions that should be
+
+equal to 0, whereas inner product of the same basis function will have a non zero value
+
+and which is a positive value. If this is true for any pair of basis functions in the set B,
+
+then we say that this basis functions they are all orthogonal in that set. So, transform coefficients in orthogonal expansion that could be easily computed by exploiting
+
+this property, that is one of the usefulness of this particular property and you can say that
+
+simply if I take the inner product of the function with a basis function, then we can and
+
+also divide it by c​i then we can get the corresponding λ​i​’s. And if c​i is equal to 1 then it
+
+becomes orthonormal expansion then we can simply write λ equal to inner product of
+
+function and b​i​. So, this is what of since we are expressing the functions in terms of only
+
+transform coefficients, so we call this operation is a Forward transform operation. So now, function instead of being represented by f(x), now the functions function is represented
+
+by these λ’s and the reverse transform or inverse transform would be to compute the
+
+function from this coefficients back and because of the orthogonal property and also
+
+41
+[p.46] orthonormal property, we can simply write it in this form. That means, simply it is a; it is nothing but the linear combination of those basis functions and since it is a
+
+continuous domain. So, we are taking the integrations over all the index values otherwise
+
+in a discrete domain we can write it in this form.
+
+(Refer Slide Time: 06:29)
+
+So, one of the special case of this orthogonal expansion is Fourier transform and in this case you
+
+can see that set of basis functions is given by in the following  form: (eq. 1) | B = ejωx −∞< ω < ∞
+
+it is a complex sinusoid which is the member of the set, it is given in the above form and the
+
+completeness (Refer Time: 06:53) of this basis function is : any orthogonal set which is
+
+a subset of any orthogonal basis set will also remain orthogonal, but using the linear
+
+combination of that subset, you will not get the complete reconstruction of the function. The basis set which keeps the complete reconstruction that is called the complete base. So, in the
+
+Fourier transform, in fact, the set what is defined here it is a complete base because, it can
+
+give me back this function as a linear combination of this function. You can see that
+
+42
+[p.47] actually this (eq. 1) is a infinite set, though individually every sinusoid can be
+
+distinguished here. So, the orthogonality property is reflected by this particular relationships where you can see the
+
+that (x) is the unit impulse function whose area is equal to 1 centering at ⍵equal to 0
+
+and otherwise (x) value would be 0 in everywhere. So, it is an unit impulse function
+
+and this particular property gives you the orthogonal property of the Fourier transform
+
+this base. So, Fourier transform can be defined in the following form which  is the forward transform . = (f(x)) (jω) F = fˆ (x) e
+
+∫ ∞ −∞ f −jωx as you see in the above that it is an inner product of f(x) and also the complete base. So, the base
+
+is ,. So, you take the complex conjugate of the base which is . And if I take the ejωx
+
+e−jωx
+
+inverse transform then once again this is considered as the inverse transform; (x) f = 1 2π ∫ ∞ −∞ (jω)e dx fˆ jωx
+
+So, is the corresponding coefficients and the linear combination of this basis function will
+
+(jω) fˆ
+
+give you the corresponding inverse transform. So, it gives you the full reconstruction because it is a complete base as I mentioned. One of the
+
+interesting fact that can be noticed in the following complex sinusoid os(ωx) sin(ωx) e−jωx = c −j
+
+it can be recomposed into two real and imaginary parts, real part consists of and
+
+os(ωx) c
+
+imaginary part consists of say in this case. So, this forward transform can be
+
+in(ωx) −s
+
+expressed using the following expression itself. 43
+[p.48] (x) f = 1 2π ∫ ∞ −∞ (jω)(cos(ωx) sin(ωx))dx fˆ −j
+
+So, it has one transform component which consists of real part, another transform component
+
+which consists of imaginary part and in the real part we are using the basis functions as
+
+where as in the imaginary part we will be using the basis functions at or os(ωx) c
+
+in(ωx) s
+
+whatever be your interpretation. in(ωx) −s
+
+So, we can consider as the set of basis functions and this is also orthogonal, os(ωx) c
+
+os(ωx)| C = c −∞< ω < ∞ in(ωx)| S = s −∞< ω < ∞
+
+The above trigonometric functions are also orthogonal we know and is also
+
+in(ωx) s
+
+orthogonal. But the thing is that as I mentioned that they will not form the complete base.
+
+So, we can use only . If I use the real part of then that will
+
+os(ωx) c
+
+(jω) cos(ωx) f
+
+os(ωx) c
+
+not give you back the full function. Similarly if I use the corresponding imaginary part of
+
+the transform and use the that will not also give me back the full function. in(ωx) s
+
+44
+[p.49]
+(Refer Slide Time: 10:55)
+
+So, it is not a complete base but there are certain functions where actually if you use only cosine
+
+functions or sine functions, you can reconstruct it fully, so these functions are called even
+
+and odd functions. There is a property like for an even functions, it should satisfy the following property: for all (−) (x) f x = f x i.e, it should be symmetric around the origin or around at at both ends say should
+
+x = 0
+
+(−) f x
+
+be equal to for all x (x) f
+
+for all (−) −(x) f x = f x Whereas for odd it should be antisymmetric. i.e, equal to for all x and (−) f x (x) −f
+
+(0)
+
+f = 0 naturally ​at the , the value has to be equal to 0 for this definition. x = 0
+
+45
+[p.50] So, a function could be even, it could be odd or it could be neither, when they are belong when
+
+they have this property, then you can expand them using only cosine or only sine
+
+functions. So, let us see so even we can have this is a property which is satisfied
+
+(x) f
+
+because, in that case if I take the integrations while taking the product with that
+
+in(ωx) s
+
+would be 0. I.e, ∫ ∞ −∞ (jω)(sin(ωx))dx fˆ = 0
+
+So, all sinusoidal terms would be 0; so that is why only cosine terms will remain and your
+
+transform coefficients can be sufficient to prescrib by only cosine transformations. ∫ ∞ −∞ (jω)(cos(ωx))dx fˆ = 0
+
+Similarly for odd the above property is true and that is why using only sine sinusoidal basis
+
+(x) f
+
+you can reconstruct it. Now this could be easily derived if I consider this relationships of and in terms of
+
+os(θ) c
+
+in(θ) s
+
+the complex exponential quantities as below. os(θ) c = 2 e +e jθ −jθ in(θ) s = 2j e −e jθ −jθ So, full reconstruction is possible with cosines when the function is even and with sines when
+
+the function is odd. 46
+[p.51]
+(Refer Slide Time: 13:03)
+
+Now, let us consider the discrete representation. So, a discrete representation of a function can be
+
+made in the following form : (n) f(nX )|n } f = { 0 ∈Z that the function needs to be sampled at periodic interval and it will provide a sequence of
+
+functional values where each sequence position is an integer set and sampling interval
+
+which is associated with this particular definition. So, it can be also considered as a vector in an infinite dimensional vector space, but in our
+
+consideration since we will be always using images of finite dimension or the signals of
+
+finite dimension, you are representing them in the computation in the discrete domain. So, there we will be having only a finite dimensional vector. (n), n , , .., f = 0 1 . N −1 For example we can represent a function from within certain interval from say 0 to
+
+as shown above. N −1
+
+47
+[p.52] You should note here the sampling interval is implicitly represented in this form. So, even
+
+without sampling interval we have a representation of the function and when you are
+
+trying to interpret the function with the physical terms, physical quantities in the
+
+functional space then only the sampling interval has to be used. So, let us consider that we are representing a function in this case with a finite dimensional
+
+vector and say it is an n dimensional vector in this case; it is a column vector
+
+representation. So, that is why the transpose operation has been used as shown below. f(0)f(1)...f(N )] f = [ −1 T
+
+(Refer Slide Time: 15:05)
+
+So, then how do you define a discrete linear transform? It is very simple because you know that
+
+whenever we perform any matrix multiplication in the following form: = Y m×1 X Bm×n n×1 48
+[p.53] , say you have a column vector of n dimensional column vector and let there may be a matrix of
+
+dimension and if I multiply them then you will get another vector of ×  n m
+
+×  1 m
+
+dimension, that means m dimensional vectors. So, this is a transformation of this column vector into another column vector of a different
+
+dimension. we call it a linear transform or as it is discrete since we were using the
+
+discrete presentation, let us call it as discrete linear transform. And this transform has
+
+inverse when this matrix which is called say transformation matrix B is a square matrix
+
+and also invertible.
+
+(Refer Slide Time: 16:11)
+
+So, one of the interesting facts about this transformation matrix that we can note that we can
+
+consider rows of these transformation matrix B, they form the basis vectors, this is the
+
+analogy with respect to the basis functions. Because we will see instead of inner product
+
+between two functions we are having here, inner product of two vectors which is
+
+equivalent to the dot product of two vectors. So, let us consider this say this is the representation of the transformation matrix 49
+[p.54] and these are the row vectors which is indicated by the transpose operations and you can say that
+
+this is a row vector you are considering, these are the complex conjugate operations by
+
+keeping it consistent with representation what we have for the inner product. So, when we perform this dot product or inner product between two vectors, then you get the
+
+corresponding element. So, i​th basis vector provides you the i​th element of the transformed
+
+vector which is Y here. .b = if i≠ j < bi T * j > 0
+
+otherwise = ci,
+
+So, the orthogonality condition in this case is reflected in the above form such that if you take
+
+any pair of two basis vector, then their inner product should be equal to 0 if they are
+
+different otherwise they should have a non zero value . ci
+
+(Refer Slide Time: 17:43)
+
+50
+[p.55] So, with this form we can consider that it will have the similar representations. You can consider
+
+that a function as a linear combination of all those basis vectors. So, if I look at the
+
+discrete Fourier transform expressions, the basis vectors for the discrete Fourier
+
+transforms are represented in this form. So, it is you should note here this is
+
+1 √N ej2π n k N
+
+defined for n functional points. for , and (n) e bk = 1 √N j2π n k N ≤ n ≤ N 0 −1 ≤ k ≤ N 0 −1
+
+So, is a small element which means you can form a basis vector from by computing it
+
+(n) bk
+
+nth
+
+to at it at each integer value of n within these interval. So, that gives me n = 0 n = N −1
+
+a vector that is a k​th vector and there are n such vectors where the k indexes k is indexes
+
+vary from 0 to . N −1
+
+for (k) fˆ = ∑ N−1 n=0 ˆ (n)e f j2π n k N ≤ k ≤ N 0 −1
+
+So, forward transform or discrete Fourier transform of a discrete sequence which is a finite
+
+(n) f
+
+sequence of length n can be expressed in the above form.
+
+for (n) f = 1 N ∑ N−1 n=0 ˆ (k)e fˆ j2π n k N ≤ n ≤ N 0 −1 You can find out that this is nothing but the inner product of .only thing is that
+
+(n) and e f j2π n k N
+
+instead of putting in this expression ,we have taken care of the square root operation
+
+1 √N
+
+during the inverse transform by multiplying as shown above .This is a simple
+
+1 N
+
+operation . 51
+[p.56] So, we kept this division normalization operation. We removed that operation in forward
+
+transform and included it in during that reconstruction. So, actually the value what we
+
+will get that would be proportional and it does not matter at this stage. But when you
+
+reconstruct, it will again recover the same value because, you are taken care of that
+
+particular normalization during reconstruction operation. So, you can see that it is a linear combination of the corresponding of basis vector in the
+
+reconstruction also and the coefficients which is given by are the coefficients from
+
+(k) fˆ
+
+discrete Fourier transform. We can also observe from the above expression that discrete
+
+Fourier transform is nothing but Fourier series of a periodic function. So, let us consider a
+
+finite sequence. So, in this case for simplicity let me take only four functional values and
+
+so, which means my value of N is 4 here and this is a functions for which I will be doing
+
+discrete Fourier transform. So, what I will consider because there is no definitions outside this interval, I can use any
+
+definition as per my convenience any other functional values and perform a
+
+transformation and after inverse transformation once again I will keep my observation
+
+window within the interval from 0 to 3 in this case. So, a periodic extension of this signal
+
+could be in this form that means, it is repeated so that you know in a periodic function
+
+this property needs to be a satisfied a periodic function with a period capital N should be
+
+. So, that is satisfied as you can see here, here the value of N is equal to 4. (n ) (n) f + N = f
+
+So, you will see after every fourth sample again it is repeating the same value. So, it becomes a
+
+periodic signal and as you know any periodic signal can be expressed as a linear
+
+combination of sinusoid functions and you can perform Fourier series ,that is ,what you
+
+are doing here in this case. After that, while in performing inverse Fourier transform ,
+
+you are only performing for these four sample points. So, and just to note that how it is
+
+related with the actual physical  sampling interval which is say here. X0
+
+52
+[p.57] So, the fundamental frequency would be determined by the length of the period of this signal
+
+which is So, fundamental frequency is . X N 0 1 NX0 And you can see that harmonics is represented by harmonic actual implicitly there is
+
+k N
+
+X k N 0 that is the physical frequency. So, we call as the normalized frequency in this
+
+✕N k
+
+representation.
+
+(Refer Slide Time: 22:47)
+
+So, discrete Fourier transform that can be also expressed in terms of a linear transforms which
+
+means we can express a discrete Fourier transform as a matrix multiplication of a column
+
+vector where the column vector is given by the functional values a finite dimensional
+
+vector as we have considered earlier and if I multiply these matrix then we will get the
+
+transform matrix and you can see that these elements they are obtained from this
+
+corresponding basis vectors definition. So, we can represent this matrix in a shorter form where each k and N​th element is represented by
+
+the corresponding expression as shown below e ] ℱN = [ −j2π n k N 0≤(k,n)≤N−1 53
+[p.58] and if the value of k and n they range from 0 to which will give me an matrix. So,
+
+N −1
+
+✕n m
+
+in a forward transform what we are doing; We are simply multiplying this transformation
+
+matrix with a column vector f which is representing the particular column vector
+
+. f(0) f(1) ...f(N)] [ T Then, we get the output transform matrix. So, the ( ) transform matrix transform column
+
+N × N
+
+vector which is representing the column vector which is
+
+F(0) F(1)....F(N )] [ −1 T
+
+actually the coefficients of discrete Fourier transform. . f F = ℱN
+
+and inverse transform will be naturally if I take the inverse of and multiply with F then
+
+(N) F
+
+we will get back once again column vector. ) F f = (ℱN −1
+
+Incidentally because of the orthogonality property and also orthonormal property of these
+
+functions. So, you can show that the inverse of the discrete Fourier transform matrix is
+
+nothing but its Hermitian transpose of the corresponding matrix. ) ℱ) (ℱN −1 = ( N H Hermitian transpose is the transpose of this matrix and also you should have to perform complex
+
+conjugate operation that would give you the Hermitian matrix. 54
+[p.59]
+(Refer Slide Time: 24:53)
+
+Now, discrete there could be other kinds of know say it off orthogonal basis vectors and some of
+
+them could be derived or extended from discrete Fourier transform representation. So, we
+
+call it generalized discrete Fourier transform. If you can observe that in the discrete Fourier transform ,basis vectors are generated by sampling
+
+the complex sinusoid within an interval between 0 to and then we have sampled at
+
+N −1
+
+regular interval .Now if I make a phase shift there in that interval. So, there itself we can
+
+have a variation instead of we can give a phase shift of 𝜷and also while defining basis
+
+vector we have considered harmonics and we have generated harmonics at regular
+
+interval. for , and (n) e bk α,β
+
+= 1 √N j2π (n+β) N k+α ≤ n ≤ N 0 −1 ≤ k ≤ N 0 −1 So, if I give also a shift in the frequency space ,then also you can have a different basis vector.
+
+Now the above representation will generate also n basis vectors of N dimensions and that
+
+would be once again an orthogonal basis vector which is a square matrix which could be
+
+invertible. 55
+[p.60] So, it could be easily used for once again for making a transform. So, this is the generalized
+
+discrete Fourier transform. We can use this basis vectors and we can get this expressions
+
+for discrete Fourier transforms. Similarly we can get back the function by applying the
+
+inverse Fourier transform it is the same similar form what we did for the case of discrete
+
+Fourier transform and the corresponding transformation matrix can be expressed in this
+
+form, here the elements as you can see it retains the same similar expressions only there
+
+are parameters and which is giving you a different set of transformation matrix. α β
+
+There are some popular transformation matrix as you can see a special value of at zero and
+
+α
+
+β that itself will give you the discrete Fourier transform what we have discussed earlier. If I
+
+took =0 and set , we call that transform as Odd Time Discrete Fourier Transform α
+
+β = 2 1
+
+or OTDFT and you can represent the transform in this form; similarly and
+
+α = 2 1
+
+β = 0 would be Odd Frequency Discrete Fourier Transform and if both are half; Odd Frequency
+
+Odd Time Discrete Fourier Transform. There are different properties which I am not discussing here; just for your example we have
+
+given this particular thing and they have their inverse transform in this case also. Those
+
+are related and  I have shown you in this particular grade. So, there are different relationships of the inverse transform. I think let us stop here at this point
+
+and we can start from this point in the next lecture, where will see that though it is not
+
+possible in the continuous domain to have cosine transform and sine transform for every
+
+kind of function but in discrete domain for any finite dimensional sequence you can
+
+define cosine transforms and sine transforms. So, for that we will be using this generalized discrete Fourier transform. So, thank you for
+
+listening this talk and we will move over to the next lecture. Thank you.
+
+56
+[p.61]
+
+57
+
+## Lecture 4 — Image Transform – Part II  (transcript PDF page 62)
+
+[p.62] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur
+
+Lecture – 04 Image Transform - Part – II
+
+So, let us discuss about the second part of the Image Transform properties and in the previous
+
+lecture I discussed how discrete Fourier transform can be generalized. And then we will see
+
+using those generalized discrete Fourier transform, we can derive also discrete cosine and
+
+discrete sine transforms for discrete sequences and they form a complete base; so you can get a
+
+completely construction of those sequences.
+
+(Refer Slide Time: 00:54)
+
+So, to understand that fact let us consider a concept of symmetric or anti-symmetric extension of
+
+a finite sequence. As I mentioned for the case of discrete Fourier transform also that given a
+
+finite sequence; you can define this sequence in the zone where in the zone of undefined region
+
+as per your convenience, make that sequence having certain properties which will be useful and
+
+58
+[p.63] which will be convenient for performing transformation on the sequences; on those extend
+
+sequences. So, one such extension type of extension that is used in that is used for this purpose is symmetric
+
+and antisymmetric extension. So, let us understand what this is. you know symmetric extension
+
+and what is antisymmetric extension. Now you can see this is an example of a symmetric
+
+extension, as this was my original sequence and here the center of symmetry lies at the end
+
+sample of the original sequence itself. And we call this kind of symmetric extension is whole symmetric extension or whole symmetry;
+
+a given a sample 4 actually can see that we require another additional 3 samples and by
+
+maintaining the symmetric symmetry of the sample values; we can create the whole symmetry.
+
+In the other kind of; no symmetry we can create that is called half symmetry, in this case central
+
+lies separated with an interval of half of the sampling period or sampling interval from the end
+
+sample; this is the point there is center of symmetry. So, at this towards its left you have 4 samples towards its right also we have 4 samples; so this is
+
+called half symmetry. And for the antisymmetry we also similarly defined whole antisymmetry;
+
+in whole antisymmetry the antisymmetry, the center of antisymmetry lies at the at a sample value
+
+which is introduced; so this value should be 0. And then next of the values should be you know determined by the corresponding sequence
+
+original sequence; they should be negative of the corresponding sample value and this is a whole
+
+antisymmetry. So, you can see the total length of in this case in this definition; it is 4 plus this is
+
+a value introduced 5 and then this is 4; so this is 9; this is a whole antisymmetry an example of
+
+whole antisymmetry. Similarly, we can have half antisymmetry; so instead of introducing a 0 explicitly here; we can
+
+assume that center of antisymmetry lies in between half of the interval between these two
+
+samples. So, you do not require any additional introduction of 0; only the samples are inverted
+
+here and this is called half antisymmetry extension. 59
+[p.64] Now, the significance of the this symmetric extension is that, if I make the symmetric extension,
+
+then you can observe of this function becomes even function if we consider this is the sample
+
+value at the 0th index or x equal to 0 and it becomes also even function if your origin of x lies
+
+here. And similarly here it would be odd function once again if your origin lies here and
+
+otherwise in this case origin. So, now, as I was mentioning that given an original sequence
+
+actually, you have converted this sequence as even function and further if you consider periodic
+
+extension of this function; then you can apply discrete Fourier transform on this; some discrete
+
+Fourier transform. And then what happens that since it is an even function that transformation will require only
+
+cosine parts; so, you can have discrete cosine transform using this kind of functions here. And
+
+again you can reconstruct back using that discrete cosine transform and keep your observation
+
+window only on this interval. So, you get the original sequence back. So, in this way you get all the original sequence by just by using only cosine transforms.
+
+Similarly, for odd functions it is sufficient to use only sine functions because for odd functions
+
+we have seen that Fourier transform is equivalent to application of only sine functions from the
+
+basis function set, here also only the sine functions can be used. So, that is what using this symmetric antisymmetric extension; we can have DCTs and DSTs or
+
+Discrete Cosine Transforms and Discrete Sine Transforms for any finite sequence. And that is
+
+the reason why do they exist and you find them in the text books and in many applications. So,
+
+for even function it is DCT and for odd function it is DST. 60
+[p.65]
+(Refer Slide Time: 06:26)
+
+So, this is what I mean there could be various kinds of discrete cosine transforms because you
+
+have so many different varieties. you can have different types of symmetric or antisymmetric
+
+extensions at its two ends. And observe whether the sequence become even function or odd
+
+function and also you can use different kinds of discrete Fourier transforms from the definition
+
+of generalized discrete Fourier transforms. So, you can have different DCTs and different DSTs; so take this example suppose we have a
+
+symmetric extension; whole symmetric extension both at the both ends, in that case we could
+
+observe that the functional values would be you know symmetric around this particular value.
+
+This is the end and this is the period that would be defined by this symmetric extension; if I
+
+extend it periodically with this one, we will get a periodic value. So, this is the original function and using the whole symmetric extension at this end and also at
+
+this end; you can identify this is the period, i.e, the minimum period that is formed by this
+
+particular extension. And if the value was 4; number of sample was 4 you can see that length of
+
+the period becomes 6. So, we will observe that how it affects the corresponding cosine
+
+transforms in this case. 61
+[p.66] It is possible to have a sine transforms and if we apply simply discrete Fourier transform on this
+
+extension will get a type I even DCT; whose expression is given in this form. You can say that
+
+only the cosine basis function is used; cosine functions is used from the based on the basis
+
+vectors. And you can see the period; period is 2N, but you observe the definition of N in this
+
+case the value ranges from 0 to capital N which means there are ​N+1 number of samples. So, if
+
+the value of ​N+1 is equal to 4. So, actual value of N is equal to 3 in this case. So, that is why the
+
+period is 6 right; so this is how the type I even DCT is defined. There is a definition of also. This is for the
+
+(p) α
+
+normalization operations for making it orthogonal and orthonormal when you are performing the
+
+reconstruction; they should satisfy this property, so you will have this particular definition.
+
+62
+[p.67]
+(Refer Slide Time: 09:15)
+
+So, similarly we can have other kinds of symmetric extensions HSHS. So, at both ends we have
+
+half symmetric extension and if this is your original samples that is of length 4; then half
+
+symmetric extension that both end will provide you a periodic signal of even function of length
+
+8. And if I apply the alpha that general discrete Fourier transform, when α=0 and that is
+
+β = 2 1
+
+odd time discrete Fourier transform, then you will find it is a type II even DCT. And the expression can be given in this form and here you can observe that given N samples you
+
+are generating a period of twice N. So, you have the following expression : (x(n)) (k) α(k) (n) cos( ), 0≤ k ≤ N
+
+C2e = XIIe =√ 2 N ∑ N−1 n=0 x 2N 2πk(n+ ) 2 1
+
+−1 and this is a familiar DCT expression what you see in the text book and this is mostly used in
+
+image compressions and video compressions. And if I say this is type II even DCT is by default
+
+that would be considered as that discrete cosine transforms. And for discrete sine transform similar we can have antisymmetric extensions; like whole
+
+antisymmetry extension and given a 4 samples; you generate a period of 9, it should be (2N +
+
+1). So, we will define the definition of N instead of starting from 1; we should consider 0 we
+
+63
+[p.68] should ​say N=1, N-1​. So, actually your defining it with respect to ​N-1 samples and that would
+
+give you the twice N period and this is what your type I even DST.
+
+(Refer Slide Time: 11:14)
+
+And for Type II even DST similarly, we have half antisymmetric extension and there also we are
+
+applying this corresponding discrete Fourier transform and this is a particular transformation
+
+matrix that you will be applying there. So, you will get a type II even DST and Following is
+
+expression for type II even DST . (x(n)) (k) α(k) (n) sin( ), 1≤ k ≤ N
+
+S2e = XsIIe =√ 2 N ∑ N−1 n=0 x 2N 2πk(n+ ) 2 1
+
+−1 There would be many other DCTs and DSTs; in fact, since there are two ends and we can have
+
+two varieties of symmetry and two varieties of antisymmetry. So, in total there could be 16
+
+different types of DCTs and DSTs and type II even DCTs is mostly used in signal image and
+
+video compression. 64
+[p.69]
+(Refer Slide Time: 12:10)
+
+So, in a matrix form we can represent particularly type 2 DCT for an example I am showing all
+
+this transformation can be also expressed in the discrete linear transform what we discussed
+
+earlier. So, an element of the matrix that is element can be denoted in this form and this
+
+k, ) ( n th
+
+matrix is also referred to as N-point DCT matrix which is a type II DCT in this case. And in this case, there are certain properties which are interesting and which are exploited in
+
+various developing different algorithms using DCT coefficients. One of this property is that :
+
+each row of this transformation matrix is either symmetric, we call the even row or
+
+antisymmetric. And following is a particular equations by which we are expressing this property (k, ) for k even C (k, ) N N −1 −n = C n
+
+− (k, ) for k odd = C n
+
+and the transformation can be expressed in terms of multiplication with the column vector
+
+x X = CN 65
+[p.70] and you get the corresponding transformed DCT column vector and its inverse is also given in
+
+the following  form ) C ) (CN −1 = ( N T in this case it is orthonormal expansion; so you can just have the transpose operation.
+
+(Refer Slide Time: 13:24)
+
+So, one of the application is that; it can simplify the convolution operations; so what you perform
+
+in the functional domain. Because, you can see that convolution operation the functional domain
+
+that becomes equivalent to multiplication operation in the transpose domain; when you
+
+considered the Fourier transform. So, this is the particular expressions as these are stage by which we can understand; that the
+
+relation is that if I consider a function and if the impulse response of the system is h(t); then
+
+convolution of impulse response with that function is equivalent to the product of Fourier
+
+transform of this function and Fourier transform of this impulse function. This property is called
+
+convolution multiplication property of Fourier transforms. 66
+[p.71]
+(Refer Slide Time: 14:19)
+
+Let us consider how this property is reflected using discrete Fourier transform. In the discrete
+
+domain the convolution operation; linear convolution operation can be represented in this form
+
+instead of integrations now we have summations and these are shifted impulse responses; that is
+
+unit impulse responses along the corresponding functional domain at integral points. And the linear combination of all those shifted values will give you the convolutions as you see
+
+that coefficients whose linear combination comes from the functional value itself. So, when you
+
+perform the linear convolution; the thing is that, we assume both of the sequence and also the
+
+impulse response they are of infinite length. But it happens so, we are handling with finite
+
+sequence and discrete Fourier transform  is applied for a finite sequence. So, how do you consider this definitions, how do you we can modify this definition because it is
+
+not necessarily the corresponding functional domain where the function is not defined in a finite
+
+sequence; it is not necessarily they have to be set to 0. If you set them to 0 it becomes equivalent
+
+to linear convolution, but you can consider some periodic extension as we did for discrete
+
+Fourier transform definition itself. So, periodic convolution of two finite sequences is defined as
+
+convolution between two finite sequences with periodic extension. 67
+[p.72] Same linear convolution and it can be observed that if they have same period that the periodic
+
+sequence also will be of same period. So, with this definition; with this property we can define a
+
+circular convolution. So, it is sufficient if we compute the periodic convolutions for a single
+
+period only, it need not compute in the whole functional domain itself. ⍟h (m)h(n ) f = ∑ N−1 m=0 f −m (m)h(n ) (m)h(n ) = ∑ n m=0 f −m + ∑ N−1 m=n+1 f −m + N So, in a circular convolution which is as I mentioned, it is a periodic extension and we can
+
+compute only with the interval of from 0 to N-1. And if I apply this periodic periodicity
+
+definition; then this can be broken into the two parts as shown above. This is the definition of a
+
+circular convolution. The interesting part is that convolution multiplication property for DFT
+
+holds for the circular convolution. So if I consider the impulse response of a system and functional finite sequence both should be
+
+of same length; take the discrete Fourier transform and take the product point wise at the
+
+corresponding coefficient wise take the product. Then, you will get also the transform
+
+coefficients of the sequence what would have been the output of the system if they are all
+
+periodic extensions. 68
+[p.73]
+(Refer Slide Time: 17:36)
+
+So, this is what is your is the property in the discrete Fourier transform domain. So, what about;
+
+there is another kind of convolution with antiperiodic extension. Like periodic extension, we can
+
+have antiperiodic extension; in the antiperiodic extension first we perform the this antiperiodic
+
+extension over the functional domain that is with an antiperiod N. (x ) −(x) f + N = f
+
+This is what it is defined antiperiodic function and if I do this antiperiodic extension; it is it is
+
+also a periodic function of period N that is interesting.I I antiperiodic function does not mean it
+
+is; it is not periodic. It is actually periodic, but the periodicity is now doubled you can check this
+
+things; you can make an antiperiodic extension and we will see there is a periodicity of twice the
+
+number of samples of the original sequence. So, skew circular convolution is defined with respect to this periodic values or we can say this
+
+antiperiodic extensions. Because we will be again observing the convolved output only in the
+
+observation window of the original sequence. So, a skew circular convolution is defined in this
+
+form; you take the convolutions again from the linear convolution definition itself, but you apply
+
+the properties of antiperiodic extension; then you will get this expression. 69
+[p.74]
+(Refer Slide Time: 19:18)
+
+So, using the circular convolution and skew circular convolution; we can find that there are
+
+different convolution multiplication properties those hold also in DCTs and DSTs. I will show
+
+you some of them for DCTs. For example, you take this case that you have two functions; one of
+
+them you can consider as the impulse response say y and both of them of same period; of same
+
+length. So, if you take the type I DCT of this one and type I DCT of this one; then if I multiply
+
+and no that is that should be multiplied by this factor because of the definition of DCTs what we
+
+have in this lecture following that this multiplication factor would there. And then you get your result in the transform domain itself; that is the type I DCT of the
+
+circularly convolved output of these two sequences. Similarly, a type II DCT of this one and type
+
+I DCT of impulse response will give you a type II DCT of the corresponding convolved result.
+
+You should note that number of samples depend upon the corresponding type of DCT what you
+
+are applying. Because finally, there should be of same periodicity; so in this case we will have
+
+N+1 samples and there are N samples because N sample define a DCT of 2N period and ​N+1
+
+samples define it type I DCT of 2N period. 70
+[p.75] So, that you need to be careful while applying this particular properties and type III DCTs have
+
+these interesting property; where actually you can find the output is this, this properties applied
+
+for skew circular convolution.
+
+(Refer Slide Time: 21:20)
+
+So, whatever we have discussed in one dimensional transform; this can be easily extended for
+
+two dimensional transforms this discussion. If I consider our basis function in two dimension as
+
+a certain particular property; which is separability property; so they are separable if I can I write
+
+this basis function into this two form; b (x, ) (x).g (y)} B = { ij y = gi j
+
+that means, you can write it as a product of 2 basis functions as shown above; they are all
+
+independent of independently they can be computed using a particular variable. So, this is an 1 D
+
+basis function say product of two one dimensional basis function. If both of them are orthogonal; then you can see that this set of basis functions will be also
+
+orthogonal and then we can reuse this one dimensional transform computation and we can
+
+express them in the following equation 71
+[p.76] (y)( (x, )g (x) ) λij = ∑
+
+j gj* ∑
+
+i f y i*
+
+So, first we are computing the transforms with respect to the x; by changing the values or
+
+sequence with respect to variation over x. And then we are considering the transform of say with respect to the value of y, we will see that
+
+how this computation is reflected in terms of matrix operation. So, you should note here though
+
+in this slide; we have used the same notations for this two functions; they could be separate, only
+
+thing is that both of them needs to be orthogonal to keep the orthogonality property of this basis
+
+functions.
+
+(Refer Slide Time: 23:11)
+
+So, 2D discrete transform can be easily computed by using this separability property. So, let us
+
+consider the computation being this way say you can transform columns and then you can
+
+transform rows. Suppose, you have a 1 dimensional transform matrix B and there is an input.
+
+your input is a corresponding input which is given in terms of matrix ,that is your data. m × n
+
+So,first I can transform columns of this input data; that is the image in this case some
+
+, m × n
+
+image block. So, I will be transforming them columns; so, we know that dimension of each
+
+72
+[p.77] column is So, that is why we are use using the corresponding transformation matrix which m
+
+deals with dimensional vectors; which is represented in this form and then each column is
+
+m
+
+now is transformed into another columns. So, you are doing it for n such columns. So, you
+
+m
+
+will find dimensional vectors transform columns and there are n columns; so this is a matrix
+
+n
+
+you will get. After that what you can do ,you can now transform the rows of this matrix which means now you
+
+have to take the transpose and then perform the . Since all rows are dimensional, so you
+
+n × n
+
+n
+
+have to use the -point transformation matrix here and then you can get the final no transforms
+
+n
+
+of the two dimensional image of ​size.
+
+m × n
+
+So, if I expand I can write the whole operations in the following composite form. Y 1
+
+B (Y ) ] (B ) X (B ) Y m×n = [ n×n 1 T T = Y 1 n×n T = Bm×m m×n n×n T So, the whole operations can be described in this particular form and that gives me the 2
+
+dimensional discrete form. So, this is how a 2 dimensional discrete form can be represented
+
+given the 2 dimensional input image we can use the corresponding transformation matrix
+
+towards its right and towards its left in this way and we can get the corresponding transformed
+
+image in the transformed domain itself. 73
+[p.78]
+(Refer Slide Time: 25:39)
+
+So, typical examples could be say discrete Fourier transform; we can also express this transforms using the summation operations because they are the basis functions here or the basis vectors here; they are separable, they are expressed in this form. And you can see that it is a simple extension of the discrete Fourier transform of what you had in the in your in the 1 dimensional case. And using property of separability, once again we can simplify this computation and when we express in terms of matrix multiplication; we have already defined the matrix representation of the transformation matrix of DFT. And we consider this is a ransformation matrix and this is a matrix; we are just
+
+m × m
+
+n × n
+
+denoting it by simple ​M showing it as ​m point discrete Fourier transformation matrix. So, this
+
+will give you the corresponding transformation of the image f. 74
+[p.79]
+(Refer Slide Time: 26:47)
+
+So, one typical example it is shown here that now given this image; we can perform Fourier
+
+transform and it will give me since it is in the complex quantity every transform coefficient in
+
+the discrete Fourier transform is a complex element. So, it has its magnitude and phase at every
+
+point; so you get two components of this transformation. And in this particular image you should
+
+note that if I apply Fourier transform, coefficient values would be very large and it is very
+
+difficult to make them display. So, we have made them display well and also we have shifted the origin of the transformation
+
+space. 75
+[p.80]
+(Refer Slide Time: 27:33)
+
+So similar way like discrete Fourier transform, we can define also discrete two dimensional
+
+discrete cosine transform. These are same simple extensions what we had in 1 dimension and in
+
+the matrix representation; we have the similar representation what we discussed for when we are
+
+extending a 1 dimensional transform to a 2 dimensional transform.
+
+(Refer Slide Time: 28:00)
+
+76
+[p.81] This is an example of a DCT; so if given this input image, you have this discrete cosine
+
+transform. In this case also you have scaling of the coefficient values and there are as I have
+
+mentioned there could be 16 different types of DCT and DSTs this is just one typical example
+
+which is type II even DCT that is shown here.
+
+(Refer Slide Time: 28:27)
+
+So, I will conclude this lecture by mentioning that why do we require image transforms? As you
+
+can see image transform, give an alternative representation of image instead of representing the
+
+image in the functional domain itself, we are representing it in a different domain; it gives a
+
+different insight of structure of images. And for example, if I consider the frequency domain representations using Fourier transforms,
+
+we get low frequency and high frequency components. So, it may become useful for providing
+
+more compact representation; you can use only a few transform coefficients to get a very close
+
+approximation of the functional representation or you can perform selective quantization of
+
+components, considering their effect on our perception. And those are used in the algorithms for image compressions, even video compressions. And
+
+sometimes many processing becomes convenient when we use this transform coefficients; like
+
+77
+[p.82] we have already discussed about filtering, there are operations like enhancement, restoration etc
+
+many other operations; where this transforms are useful. So, with this I end my lecture on image
+
+transforms. Thank you very much for your patience and listening to my lecture.
+
+78

@@ -1,0 +1,492 @@
+# Week 10 — Clustering and Classification — study notes
+(Clustering & Classification; Prof. Jayanta Mukhopadhyay · Lectures 46–50. Re-taught-from-scratch notes written from the slides + transcript; math is LaTeX between $...$ / $$...$$. Pretty version: https://pml2405.github.io/computer-vision-notes/notes/week10_notes.html)
+
+COMPUTER VISION · NPTEL · IIT KHARAGPUR
+
+Week 10
+
+**Clustering** & **Classification**
+
+Prof. Jayanta Mukhopadhyay · Lectures 46–50
+
+### 📒 what's inside this week
+
+1. Lecture 46 — Clustering & Classification · Part I
+classification vs clustering, learning paradigms, K-means (Lloyd), K-medoids (PAM), Mixture of Gaussians (EM)
+
+2. Lecture 47 — Clustering & Classification · Part II
+the four classifier families, Bayes' theorem & MAP, Naive Bayes, a worked example, Laplacian correction
+
+3. Lecture 48 — Clustering & Classification · Part III
+K-NN & its Bayesian basis, discriminant functions, LDA from Bayes, the perceptron
+
+4. Lecture 49 — Clustering & Classification · Part IV
+the perceptron, separating hyperplane, perceptron criterion & gradient descent, relaxation with margin (→ SVM), feed-forward networks
+
+5. Lecture 50 — Clustering & Classification · Part V
+backpropagation (delta rule), the sigmoid derivative, ANN as classifier, evaluation (precision/recall/F), k-fold cross-validation
+
+# LECTURE 46 — Clustering & Classification — Part I
+
+classification vs clustering · learning paradigms · K-means (Lloyd) · K-medoids (PAM) · Mixture of Gaussians (EM)
+
+🧠 the big picture, first
+
+After features are extracted, we must **group or label** the feature vectors — the high-level "make sense of it" stage. **Classification** assigns a known class (supervised); **clustering** discovers groups by similarity (unsupervised). This lecture teaches three clustering algorithms: K-means, K-medoids, and Mixture of Gaussians.
+
+## 1.  classification vs clustering, and how we learn
+|  | Classification | Clustering |
+| **goal** | assign a **known** class | discover groups by similarity |
+| **groups** | well-defined (studied properties) | loosely defined (a proto-class) |
+| **learning** | **supervised** (labelled training) | **unsupervised** (no labels) |
+| **example** | human/non-human patch, pedestrian, OCR | image segmentation, mushroom-vs-humus regions |
+
+**Learning paradigms:** supervised (labels) · unsupervised (none) · **semi-supervised** (small labelled + large unlabelled) · **reinforcement** (reward/punishment feedback).
+
+**Why cluster?** image segmentation · **data reduction** (represent a big set by a few representatives) · discovering natural categories · **outlier** detection (points that fit no group).
+
+## 2.  what every clustering method needs
+
+Three ingredients: a **distance** ($L_1,L_2,L_p$), a **criteria function**, and an **algorithm**. A good clustering has two properties:
+
+homogeneity (small = good)
+
+$$ \tfrac{1}{|C_k|}\!\sum_{x\in C_k}\!\lVert x-c_k\rVert $$
+
+separation (large = good)
+
+$$ \tfrac{1}{\binom{K}{2}}\!\sum_{i<j}\!\lVert c_i-c_j\rVert $$
+
+Intra-cluster cohesion (members close to their centre) + inter-cluster separation (centres far apart).
+
+## 3.  K-means (Lloyd's algorithm)
+
+Partition $n$ points into $K$ clusters minimizing the sum of squared distances to cluster means:
+
+K-means objective
+
+$$ J=\sum_{k=1}^{K}\sum_{x\in C_k}\lVert x-c_k\rVert^2,\quad c_k=\tfrac{1}{|C_k|}\!\sum_{x\in C_k}\!x $$
+
+**🔁 Lloyd's algorithm**
+
+1. Choose $K$ initial centres.
+
+2. **Assign** each point to its nearest centre.
+
+3. **Update** each centre = mean of its assigned points.
+
+4. Iterate 2–3 until centres stop moving.
+
+NP-complete for $K>1$; simple & effective but **convergence not guaranteed** and can stick at a **local minimum**. (Greedy variant: move one point at a time, keep the max-cost-reduction transfer — slower, better minima.)
+
+**✍️ worked example (illustrative) — K-means on {1,2,8,9}, K=2**
+Init $c_1{=}1,c_2{=}9$ → assign {1,2}→$c_1$, {8,9}→$c_2$ → update $c_1{=}1.5,c_2{=}8.5$ → re-assign unchanged → converged. $\text{SSE}=0.25{\times}4=\mathbf{1.0}$.
+
+## 4.  K-medoids (PAM)
+
+A **medoid** is the cluster's **actual data point** with minimum average distance to the rest (the median vector) — unlike a mean, which need not be a data point (so medoids are robust to outliers):
+
+medoid & objective
+
+$$ m=\arg\min_{y\in X}\tfrac{1}{|X|}\!\sum_i\lVert y-x_i\rVert,\quad J=\sum_k\sum_{x\in C_k}\lVert x-m_k\rVert $$
+
+Same loop as K-means but updates **medoids** (expensive — a median per cluster). **PAM** speeds it up: randomly swap a non-medoid with a medoid, **accept only if cost drops**, repeat.
+
+## 5.  Mixture of Gaussians — soft clustering via EM
+
+Model the data density as a **weighted sum of Gaussians**, one per cluster (each with mean $\mu_k$, covariance $\Sigma_k$, mixing weight $\pi_k$); membership is a **probability**, not hard:
+
+GMM density
+
+$$ p(x)=\sum_{k=1}^{K}\pi_k\,\mathcal N(x\mid\mu_k,\Sigma_k),\ \ \textstyle\sum_k\pi_k=1 $$
+
+**🔄 Expectation–MaximizationE-step** — responsibility (soft membership) of point $i$ to component $k$:
+
+$$ \gamma_{ik}=\frac{\pi_k\,\mathcal N(x_i\mid\mu_k,\Sigma_k)}{\sum_j \pi_j\,\mathcal N(x_i\mid\mu_j,\Sigma_j)} $$
+
+**M-step** — re-estimate from the responsibilities ($N_k=\sum_i\gamma_{ik}$ = expected, fractional count):
+
+$$ \mu_k=\tfrac{1}{N_k}\!\sum_i\gamma_{ik}x_i,\quad \Sigma_k=\tfrac{1}{N_k}\!\sum_i\gamma_{ik}(x_i{-}\mu_k)(x_i{-}\mu_k)^{T},\quad \pi_k=\tfrac{N_k}{N} $$
+
+Iterate E,M until convergence; finally hard-assign each point to its max-responsibility component. (Distances here are **Mahalanobis** $d_M=\sqrt{(x-\mu_k)^T\Sigma_k^{-1}(x-\mu_k)}$ — covariance-aware.)
+
+### cluster three ways: K-means (mean, hard, L2), K-medoids (a real data point, robust), GMM/EM (Gaussian, soft, Mahalanobis).
+
+$J=\sum\lVert x-c_k\rVert^2$; medoid $=\arg\min$ avg distance; EM E-step $\gamma_{ik}$, M-step $\mu_k,\Sigma_k,\pi_k=N_k/N$.
+
+### Self-check quiz
+
+1. Key difference between classification and clustering?
+
+→ Answer: classification assigns objects to KNOWN classes (supervised, labelled); clustering groups by loose similarity with no prior group knowledge (unsupervised)
+
+2. State Lloyd's two iterated steps and the stop condition.
+
+→ Answer: assign each point to the nearest centre; recompute each centre as the mean of its points; stop when centres stop moving (may reach only a local minimum)
+
+3. How does a medoid differ from a mean, and what does PAM do?
+
+→ Answer: a medoid is an actual data point (min avg distance to others); a mean need not be. PAM: random swap medoid↔non-medoid, accept only if cost decreases
+
+4. What do the EM E-step and M-step compute?
+
+→ Answer: E: responsibilities $\gamma_{ik}=\pi_k\mathcal N/\sum_j\pi_j\mathcal N$; M: re-estimate $\mu_k,\Sigma_k,\pi_k=N_k/N$ with $N_k=\sum_i\gamma_{ik}$
+
+— end of Lecture 46 notes ✏️
+
+# LECTURE 47 — Clustering & Classification — Part II
+
+the four classifier families · misclassification risk · Bayes' theorem & the MAP rule · Naive Bayes · Gaussian likelihood · a full worked example · Laplacian correction
+
+🧠 the big picture, first
+
+Now the **supervised** side: assign a **known** class to a feature vector. There are four families — this lecture develops the **probabilistic** one: Bayes' theorem → the **MAP rule** → the practical **Naive Bayes** classifier, which turns an intractable $n$-D likelihood into a **product of 1-D probabilities**.
+
+## 1.  four classifier families & the setup
+| family | representative |
+| **Probabilistic** | **Naive Bayes** (this lecture) |
+| Distance-based | K-nearest-neighbour (L48) |
+| Discriminant analysis | Linear Discriminant Analysis (LDA) |
+| Neural network | feed-forward network |
+
+Given labelled pairs $(y_i,x_i)$ with $x_i\in\mathbb R^n$ and a finite class set, design a classifier $C$. Its **risk** = fraction of points misclassified — and **Bayesian classification minimizes this risk**.
+
+## 2.  Bayes' theorem → the MAP rule
+
+From the two factorizations of the joint $P(A,B)=P(A)P(B|A)=P(B)P(A|B)$:
+
+Bayes' theorem
+
+$$ P(C_i\mid X)=\frac{\overbrace{P(C_i)}^{\text{prior}}\,\overbrace{P(X\mid C_i)}^{\text{likelihood}}}{\underbrace{P(X)}_{\text{evidence}}} $$
+
+$P(C_i|X)$ = **posterior**. The **MAP rule**: assign the class with the largest posterior. Since $P(X)$ is the **same constant** for every class, drop it and maximize the numerator:
+
+$$ \hat C=\arg\max_{C_i}\ P(C_i)\,P(X\mid C_i) $$
+
+Estimate the prior as $P(C_i)=|C_i|/N$; the likelihood from the class's data distribution.
+
+## 3.  Naive Bayes — conditional independence
+
+Modelling a full $n$-D likelihood is hard. **Assume attributes are class-conditionally independent**, so the likelihood **factorizes** into cheap 1-D probabilities:
+
+the naive factorization
+
+$$ P(X\mid C_i)=\prod_{k=1}^{n}P(x_k\mid C_i) $$
+
+Estimate each factor: **discrete** attribute → count fraction $P(x_k{=}v|C_i)=\tfrac{\text{count}(x_k{=}v,C_i)}{|C_i|}$; **continuous** → fit a Gaussian $g(x,\mu,\sigma)=\tfrac{1}{\sqrt{2\pi}\sigma}e^{-(x-\mu)^2/2\sigma^2}$ with the class's $\mu,\sigma$.
+
+## 4.  ⭐ worked example — buys_computer
+
+14 records; class $\in\{$yes,no$\}$. Priors: $P(\text{yes})=\tfrac{9}{14}$, $P(\text{no})=\tfrac{5}{14}$. Query $X=\{$age≤30, income=medium, student=yes, credit=fair$\}$.
+| attribute | $P(\cdot\mid\text{yes})$ | $P(\cdot\mid\text{no})$ |
+| age ≤ 30 | 2/9 | 3/5 |
+| income = medium | 4/9 | 2/5 |
+| student = yes | 6/9 | 1/5 |
+| credit = fair | 6/9 | 2/5 |
+
+**✍️ decide**
+
+1. $P(X|\text{yes})=\tfrac29\!\cdot\!\tfrac49\!\cdot\!\tfrac69\!\cdot\!\tfrac69\approx0.044$; $P(X|\text{no})=\tfrac35\!\cdot\!\tfrac25\!\cdot\!\tfrac15\!\cdot\!\tfrac25\approx0.019$.
+
+2. Proportional posteriors: yes $=0.044\times\tfrac{9}{14}\approx\mathbf{0.028}$; no $=0.019\times\tfrac{5}{14}\approx\mathbf{0.007}$.
+
+3. $0.028>0.007$ ⇒ $\boxed{\text{buys\_computer}=\text{yes}}$.
+
+## 5.  the zero-probability trap & Laplacian correction
+
+If any attribute value never co-occurs with a class, its factor is $0$ and **zeroes the whole product** — but noisy data shouldn't imply a true zero. Fix: **Laplacian correction** — add 1 to every count:
+
+$$ P(x_k{=}v\mid C_i)=\frac{\text{count}(x_k{=}v,C_i)+1}{|C_i|+m} $$
+
+(e.g. income counts $0/990/10$ → $1/991/11$: the zero becomes a tiny non-zero probability.)
+
+**⚖️ Naive Bayes — pros & cons+** easy to implement, good results, incremental learning, combines prior + evidence. **−** the conditional-independence assumption often fails (real attributes are dependent — patient profile/symptoms/disease) → lost accuracy.
+
+### classify by the posterior: $\hat C=\arg\max_{C_i}P(C_i)\prod_k P(x_k\mid C_i)$ — drop the constant evidence, factorize the likelihood, and Laplace-smooth the zeros.
+
+Bayes $P(C_i|X)\propto P(C_i)P(X|C_i)$; naive $\prod P(x_k|C_i)$; worked example → yes (0.028 vs 0.007); Laplacian $+1$.
+
+### Self-check quiz
+
+1. Why can we ignore $P(X)$ when choosing a class?
+
+→ Answer: it's the same constant for every class given $X$, so it doesn't change which posterior is largest; maximize $P(C_i)P(X|C_i)$
+
+2. What is the "naive" assumption, and what does it buy?
+
+→ Answer: attributes are conditionally independent given the class ⇒ $P(X|C_i)=\prod_k P(x_k|C_i)$ — $n$ cheap 1-D estimates instead of one $n$-D density
+
+3. For the query, which class and with what proportional posteriors?
+
+→ Answer: buys_computer = yes; ≈0.028 (yes) vs ≈0.007 (no)
+
+4. What does the Laplacian correction fix, and how?
+
+→ Answer: the zero-probability problem (one zero count kills the whole product); add 1 to every count so estimates are small but non-zero
+
+— end of Lecture 47 notes ✏️
+
+# LECTURE 48 — Clustering & Classification — Part III
+
+nearest-neighbour & K-NN · K-NN as non-parametric Bayes · discriminant functions · linear discriminant analysis (LDA) from Bayes · the perceptron
+
+🧠 the big picture, first
+
+Two more classifier families: the **lazy** memory-based K-NN (store everything, decide at query time) and **eager** discriminant methods (LDA, perceptron) that fit a decision surface. The theme: both reduce to the same Bayesian goal — maximize the posterior — K-NN by counting, LDA by assuming shared-covariance Gaussians.
+
+## 1.  K-nearest-neighbour
+
+**Nearest-neighbour** is the laziest learner: training = **just store the data**. To classify $x$, look at its **$K$ closest** training points and take a **majority vote** ("you are the company you keep"):
+
+**🗳️ K-NN algorithm**
+
+1. Compute the distance (usually **Euclidean**) from $x$ to every training point.
+
+2. Sort; take the $K$ nearest.
+
+3. Assign the class most frequent among them.
+
+**Worked:** $K{=}3$, neighbours are 2 pink + 1 green → assign **pink**.
+
+## 2.  why it works — K-NN is non-parametric Bayes
+
+In a small region of volume $V$ around $x$ containing $K$ of the $N$ points: the probability of landing there is $P\approx K/N$, so the density is $p(x)=P/V=\tfrac{K}{NV}$. If class $w_1$ contributes $n_1$ of the $K$, the posterior is:
+
+posterior from neighbour counts
+
+$$ p(w_1\mid x)=\frac{n_1/(NV)}{K/(NV)}=\frac{n_1}{K} $$
+
+**so:** the **fraction of the $K$ neighbours in a class IS that class's posterior** — majority vote = maximize the posterior = the Bayes rule. K-NN is Bayes-optimal by counting.
+
+**⚖️ trade-offs**
+
+- **+** trivial training; complex decision boundaries; no information lost.
+
+- **−** slow at query (distance to all points, linear in $N$); fooled by irrelevant attributes/outliers.
+
+- Larger $K$ ⇒ **lower variance, higher bias** (prior dominates). **Curse of dimensionality** — use $\lesssim20$ attributes.
+
+## 3.  discriminant functions & LDA
+
+A **discriminant function** $g(x)$ classifies by sign: $y=\operatorname{sign}(g(x))$, with the decision boundary $g(x)=0$. **Linear** = degree-1, **quadratic** = degree-2. LDA **derives** a linear $g$ from Bayes. Assume each class is multivariate Gaussian and — the key move — all classes **share one covariance** $S$:
+
+$$ \log P(k\mid x)=\log P(k)-\tfrac12(x-m_k)^{T}S^{-1}(x-m_k)-\log C $$
+
+Expand the quadratic: $x^TS^{-1}x$ is class-independent (drop it), and since $S$ is symmetric the cross terms combine → the $x$-dependent part is **linear**:
+
+LDA discriminant (linear in $x$)
+
+$$ g_k(x)=m_k^{T}S^{-1}x-\tfrac12 m_k^{T}S^{-1}m_k+\log P(k) $$
+
+Two-class decision: $g(x)=g_1(x)-g_2(x)$, class by $\operatorname{sign}(g)$. Fit from data: $P(k)=\tfrac{N_k}{N}$, $m_k=\tfrac1{N_k}\sum_{i\in k}x_i$, $S=\tfrac1N\sum_i(x_i-m)(x_i-m)^T$ ($m$ = overall mean).
+
+**the one assumption that linearizes Bayes:shared covariance** $S_k=S$ — then the quadratic $x^TS^{-1}x$ cancels across classes.
+
+## 4.  the perceptron (a preview)
+
+The same linear classifier as a computational node: weight each input and add a bias, then take the sign:
+
+perceptron
+
+$$ z=w_0+\sum_i w_i x_i=w_0+\mathbf w^{T}\mathbf x,\qquad y=\operatorname{sign}(z) $$
+
+$z$ plays the role of the discriminant $g(x)$ — the perceptron is LDA's problem drawn as weights + bias (details next lecture).
+
+### K-NN = counting neighbours ($p(w_1|x)=n_1/K$, majority vote = Bayes); LDA = shared-covariance Gaussians → a linear $g_k(x)=m_k^TS^{-1}x-\tfrac12 m_k^TS^{-1}m_k+\log P(k)$.
+
+lazy vs eager learners; both maximize the posterior; the perceptron $z=w_0+\mathbf w^T\mathbf x$ is the same linear boundary.
+
+### Self-check quiz
+
+1. What does $n_1/K$ represent, and why is K-NN majority vote Bayes-optimal?
+
+→ Answer: the estimated posterior $p(w_1|x)$; picking the majority class maximizes the posterior = the Bayes decision rule
+
+2. What happens to bias/variance as $K$ grows?
+
+→ Answer: variance decreases, bias increases; for very large $K$ the class prior dominates (drifts to the majority class)
+
+3. Which single assumption makes the Gaussian Bayes classifier linear, and why?
+
+→ Answer: a shared covariance $S_k=S$; then the $x^TS^{-1}x$ quadratic term is class-independent and cancels, leaving a linear $g_k(x)$
+
+4. How is the perceptron related to LDA?
+
+→ Answer: it computes $z=w_0+\mathbf w^T\mathbf x$ (linear) and outputs $\operatorname{sign}(z)$ — $z$ is the discriminant $g(x)$, so it's the same linear-classifier problem
+
+— end of Lecture 48 notes ✏️
+
+# LECTURE 49 — Clustering & Classification — Part IV
+
+the perceptron node · separating hyperplane · linear separability · data normalization · perceptron criterion & gradient descent · relaxation with margin (→ SVM) · feed-forward neural networks
+
+🧠 the big picture, first
+
+The **perceptron** is a linear classifier drawn as one **node**: weight the inputs, add a bias, take the **sign**. This lecture **learns** its weights by gradient descent on an error built from misclassified samples, adds a **margin** (the link to SVMs), and stacks these nodes into a **feed-forward neural network**.
+
+## 1.  the perceptron node
+
+#### a node = a neuron
+
+[diagram text: x₁ | xₙ | 1 | Σ wᵢxᵢ | +w₀ | sign | ŷ]
+
+augment $x$ with a constant 1 → bias folds into $W$.
+
+Augment the input with a constant $1$ and fold the bias $w_0$ into $W$; the net input is a single dot product:
+
+$$ z=W^{T}X,\qquad \hat y=\operatorname{sign}(z) $$
+
+$z\ge0\Rightarrow+1$, $z<0\Rightarrow-1$. Same linear boundary as LDA (L48), learned differently.
+
+## 2.  the separating hyperplane & linear separability
+
+$W^{T}X=0$ is a **hyperplane** through the origin with normal $W$; $\tfrac{W^{T}X}{\lVert W\rVert}$ is the **signed distance** of $X$ from it. If some hyperplane puts all class-1 on one side and all class-2 on the other, the classes are **linearly separable**.
+
+**🔁 data normalization (the trick)**
+Keep class-1 as $X$, but **negate class-2 to $-X$**. Now a **correctly** classified sample of either class satisfies $W^{T}Y>0$, so **misclassified** uniformly means $W^{T}Y\le0$.
+
+## 3.  learning by gradient descent
+
+Build an error summed **only over misclassified** samples (correct ones contribute nothing) — the **perceptron criterion**:
+
+perceptron criterion & its gradient
+
+$$ J_p(W)=\!\!\sum_{Y:\,W^{T}Y\le0}\!\!(-W^{T}Y),\quad \nabla J_p=\!\!\sum_{Y}(-Y) $$
+
+It's $\ge0$ (each $-W^{T}Y>0$). Descend opposite the gradient ($\eta$ = learning rate):
+
+$$ W(k{+}1)=W(k)-\eta\,\nabla J_p=W(k)+\eta\!\!\sum_{Y\text{ mis}}\!\!Y $$
+
+**in words:** nudge $W$ by (a scaled) **sum of the currently misclassified samples**; repeat until no sample has $W^{T}Y\le0$.
+
+## 4.  relaxation with a margin → SVM
+
+The plain criterion is piecewise-linear (non-smooth). A squared version $J_q=\sum(W^{T}Y)^2$ is continuous but is **dominated by long vectors** (large $\lVert Y\rVert$) and flat near the boundary. Fix both: add a **margin $b$** and **normalize by $\lVert Y\rVert^2$**:
+
+relaxation-with-margin criterion & update
+
+$$ J_r=\tfrac12\!\!\sum_{Y:\,W^{T}Y\le b}\!\!\frac{(W^{T}Y-b)^2}{\lVert Y\rVert^2} $$
+
+$$ W(k{+}1)=W(k)+\eta\!\!\sum_{Y}\!\frac{(b-W^{T}Y)}{\lVert Y\rVert^2}Y $$
+
+The margin pushes the hyperplane $b$ further onto the positive side — a **stricter** separability. (The $\tfrac12$ just cancels the 2 from differentiation.) **A linear SVM is the classifier that maximizes this margin $b$.**
+| update mode | when $W$ updates |
+| **Batch** relaxation | after classifying the whole set — one update/iteration |
+| **Single-sample** | immediately on each misclassified sample (simpler, faster, same performance) |
+
+## 5.  from a neuron to a neural network
+
+A node ≈ a **biological neuron** (synapses = weighted inputs → axon output). Wire many together → an **artificial neural network**. With **no loops** it is **feed-forward**; a **fully-connected multilayer** net has input → hidden → output layers, every neuron connected to all in the next, each computing a weighted sum through a **non-linear** function:
+
+$$ z_j=\sum_i w_{ji}\,o_i^{(\text{prev})}+w_{j0},\qquad o_j=f(z_j) $$
+
+### learn a separating hyperplane by descending the misclassified-sample error; a margin makes it strict (→ SVM); stack the nodes → a feed-forward neural network.
+
+$\hat y=\operatorname{sign}(W^TX)$; update $W{+}{=}\eta\sum_{\text{mis}}Y$ (or margin form); SVM maximizes $b$; ANN = layered fully-connected perceptrons with non-linear $f$.
+
+### Self-check quiz
+
+1. Why negate class-2 samples before training?
+
+→ Answer: so a correctly classified sample of either class satisfies $W^TY>0$; then "misclassified" uniformly means $W^TY\le0$ (or $\le b$), unifying the error function
+
+2. State the perceptron criterion, its gradient, and the weight update.
+
+→ Answer: $J_p=\sum_{\text{mis}}(-W^TY)$; $\nabla J_p=\sum(-Y)$; $W(k{+}1)=W(k)+\eta\sum_{\text{mis}}Y$
+
+3. What does the margin $b$ do, and how does it relate to SVM?
+
+→ Answer: it shifts the hyperplane $b$ onto the positive side (stricter separability); a linear SVM maximizes this margin
+
+4. When is a network feed-forward and fully connected?
+
+→ Answer: feed-forward = no loops/feedback; fully connected = every neuron connects to all neurons of the next layer, each weighted and summed then passed through a non-linear $f$
+
+— end of Lecture 49 notes ✏️
+
+# LECTURE 50 — Clustering & Classification — Part V
+
+training a multilayer net (MSE + gradient descent) · the sigmoid derivative · backpropagation (the delta rule) · ANN as classifier · evaluation (confusion matrix, precision/recall/F) · k-fold cross-validation
+
+🧠 the big picture, first
+
+Close the neural-network thread: **train** a multilayer net by gradient descent + the chain rule (backpropagation), turn a regressor into a classifier by **output encoding**, and **measure** any classifier (confusion matrix, precision/recall/F-score) and **validate** it (k-fold). Then the whole module on one page.
+
+## 1.  the network & its training objective
+
+Layer $i$: $X^{(i)}=f(W^{(i)}X^{(i-1)}+b^{(i)})$; the whole net is a composition $F(X;W)$. Train by minimizing the **mean square error** over the training pairs $(X_i,O_i)$, via gradient descent (or per-sample **SGD**):
+
+training objective
+
+$$ E(W)=\frac1n\sum_{i=1}^{n}\lVert O_i-F(X_i;W)\rVert^2 $$
+
+## 2.  the gradient — chain rule & the sigmoid trick
+
+For one neuron (net input $z$, output $O=f(z)$, error $E=(t-O)^2$), the chain rule gives each weight's gradient:
+
+$$ \frac{\partial E}{\partial w}=\underbrace{\frac{\partial E}{\partial O}}_{-2(t-O)}\cdot\underbrace{\frac{\partial O}{\partial z}}_{f'(z)}\cdot\underbrace{\frac{\partial z}{\partial w}}_{x} $$
+
+sigmoid & its self-referential derivative
+
+$$ f(z)=\frac{1}{1+e^{-z}}\ \Rightarrow\ f'(z)=f(z)\big(1-f(z)\big) $$
+
+**why it's beautiful:** the slope $=O(1-O)$ — computed straight from the neuron's own output, **no numerical differentiation**. Once you have the value, you have the derivative.
+
+## 3.  backpropagation — the delta rule
+
+Define $\delta_j^{(i)}=\partial E/\partial y_j^{(i)}$ (accumulated error gradient at a neuron's output). At the output, $\delta=2(o-t)$. Propagate **backward**: a node's delta = weighted sum of the deltas it feeds, each scaled by that node's slope:
+
+delta recursion (output → input)
+
+$$ \delta_j^{(i)}=\sum_k \delta_k^{(i+1)}f'\!\big(z_k^{(i+1)}\big)\,w_{jk}^{(i+1)} $$
+
+weight gradient
+
+$$ \frac{\partial E}{\partial w_{kj}^{(i)}}=\delta_j^{(i)}f'\!\big(z_j^{(i)}\big)\,y_k^{(i-1)} $$
+
+**Algorithm:** forward pass (compute every neuron's value) → backward pass (propagate deltas, update each weight) → repeat to convergence. **Classifier vs regressor:** the net is a regressor; encode classes at the output — **binary** (0/1) or **one-hot** ($m$ neurons, exactly one =1).
+
+## 4.  evaluating a classifier
+
+Two classes give four outcomes (TP, FP, FN, TN) — a **confusion matrix**. The standard measures:
+| measure | formula | over |
+| **Accuracy** | $\tfrac{TP+TN}{TP+TN+FP+FN}$ | all predictions |
+| **Precision** | $\tfrac{TP}{TP+FP}$ | predicted positives |
+| **Recall** (sensitivity, TPR) | $\tfrac{TP}{TP+FN}$ | actual positives |
+| **Specificity** (TNR) | $\tfrac{TN}{TN+FP}$ | actual negatives |
+| **F-score** | $\tfrac{2PR}{P+R}$ | harmonic mean of P & R |
+
+Multi-class: use the confusion matrix (rows=true, cols=predicted); accuracy = diagonal sum / total. **k-fold cross-validation:** split into $k$ equal folds, train on $k{-}1$, test on the held-out fold, rotate so each fold tests once, average the $k$ scores.
+
+## 5.  the whole module on one page
+
+**📌 clustering & classification — cheat-sheet**
+| task | methods |
+| **Clustering** (unsupervised) | K-means (Lloyd), K-medoids (PAM), Gaussian mixture (EM) — see L46 |
+| **Classification** (supervised) | Naive Bayes (L47), K-NN + LDA (L48), perceptron / neural net (L49–50) |
+| **Training a net** | minimize MSE by gradient descent; gradients by **backprop** (delta rule); sigmoid $f'=f(1-f)$ |
+| **Evaluation** | confusion matrix; precision, recall, F-score; k-fold cross-validation |
+
+### train by descending the MSE with backprop (deltas flow output→input, sigmoid slope = O(1−O)); measure with precision/recall/F and k-fold.
+
+$\delta_j^{(i)}=\sum_k\delta_k^{(i+1)}f'w_{jk}$; $\partial E/\partial w=\delta f' y$; $F=\tfrac{2PR}{P+R}$; k-fold = rotate the test fold, average.
+
+### Self-check quiz
+
+1. Give $f'(z)$ for the sigmoid and why it's convenient.
+
+→ Answer: $f'(z)=f(z)(1-f(z))=O(1-O)$ — computed from the neuron's own output, no numerical differentiation
+
+2. What is $\delta_j^{(i)}$ and how is it computed from the next layer?
+
+→ Answer: the accumulated error gradient at neuron $j$'s output; $\delta_j^{(i)}=\sum_k\delta_k^{(i+1)}f'(z_k^{(i+1)})w_{jk}^{(i+1)}$ (each downstream delta × its slope × edge weight)
+
+3. Distinguish precision, recall, specificity by denominator.
+
+→ Answer: precision = TP/(TP+FP) over predicted positives; recall = TP/(TP+FN) over actual positives; specificity = TN/(TN+FP) over actual negatives
+
+4. Describe k-fold cross-validation.
+
+→ Answer: split into $k$ equal folds; train on $k{-}1$, test on the remaining fold; rotate so each fold tests exactly once; average the $k$ results
+
+— end of Lecture 50 · end of Week 10 ✏️

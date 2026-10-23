@@ -1,0 +1,506 @@
+# Week 11 — Dimension Reduction and Sparse Representation — assignment solution
+(source: NPTEL, 6 PDF pages; fractions/matrices from the PDF may be flattened in this text)
+
+Nptel Online Certification Course: Computer Vision
+Week 11: Dimensionality Reduction and Sparse Representation
+Type of questions: MCQ/MSQ
+Number of questions: 10
+Total marks: 10 X 2 = 20
+QUESTION 1:
+Type: MSQ
+Which of the following statements about PCA are FALSE?
+a) PCA is a supervised dimensionality reduction technique.
+b) The principal components are the eigenvectors of the covariance matrix.
+c) PCA maximises the within-class scatter of the data.
+d) The number of principal components is always equal to the number of data points.
+Correct Answer: a, c, d
+QUESTION 2:
+Type: MSQ
+Let X =
+
+1
+3
+2
+4
+3
+5
+4
+6
+
+. Compute the unit vector along the direction of the dominant principal
+component of X.
+a)
+"1.0
+0.0
+#
+b)
+" 0.707
+−0.707
+#
+c)
+"0.707
+0.707
+#
+d)
+"0.0
+1.0
+#
+Correct Answer: c
+Detailed Solution: Feature means: µ1 = 2.5, µ2 = 4.5.
+Centred data: Xc =
+
+−1.5
+−2.5
+−0.5
+−0.5
+0.5
+0.5
+1.5
+1.5
+
+.
+Covariance matrix:
+Σ = 1
+3XT
+c Xc = 1
+3
+"5
+5
+5
+5
+#
+=
+"1.67
+1.67
+1.67
+1.67
+#
+.
+Eigenvalues: λ1 = 3.33, λ2 = 0.
+Eigenvector for λ1: solving (Σ −λ1I)v = 0 gives v = (1, 1)T.
+Normalising: ˆv =
+"0.707
+0.707
+#
+.
+QUESTION 3:
+Type: MSQ
+A dataset has covariance matrix eigenvalues λ1 = 50, λ2 = 30, λ3 = 15, λ4 = 5. Which of
+the following are true?
+a) Retaining the first two principal components preserves 80% of total variance.
+b) The fourth principal component contributes significantly to the total variance.
+c) Retaining three components preserves exactly 95% of total variance.
+d) PCA selects components to minimise reconstruction error in a least-squares sense.
+Correct Answer: a, c, d
+Detailed Solution: Total variance = 50 + 30 + 15 + 5 = 100.
+• (a) First two: 50+30
+100 = 80%.
+• (b) λ4 = 5 is the smallest eigenvalue, and contributes the least to toal variance.
+• (c) First three: 50+30+15
+100
+= 95%.
+• (d) PCA minimises mean squared reconstruction error; this is a fundamental property.
+QUESTION 4:
+Type: MCQ
+Given two class means µ1 =
+"1
+2
+#
+, µ2 =
+"5
+4
+#
+, and within-class scatter S W =
+"4
+0
+0
+1
+#
+, compute the
+optimal Fisher LDA projection direction w = S −1
+W (µ1 −µ2).
+a)
+"1
+2
+#
+b)
+"−1
+−2
+#
+c)
+"−2
+−1
+#
+d)
+"2
+1
+#
+Correct Answer: b
+Detailed Solution:
+S −1
+W =
+"1
+4
+0
+0
+1
+#
+,
+µ1 −µ2 =
+"1 −5
+2 −4
+#
+=
+"−4
+−2
+#
+.
+w = S −1
+W (µ1 −µ2) =
+"1
+4
+0
+0
+1
+# "−4
+−2
+#
+=
+"−1
+−2
+#
+.
+QUESTION 5:
+Type: MCQ
+Given class means µ1 =
+"1
+1
+#
+, µ2 =
+"5
+5
+#
+, and S W =
+"2
+0
+0
+2
+#
+, compute the Fisher LDA direction w
+and find the scalar projections of µ1 and µ2 onto w.
+a) w =
+"−2
+−2
+#
+; projections: −4 and −20
+b) w =
+"−2
+−2
+#
+; projections: −2 and −10
+c) w =
+"2
+2
+#
+; projections: 4 and 20
+d) w =
+"−2
+−2
+#
+; projections: 4 and 20
+Correct Answer: a
+Detailed Solution:
+S −1
+W =
+"1
+2
+0
+0
+1
+2
+#
+,
+µ1 −µ2 =
+"−4
+−4
+#
+.
+w = S −1
+W (µ1 −µ2) =
+"1
+2
+0
+0
+1
+2
+# "−4
+−4
+#
+=
+"−2
+−2
+#
+.
+µ1 · w = (1)(−2) + (1)(−2) = −4,
+µ2 · w = (5)(−2) + (5)(−2) = −20.
+QUESTION 6:
+Type: MCQ
+Consider a dictionary with atoms d1 = (1, 1), d2 = (1, −1), d3 = (−1, 1). Using OMP with
+sparsity k = 2, find the representation of y = (4, 2).
+a)
+"4
+2
+#
+= 4
+"1
+1
+#
++ 2
+" 1
+−1
+#
+b)
+"4
+2
+#
+= 3
+"1
+1
+#
++ 1
+"−1
+1
+#
+c)
+"4
+2
+#
+= 2
+"1
+1
+#
++ 2
+" 1
+−1
+#
+d)
+"4
+2
+#
+= 3
+"1
+1
+#
++ 1
+" 1
+−1
+#
+Correct Answer: d
+Detailed Solution: Iteration 1: Compute dot products with y = (4, 2):
+⟨y, d1⟩= 4 + 2 = 6
+⟨y, d2⟩= 4 −2 = 2
+⟨y, d3⟩= −4 + 2 = −2
+Select d1 (maximum absolute value = 6).
+Residual: r1 = (4, 2) −6(1, 1) = (−2, −4).
+Iteration 2: Compute dot products with r1 = (−2, −4):
+⟨r1, d2⟩= −2 + 4 = 2
+⟨r1, d3⟩= 2 −4 = −2
+Either d2 or d3 (tie); select d2.
+Least-squares solve with A =
+"1
+1
+1
+−1
+#
+:
+"x
+y
+#
+= (ATA)−1AT
+"4
+2
+#
+= 1
+4
+"2
+2
+2
+−2
+# "4
+2
+#
+· 1
+2 =
+"3
+1
+#
+.
+Result:
+"4
+2
+#
+= 3
+"1
+1
+#
++ 1
+" 1
+−1
+#
+.
+QUESTION 7:
+Type: MSQ
+Which of the following are true about sparse representation and dictionaries?
+a) A dictionary can be over-complete, meaning it has more atoms than the signal dimension.
+b) OMP is a greedy algorithm that selects one atom per iteration.
+c) Sparse representation requires all atoms of the dictionary to be used.
+d) Basis Pursuit replaces the ℓ0 minimisation with an ℓ1 minimisation for tractability.
+Correct Answer: a, b, d
+Detailed Solution: Over-complete dictionaries have more columns than rows, providing
+richer representational capacity. OMP greedily selects the atom most correlated with the
+current residual at each iteration. Sparse representation by definition uses only a small subset
+of the dictionary atoms; the representation coefficient vector has few non-zero entries. The ℓ0
+norm (count of non-zeros) minimisation is NP-hard; Basis Pursuit relaxes it to ℓ1
+minimisation, which is convex.
+QUESTION 8:
+Type: MCQ
+In the K-SVD algorithm, during the dictionary update step for atom dj, which of the
+following correctly describes the procedure?
+a) Replace dj with the mean of all data points assigned to it.
+b) Compute the residual error matrix E j = X −P
+i, j diyT
+i , then apply rank-1 SVD to update
+dj and the corresponding coefficients.
+c) Re-run OMP on the entire dataset and replace dj with the dominant eigenvector.
+d) Set dj to the normalised sum of all training signals.
+Correct Answer: b
+Detailed Solution: In K-SVD, the dictionary atom dj is updated one at a time.
+Let ω j be the set of indices of training signals that use atom j.
+The residual error matrix for atom j is:
+E j = X −
+X
+i, j
+diyT
+i ,
+where yT
+i is the i-th row of the sparse coding matrix restricted to ωj.
+The rank-1 SVD of E j gives E j ≈σ1u1vT
+1 .
+The updated atom is d j ←u1 and the updated sparse coefficients are σ1v1.
+This ensures ∥X −DY∥2
+F is non-increasing after each atom update.
+QUESTION 9:
+Type: MCQ
+Which of the following correctly identifies how K-SVD generalises K-means clustering?
+a) K-SVD uses ℓ2 norm for the reconstruction error, while K-means uses ℓ1 norm.
+b) In K-means each data point is represented by exactly one cluster centre; in K-SVD each
+signal can be represented by a sparse combination of multiple dictionary atoms.
+c) K-SVD initialises its dictionary randomly, whereas K-means always uses a fixed
+initialisation.
+d) K-means allows each data point to be represented by multiple cluster centres; K-SVD
+restricts representation to one atom.
+Correct Answer: b
+Detailed Solution: K-means assigns each point to a single centroid (sparsity k = 1, binary
+coefficients). K-SVD generalises this by allowing each signal to be reconstructed from a
+sparse linear combination of k > 1 dictionary atoms with real-valued coefficients.
+QUESTION 10:
+Type: MCQ
+Consider two classes: X1 = {(2, 4), (4, 2), (3, 3)} and X2 = {(8, 6), (6, 8), (7, 7)}.
+Compute the within-class scatter matrix S W.
+a) S W =
+" 2.0
+−2.0
+−2.0
+2.0
+#
+b) S W =
+" 1.33
+−1.33
+−1.33
+1.33
+#
+c) S W =
+"4.0
+0.0
+0.0
+4.0
+#
+d) None of the above
+Correct Answer: b
+Detailed Solution: Class 1 mean: µ1 = (3, 3)T.
+Class 1 scatter:
+S 1 =
+"−1
+1
+# h
+−1
+1
+i
++
+" 1
+−1
+# h
+1
+−1
+i
++
+"0
+0
+# h
+0
+0
+i
+=
+" 2
+−2
+−2
+2
+#
+.
+Class 2 mean: µ2 = (7, 7)T.
+Class 2 scatter:
+S 2 =
+" 1
+−1
+# h
+1
+−1
+i
++
+"−1
+1
+# h
+−1
+1
+i
++
+"0
+0
+# h
+0
+0
+i
+=
+" 2
+−2
+−2
+2
+#
+.
+Within-class scatter:
+S W = S 1 + S 2
+3
+= 1
+3
+" 4
+−4
+−4
+4
+#
+=
+" 1.33
+−1.33
+−1.33
+1.33
+#
+.

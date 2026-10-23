@@ -1,0 +1,126 @@
+# Computer Vision — NPTEL 106105216 study material (IIT Kharagpur, Prof. Jayanta Mukhopadhyay)
+
+> Lecture slides, lecture transcripts, assignment solutions and handwritten-style study notes for weeks 1-12 of the NPTEL Computer Vision course. Every PDF has a plain-text copy; the per-week files below concatenate everything for that week, so read the text files rather than the PDFs. Slide text is the PDF text layer plus OCR, so equations there may be garbled; the transcript and the study notes are the cleanest sources.
+
+- Website: https://pml2405.github.io/computer-vision-notes/
+- Manifest (JSON): https://pml2405.github.io/computer-vision-notes/manifest.json
+- All study notes in one file: https://pml2405.github.io/computer-vision-notes/text/all-notes.txt
+
+## Week 1: Fundamentals of Image Processing and Transforms
+
+Lectures: 1 Fundamentals of Image Processing – Part I; 2 Fundamentals of Image Processing – Part II; 3 Image Transform – Part I; 4 Image Transform – Part II
+
+- [Everything for week 1 (one text file)](https://pml2405.github.io/computer-vision-notes/text/weeks/week-01.txt)
+- Study notes: [text](https://pml2405.github.io/computer-vision-notes/text/notes/Week_01_Notes.txt) · [page](https://pml2405.github.io/computer-vision-notes/notes/week1_notes.html)
+- Assignment solution: [text](https://pml2405.github.io/computer-vision-notes/text/solutions/Week_01_Assignment_Solution.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_01_Assignment_Solution.pdf), 7 pages
+- Lecture slides: [text](https://pml2405.github.io/computer-vision-notes/text/slides/Week_01_Slides.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_01_Slides.pdf), 67 pages
+- Lecture transcript: [text](https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_01_Transcript.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_01_Transcript.pdf), 82 pages
+
+## Week 2: Projective Geometry
+
+Lectures: 5 Projective Geometry – Part I; 6 Projective Geometry – Part II; 7 Projective Transformation; 8 Homography:Properties – Part I; 9 Homography:Properties – Part II; 10 Homography:Properties – Part III
+
+- [Everything for week 2 (one text file)](https://pml2405.github.io/computer-vision-notes/text/weeks/week-02.txt)
+- Study notes: [text](https://pml2405.github.io/computer-vision-notes/text/notes/Week_02_Notes.txt) · [page](https://pml2405.github.io/computer-vision-notes/notes/week2_notes.html)
+- Assignment solution: [text](https://pml2405.github.io/computer-vision-notes/text/solutions/Week_02_Assignment_Solution.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_02_Assignment_Solution.pdf), 10 pages
+- Lecture slides: [text](https://pml2405.github.io/computer-vision-notes/text/slides/Week_02_Slides.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_02_Slides.pdf), 83 pages
+- Lecture transcript: [text](https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_02_Transcript.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_02_Transcript.pdf), 114 pages
+
+## Week 3: Camera Geometry
+
+Lectures: 11 Camera Geometry – Part I; 12 Camera Geometry – Part II; 13 Camera Geometry – Part III; 14 Camera Geometry – Part IV; 15 Camera Geometry – Part V
+
+- [Everything for week 3 (one text file)](https://pml2405.github.io/computer-vision-notes/text/weeks/week-03.txt)
+- Study notes: [text](https://pml2405.github.io/computer-vision-notes/text/notes/Week_03_Notes.txt) · [page](https://pml2405.github.io/computer-vision-notes/notes/week3_notes.html)
+- Assignment solution: [text](https://pml2405.github.io/computer-vision-notes/text/solutions/Week_03_Assignment_Solution.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_03_Assignment_Solution.pdf), 7 pages
+- Lecture slides: [text](https://pml2405.github.io/computer-vision-notes/text/slides/Week_03_Slides.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_03_Slides.pdf), 51 pages
+- Lecture transcript: [text](https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_03_Transcript.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_03_Transcript.pdf), 94 pages
+
+## Week 4: Stereo Geometry
+
+Lectures: 16 Stereo Geometry – Part I; 17 Stereo Geometry – Part II; 18 Stereo Geometry – Part III; 19 Stereo Geometry – Part IV
+
+- [Everything for week 4 (one text file)](https://pml2405.github.io/computer-vision-notes/text/weeks/week-04.txt)
+- Study notes: [text](https://pml2405.github.io/computer-vision-notes/text/notes/Week_04_Notes.txt) · [page](https://pml2405.github.io/computer-vision-notes/notes/week4_notes.html)
+- Assignment solution: [text](https://pml2405.github.io/computer-vision-notes/text/solutions/Week_04_Assignment_Solution.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_04_Assignment_Solution.pdf), 10 pages
+- Lecture slides: [text](https://pml2405.github.io/computer-vision-notes/text/slides/Week_04-05_Slides.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_04-05_Slides.pdf), 73 pages
+- Lecture transcript: [text](https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_04_Transcript.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_04_Transcript.pdf), 59 pages
+
+## Week 5: Stereo Geometry
+
+Lectures: 20 Stereo Geometry – Part V; 21 Stereo Geometry – Part VI; 22 Stereo Geometry – Part VII; 23 Stereo Geometry – Part VIII
+
+- [Everything for week 5 (one text file)](https://pml2405.github.io/computer-vision-notes/text/weeks/week-05.txt)
+- Study notes: [text](https://pml2405.github.io/computer-vision-notes/text/notes/Week_05_Notes.txt) · [page](https://pml2405.github.io/computer-vision-notes/notes/week5_notes.html)
+- Assignment solution: [text](https://pml2405.github.io/computer-vision-notes/text/solutions/Week_05_Assignment_Solution.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_05_Assignment_Solution.pdf), 8 pages
+- Lecture slides: [text](https://pml2405.github.io/computer-vision-notes/text/slides/Week_04-05_Slides.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_04-05_Slides.pdf), 73 pages
+- Lecture transcript: [text](https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_05_Transcript.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_05_Transcript.pdf), 64 pages
+
+## Week 6: Feature Detection and Description
+
+Lectures: 24 Feature Detection And Description – Part I; 25 Feature Detection And Description – Part II; 26 Feature Detection And Description – Part III; 27 Feature Detection And Description – Part IV; 28 Feature Detection And Description – Part V
+
+- [Everything for week 6 (one text file)](https://pml2405.github.io/computer-vision-notes/text/weeks/week-06.txt)
+- Study notes: [text](https://pml2405.github.io/computer-vision-notes/text/notes/Week_06_Notes.txt) · [page](https://pml2405.github.io/computer-vision-notes/notes/week6_notes.html)
+- Assignment solution: [text](https://pml2405.github.io/computer-vision-notes/text/solutions/Week_06_Assignment_Solution.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_06_Assignment_Solution.pdf), 10 pages
+- Lecture slides: [text](https://pml2405.github.io/computer-vision-notes/text/slides/Week_06_Slides.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_06_Slides.pdf), 78 pages
+- Lecture transcript: [text](https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_06_Transcript.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_06_Transcript.pdf), 95 pages
+
+## Week 7: Feature Matching and Model Fitting
+
+Lectures: 29 Feature Matching And Model Fitting – Part I; 30 Feature Matching And Model Fitting – Part II; 31 Feature Matching And Model Fitting – Part III; 32 Feature Matching And Model Fitting – Part IV; 33 Feature Matching And Model Fitting – Part V
+
+- [Everything for week 7 (one text file)](https://pml2405.github.io/computer-vision-notes/text/weeks/week-07.txt)
+- Study notes: [text](https://pml2405.github.io/computer-vision-notes/text/notes/Week_07_Notes.txt) · [page](https://pml2405.github.io/computer-vision-notes/notes/week7_notes.html)
+- Assignment solution: [text](https://pml2405.github.io/computer-vision-notes/text/solutions/Week_07_Assignment_Solution.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_07_Assignment_Solution.pdf), 6 pages
+- Lecture slides: [text](https://pml2405.github.io/computer-vision-notes/text/slides/Week_07_Slides.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_07_Slides.pdf), 53 pages
+- Lecture transcript: [text](https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_07_Transcript.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_07_Transcript.pdf), 77 pages
+
+## Week 8: Color Fundamentals and Processing
+
+Lectures: 34 Color Fundamentals And Processing – Part I; 35 Color Fundamentals And Processing – Part II; 36 Color Fundamentals And Processing – Part III; 37 Color Fundamentals And Processing – Part IV; 38 Color Fundamentals And Processing – Part V; 39 Color Fundamentals And Processing – Part VI; 40 Color Fundamentals And Processing – Part VII
+
+- [Everything for week 8 (one text file)](https://pml2405.github.io/computer-vision-notes/text/weeks/week-08.txt)
+- Study notes: [text](https://pml2405.github.io/computer-vision-notes/text/notes/Week_08_Notes.txt) · [page](https://pml2405.github.io/computer-vision-notes/notes/week8_notes.html)
+- Assignment solution: [text](https://pml2405.github.io/computer-vision-notes/text/solutions/Week_08_Assignment_Solution.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_08_Assignment_Solution.pdf), 10 pages
+- Lecture slides: [text](https://pml2405.github.io/computer-vision-notes/text/slides/Week_08_Slides.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_08_Slides.pdf), 110 pages
+- Lecture transcript: [text](https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_08_Transcript.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_08_Transcript.pdf), 125 pages
+
+## Week 9: Range Image Processing
+
+Lectures: 41 Range Image Processing – Part I; 42 Range Image Processing – Part II; 43 Range Image Processing – Part III; 44 Range Image Processing – Part IV; 45 Range Image Processing – Part V
+
+- [Everything for week 9 (one text file)](https://pml2405.github.io/computer-vision-notes/text/weeks/week-09.txt)
+- Study notes: [text](https://pml2405.github.io/computer-vision-notes/text/notes/Week_09_Notes.txt) · [page](https://pml2405.github.io/computer-vision-notes/notes/week9_notes.html)
+- Assignment solution: [text](https://pml2405.github.io/computer-vision-notes/text/solutions/Week_09_Assignment_Solution.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_09_Assignment_Solution.pdf), 5 pages
+- Lecture slides: [text](https://pml2405.github.io/computer-vision-notes/text/slides/Week_09_Slides.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_09_Slides.pdf), 58 pages
+- Lecture transcript: [text](https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_09_Transcript.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_09_Transcript.pdf), 82 pages
+
+## Week 10: Clustering and Classification
+
+Lectures: 46 Clustering And Classification – Part I; 47 Clustering And Classification – Part II; 48 Clustering And Classification – Part III; 49 Clustering And Classification – Part IV; 50 Clustering And Classification – Part V
+
+- [Everything for week 10 (one text file)](https://pml2405.github.io/computer-vision-notes/text/weeks/week-10.txt)
+- Study notes: [text](https://pml2405.github.io/computer-vision-notes/text/notes/Week_10_Notes.txt) · [page](https://pml2405.github.io/computer-vision-notes/notes/week10_notes.html)
+- Assignment solution: [text](https://pml2405.github.io/computer-vision-notes/text/solutions/Week_10_Assignment_Solution.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_10_Assignment_Solution.pdf), 10 pages
+- Lecture slides: [text](https://pml2405.github.io/computer-vision-notes/text/slides/Week_10_Slides.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_10_Slides.pdf), 98 pages
+- Lecture transcript: [text](https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_10_Transcript.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_10_Transcript.pdf), 102 pages
+
+## Week 11: Dimension Reduction and Sparse Representation
+
+Lectures: 51 Dimension Reduction And Sparse Representation – Part I; 52 Dimension Reduction And Sparse Representation – Part II; 53 Dimension Reduction And Sparse Representation – Part III; 54 Dimension Reduction And Sparse Representation – Part IV
+
+- [Everything for week 11 (one text file)](https://pml2405.github.io/computer-vision-notes/text/weeks/week-11.txt)
+- Assignment solution: [text](https://pml2405.github.io/computer-vision-notes/text/solutions/Week_11_Assignment_Solution.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_11_Assignment_Solution.pdf), 6 pages
+- Lecture slides: [text](https://pml2405.github.io/computer-vision-notes/text/slides/Week_11_Slides.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_11_Slides.pdf), 67 pages
+- Lecture transcript: [text](https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_11_Transcript.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_11_Transcript.pdf), 76 pages
+
+## Week 12: Deep Neural Architecture and Applications
+
+Lectures: 55 Deep Neural Architecture And Applications – Part I; 56 Deep Neural Architecture And Applications – Part II; 57 Deep Neural Architecture And Applications – Part III; 58 Deep Neural Architecture And Applications – Part IV; 59 Deep Neural Architecture And Applications – Part V; 60 Deep Neural Architecture And Applications – Part VI
+
+- [Everything for week 12 (one text file)](https://pml2405.github.io/computer-vision-notes/text/weeks/week-12.txt)
+- Assignment solution: [text](https://pml2405.github.io/computer-vision-notes/text/solutions/Week_12_Assignment_Solution.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_12_Assignment_Solution.pdf), 10 pages
+- Lecture slides (part 1): [text](https://pml2405.github.io/computer-vision-notes/text/slides/Week_12_Slides_Part1.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_12_Slides_Part1.pdf), 41 pages
+- Lecture slides (part 2): [text](https://pml2405.github.io/computer-vision-notes/text/slides/Week_12_Slides_Part2.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_12_Slides_Part2.pdf), 63 pages
+- Lecture transcript: [text](https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_12_Transcript.txt) · [PDF](https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_12_Transcript.pdf), 127 pages

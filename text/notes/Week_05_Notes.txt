@@ -1,0 +1,357 @@
+# Week 5 — Stereo Geometry — study notes
+(Stereo Geometry — estimating F, recovering structure; Prof. Jayanta Mukhopadhyay · Lectures 20–23. Re-taught-from-scratch notes written from the slides + transcript; math is LaTeX between $...$ / $$...$$. Pretty version: https://pml2405.github.io/computer-vision-notes/notes/week5_notes.html)
+
+COMPUTER VISION · NPTEL · IIT KHARAGPUR
+
+Week 5
+
+**Stereo Geometry** — estimating F, recovering structure
+
+Prof. Jayanta Mukhopadhyay · Lectures 20–23
+
+### 📒 what's inside this week
+
+1. Lecture 20 — Stereo Geometry · Part V
+enforcing rank-2 with SVD, the essential-matrix constraint, the 7-point method
+
+2. Lecture 21 — Stereo Geometry · Part VI
+cameras from F/E (projective ambiguity, cheirality), triangulation
+
+3. Lecture 22 — Stereo Geometry · Part VII
+triangulation worked out, line reconstruction, plane-induced homography
+
+4. Lecture 23 — Stereo Geometry · Part VIII
+affine epipolar geometry & the grand stereo summary
+
+# LECTURE 20 — Stereo Geometry — Part V
+
+making the estimate legal — enforcing rank-2 with SVD · the essential-matrix constraint · the 7-point method
+
+🧠 the big picture, first
+
+The 8-point algorithm gives a matrix — but not yet a valid fundamental matrix, because it ignored $\det F=0$. This lecture **repairs** the estimate with an **SVD trick**, does the same (plus an extra constraint) for $E$, and shows the minimal **7-point** method.
+
+Key idea: any messy estimate can be **projected** to the nearest matrix that obeys the constraint. 🔧
+
+**📎 stereo essentials to keep on hand (from Week 4 / L16–19)**
+This week's assignment reviews the whole stereo topic, so keep these Week-4 results handy:
+
+- **Skew matrix** for a cross product: $[\mathbf e]_\times=\begin{bmatrix}0&-e_3&e_2\\ e_3&0&-e_1\\ -e_2&e_1&0\end{bmatrix}$, so $\mathbf e\times\mathbf x=[\mathbf e]_\times\mathbf x$.
+
+- **$F$ and $E$:** $F=[\mathbf e']_\times K'RK^{-1}$; calibrated $E=[\mathbf t]_\times R$; convert with $\ E=K'^{T}F\,K\ $ and $\ F=K'^{-T}E\,K^{-1}$.
+
+- **Pure translation** ($R=I$, same $K$): $H_\infty=I$, so $F=[\mathbf e']_\times$. Translation along $x$ ⇒ $\mathbf e'=(1,0,0)^{T}$ (along $y$ ⇒ $(0,1,0)^{T}$) — epipole **at infinity**, epipolar lines **parallel**, and $y=y'$.
+
+- **Depth from disparity** (rectified/translation rig, baseline $B=t_x$): $\ \text{disparity}=x-x'=\tfrac{fB}{Z}\ \Rightarrow\ Z=\tfrac{fB}{x-x'}$.
+
+- **Back-projected ray** two ways: $\tilde{\mathbf X}(\lambda)=\tilde{\mathbf C}+\lambda M^{-1}\mathbf x$, equivalently $\mathbf X(\lambda)=P^{+}\mathbf x+\lambda\mathbf C$ (the point $P^{+}\mathbf x$ at $\lambda=0$ and the camera centre $\mathbf C$ as $\lambda\to\infty$).
+
+## 1.  recap — normalize first
+
+As in Lecture 19: map each image's coordinates to a small, centred range before estimating, then de-normalize $F=T'^{T}\tilde F T$. Note $T$ must be **upper-triangular** — it scales and translates the centre to the origin (a pure $\operatorname{diag}$ can only scale, not shift):
+
+$$ T=\begin{bmatrix}s&0&-s\,c_x\\ 0&s&-s\,c_y\\ 0&0&1\end{bmatrix},\quad (c_x,c_y)=\text{image centre} $$
+
+This is what makes the least-squares solution numerically trustworthy.
+
+## 2.  enforcing the singularity constraint
+
+A true $F$ has $\operatorname{rank}F=2$ (so $\det F=0$). The estimate usually comes out full-rank. Fix it with the **Singular Value Decomposition** $F=U\Sigma V^{T}$, where $\Sigma=\operatorname{diag}(\sigma_1,\sigma_2,\sigma_3)$ with $\sigma_1\ge\sigma_2\ge\sigma_3$:
+
+closest rank-2 matrix
+
+$$ F'=U\,\operatorname{diag}(\sigma_1,\sigma_2,0)\,V^{T} $$
+
+**read it as:** $F$ is a sum of 3 rank-1 pieces weighted by $\sigma_1,\sigma_2,\sigma_3$. **Zeroing the smallest** $\sigma_3$ drops the least-important piece → a rank-2 matrix, and it's the **closest** one to $F$ in Frobenius (element-wise L2) norm.
+
+**⚠️ why this actually matters (geometry)**
+If $F$ isn't singular, the epipolar lines you draw **don't meet** at a single epipole — geometrically impossible. Enforcing rank-2 guarantees all epipolar lines converge to the true epipole. (Classic Hartley–Zisserman illustration.)
+
+## 3.  the essential matrix's extra constraint
+
+$E$ has only **5 DOF**, so beyond $\det E=0$ it needs its **two non-zero singular values to be equal**. Enforce it by averaging them:
+
+$$ E'=U\,\operatorname{diag}\!\Big(\tfrac{\sigma_1+\sigma_2}{2},\ \tfrac{\sigma_1+\sigma_2}{2},\ 0\Big)V^{T} $$
+
+(You estimate $E$ exactly like $F$ but on calibrated/normalized coordinates, then apply this projection.)
+
+## 4.  the 7-point algorithm (minimum data)
+
+Since $F$ has 7 DOF, **7 correspondences** suffice. Now $A$ is $7\times9$ (rank 7), so its null-space is **2-dimensional** — SVD gives two null vectors $\mathbf f_1,\mathbf f_2$ (i.e. matrices $F_1,F_2$). The answer is some combination:
+
+$$ F=F_1+\lambda F_2 $$
+
+Pin down $\lambda$ with the rank constraint $\det(F_1+\lambda F_2)=0$ — a **cubic** in $\lambda$, giving **1 or 3 real** solutions (so up to three candidate fundamental matrices).
+
+**🧷 aside — rank-forcing parametrizations**
+You can also build in the rank-2 constraint by parametrizing $F$ so its third column is a fixed linear combination of the first two (making one epipole $(\alpha,\beta,-1)^{T}$ explicit) — then $\det F=0$ holds automatically. An over-parametrized form is $F=[\mathbf t]_\times M$ with $\mathbf t$ the epipole.
+
+### project the estimate onto the constraint: zero the smallest singular value → the nearest rank-2 $F$.
+
+SVD $F=U\Sigma V^{T}$; $F'=U\operatorname{diag}(\sigma_1,\sigma_2,0)V^{T}$; for $E$ also equalize $\sigma_1,\sigma_2$; 7 points ⇒ $F_1+\lambda F_2$, solve the cubic $\det=0$.
+
+### Self-check quiz
+
+1. The 8-point estimate is full-rank. How do you make it a valid (rank-2) fundamental matrix?
+
+→ Answer: SVD $F=U\Sigma V^{T}$, set the smallest singular value to 0: $F'=U\operatorname{diag}(\sigma_1,\sigma_2,0)V^{T}$ — the closest rank-2 matrix
+
+2. Geometrically, what goes wrong if $F$ is not enforced to be singular?
+
+→ Answer: the epipolar lines fail to converge to a single epipole
+
+3. What extra constraint does the essential matrix satisfy, and how is it enforced?
+
+→ Answer: its two non-zero singular values must be equal; set both to their average via SVD
+
+4. Why does the 7-point method yield up to three fundamental matrices?
+
+→ Answer: the null-space is 2-D ($F=F_1+\lambda F_2$); enforcing $\det=0$ is a cubic in $\lambda$ with 1 or 3 real roots
+
+— end of Lecture 20 notes ✏️
+
+# LECTURE 21 — Stereo Geometry — Part VI
+
+cameras from F (up to a projective ambiguity) · cameras from E · triangulation → 3-D structure
+
+🧠 the big picture, first
+
+Given $F$ (or $E$) from image matches, can we recover the **cameras** and then the **3-D scene**? Yes — but with a twist: from $F$ alone the reconstruction is only fixed up to an unknown projective transformation. With calibration ($E$) you get true metric shape.
+
+## 1.  $F$ does not fix the cameras (projective ambiguity)
+
+A camera pair $(P,P')$ gives a unique $F$. But the reverse fails: for **any** invertible $4\times4$ $H$, the pair $(PH,\,P'H)$ gives the **same** $F$ — just re-coordinatize the world by $H^{-1}$.
+
+$$ (P,P')\ \to\ F\quad\text{but}\quad (PH,\,P'H)\ \to\ \text{the same }F $$
+
+**read it as:** $F$ depends only on image coordinates, so it's blind to how you set up world coordinates — you can slide/warp the whole rig and $F$ is unchanged. A neat DOF check: $2\times11-\underbrace{15}_{\text{DOF of the }4\times4\,H}=7=$ DOF of $F$ (the $4\times4$ world homography $H$ has $16-1=15$ DOF). ✅ Consequence: from $F$ you get a **projective reconstruction**, correct up to an overall projective transform.
+
+## 2.  compatibility test
+
+Is a given $F$ consistent with a given $(P,P')$? Check one property — no need to recompute $F$:
+
+compatibility condition
+
+$$ P'^{T} F\,P \ \text{is skew-symmetric} $$
+
+(A skew-symmetric $S$ satisfies $S^{T}=-S$, zero diagonal, and $\mathbf X^{T}S\mathbf X=0$ for all $\mathbf X$ — which is exactly the epipolar constraint pushed back to 3-D.) In a problem: compute $P'^{T}FP$; if it isn't skew-symmetric, they're incompatible.
+
+## 3.  a canonical camera pair from $F$
+
+Pick the reference as $P=[\,I\mid\mathbf 0\,]$; then one valid second camera (using the right epipole $\mathbf e'$, where $F^{T}\mathbf e'=\mathbf 0$) is:
+
+$$ P=[\,I\mid\mathbf 0\,],\qquad P'=\big[\,[\mathbf e']_\times F \ \big|\ \mathbf e'\,\big] $$
+
+The full family is $P'=\big[\,[\mathbf e']_\times F+\mathbf e'\mathbf v^{T}\ \big|\ k\,\mathbf e'\,\big]$ for any 3-vector $\mathbf v$ and scalar $k$ — that's the projective ambiguity made explicit.
+
+## 4.  cameras from the essential matrix (metric)
+
+With calibration, $E=[\mathbf t]_\times R$ decomposes cleanly. SVD $E=U\operatorname{diag}(1,1,0)V^{T}$ and use the fixed matrix $W=\begin{bmatrix}0&-1&0\\1&0&0\\0&0&1\end{bmatrix}$:
+
+$$ R=UWV^{T}\ \text{or}\ UW^{T}V^{T},\qquad \mathbf t=\pm\,\mathbf u_3 \ (\text{last column of }U) $$
+
+**🎯 four candidates, one winner (cheirality)**
+The two choices of $R$ times the two signs of $\mathbf t$ give **4 possible** second cameras $P'$. Only **one** places the reconstructed point **in front of both cameras** (positive depth) — test one point's cheirality and pick that configuration.
+
+## 5.  triangulation — recovering the 3-D point
+
+Given matches $\mathbf x\leftrightarrow\mathbf x'$ and cameras $P,P'$, find the scene point $X$ (this is **structure recovery**). Three ways:
+| method | idea | note |
+| **Geometric midpoint** | back-project both rays; take the midpoint of their common perpendicular | simple; not projective-invariant |
+| **Reprojection error** | minimise $\lVert\mathbf x-P\hat X\rVert^2+\lVert\mathbf x'-P'\hat X\rVert^2$ (non-linear) | best; projective-invariant |
+| **Linear (DLT)** | $\mathbf x\times PX=0$ & $\mathbf x'\times P'X=0$ | fast; solves $AX=0$ |
+
+The **linear** one is the DLT again: each view's $\mathbf x\times PX=\mathbf 0$ gives **2** independent equations (rows of $P$), so two views give **4 equations** in the **3** unknowns of $X$. Stack into $AX=\mathbf 0$ and take the smallest right-singular vector (SVD):
+
+$$ A X=\mathbf 0,\qquad \min\lVert AX\rVert\ \text{s.t.}\ \lVert X\rVert=1 $$
+
+It generalises to $N$ views (each adds 2 equations) — e.g. a 3-camera rig gives 6 equations for the same 3 unknowns.
+
+### from $F$ you get cameras only up to a projective warp; from $E$ (calibrated) you get metric cameras — then triangulate.
+
+compatibility: $P'^{T}FP$ skew; canonical $P'=[[\mathbf e']_\times F\mid\mathbf e']$; $E$→4 poses, pick by cheirality; triangulate via $AX=0$.
+
+### Self-check quiz
+
+1. Why can't you recover unique cameras from $F$ alone?
+
+→ Answer: $(PH,P'H)$ gives the same $F$ for any invertible $4\times4$ $H$ — reconstruction is fixed only up to a projective transform
+
+2. How do you check whether a fundamental matrix is compatible with a camera pair $(P,P')$?
+
+→ Answer: verify that $P'^{T}FP$ is skew-symmetric
+
+3. Decomposing $E$ gives four candidate second cameras. How do you choose the right one?
+
+→ Answer: cheirality — pick the one for which a reconstructed point is in front of both cameras (positive depth)
+
+4. In linear triangulation, how many equations does each view contribute and why?
+
+→ Answer: 2 independent equations from $\mathbf x\times PX=0$ (the third is dependent); two views → 4 equations for 3 unknowns
+
+— end of Lecture 21 notes ✏️
+
+# LECTURE 22 — Stereo Geometry — Part VII
+
+triangulation worked out · reconstructing a 3-D line · the plane-induced homography
+
+🧠 the big picture, first
+
+We put triangulation to work on a concrete example, reconstruct a whole **line** (not just points), and meet a beautiful fact: whenever the scene points lie on a **plane**, the two images are related by a single homography — the plane-induced homography, the bridge between $F$ and $H$.
+
+## 1.  worked example — triangulate a scene point
+
+**given $P,P'$ and matches $(0,3.5)\leftrightarrow(\tfrac23,-\tfrac13)$, find $X$ (geometric method)**
+
+1. Camera centres: $\tilde{\mathbf C}=-M^{-1}\mathbf m$, $\tilde{\mathbf C}'=-M'^{-1}\mathbf m'$.
+
+2. Ray directions: $\mathbf d=M^{-1}\mathbf x$, $\mathbf d'=M'^{-1}\mathbf x'$.
+
+3. The two rays $\tilde{\mathbf C}+s\,\mathbf d$ and $\tilde{\mathbf C}'+t\,\mathbf d'$ won't exactly meet (noise). The **common-perpendicular** direction is $\mathbf d\times\mathbf d'$.
+
+4. Solve the two linear equations that force the segment joining the rays to be perpendicular to both $\mathbf d$ and $\mathbf d'$ → get $s,t$; the scene point is the **midpoint** of that shortest segment. ✅
+
+## 2.  reconstructing a 3-D line
+
+A 3-D line $L$ images to lines $\mathbf l$ (left) and $\mathbf l'$ (right). Each image line + its camera centre spans a 3-D plane; the 3-D line is where those two planes meet:
+
+$$ \boldsymbol\pi=P^{T}\mathbf l,\qquad \boldsymbol\pi'=P'^{T}\mathbf l',\qquad L=\boldsymbol\pi\cap\boldsymbol\pi' $$
+
+(Back-project each image line to its plane, intersect the two planes — done.)
+
+## 3.  the plane-induced homography
+
+If all the scene points lie on one plane $\boldsymbol\pi$ (normal direction $\mathbf v$), then their left and right images are related by a single homography $H$ ($\mathbf x'=H\mathbf x$):
+
+plane-induced homography
+
+$$ H=A-\mathbf a\,\mathbf v^{T} $$
+
+$A=$ left $3\times3$ block of $P'$, $\ \mathbf a=$ its 4th column
+
+**where it comes from:** back-project $\mathbf x$; the depth $\rho=-\mathbf v^{T}\mathbf x$ is fixed by "point lies on $\boldsymbol\pi$"; substitute into $\mathbf x'=P'X$ to get $\mathbf x'=(A-\mathbf a\mathbf v^{T})\mathbf x$. Different plane ⇒ different $H$.
+
+## 4.  homography ↔ fundamental matrix
+
+**🔗 the links**
+
+- $F$ factors through any plane-induced $H$: $\ F=[\mathbf e']_\times H$, and $\ \mathbf e'=H\mathbf e$.
+
+- **Compatibility:** $H$ is a valid plane-induced homography for $F$ iff $H^{T}F$ is **skew-symmetric** (proof: $\mathbf x'^{T}F\mathbf x=0$ with $\mathbf x'=H\mathbf x$).
+
+- The mapped point lies on the epipolar line: $(H\mathbf x)^{T}F\mathbf x=0$.
+
+**$F$ from 6 points, 4 of them coplanar**
+
+1. From the 4 coplanar matches, compute the plane-induced homography $H$ (4 correspondences).
+
+2. For the two off-plane points, form epipolar lines $\mathbf l_1=(H\mathbf x_5)\times\mathbf x_5'$, $\mathbf l_2=(H\mathbf x_6)\times\mathbf x_6'$.
+
+3. Right epipole $\mathbf e'=\mathbf l_1\times\mathbf l_2$; then $\ F=[\mathbf e']_\times H$. ✅
+
+## 5.  the homography at infinity
+
+Take the inducing plane to be the plane at infinity ($d\to\infty$). The plane-induced homography becomes the **infinite homography**:
+
+$$ H_\infty=K'RK^{-1}=M'M^{-1} $$
+
+It **maps vanishing points** between the two images (images of points at infinity). You can compute it from **3 non-collinear vanishing-point correspondences given $F$**, or from 4 vanishing-point pairs. This is the same $H_\infty$ that appeared in $F=[\mathbf e']_\times H_\infty$.
+
+### points on a plane ⇒ one homography $H=A-\mathbf a\mathbf v^{T}$; and $F=[\mathbf e']_\times H$ ties homographies to the epipolar map.
+
+triangulate points via common perpendicular; a 3-D line = $P^{T}\mathbf l \cap P'^{T}\mathbf l'$; $H_\infty=M'M^{-1}$ maps vanishing points.
+
+### Self-check quiz
+
+1. In geometric triangulation, why don't the two back-projected rays exactly intersect, and what's the fix?
+
+→ Answer: measurement noise; take the midpoint of their common-perpendicular (shortest) segment
+
+2. How do you reconstruct a 3-D line from its two images?
+
+→ Answer: intersect the planes $\boldsymbol\pi=P^{T}\mathbf l$ and $\boldsymbol\pi'=P'^{T}\mathbf l'$
+
+3. When do two stereo images relate by a single homography, and what's its form?
+
+→ Answer: when the scene points are coplanar; $H=A-\mathbf a\mathbf v^{T}$ (plane-induced homography)
+
+4. How is a plane-induced homography linked to the fundamental matrix?
+
+→ Answer: $F=[\mathbf e']_\times H$ (and $H^{T}F$ is skew-symmetric for a compatible $H$)
+
+— end of Lecture 22 notes ✏️
+
+# LECTURE 23 — Stereo Geometry — Part VIII
+
+affine epipolar geometry · the affine fundamental matrix · the grand stereo summary
+
+🧠 the big picture, first
+
+We finish stereo with its **simplest** special case — two **affine** cameras — where the fundamental matrix nearly empties out and singularity comes for free. Then a one-page recap of the entire two-view module.
+
+## 1.  affine epipolar geometry
+
+Recall an **affine camera** has its centre at infinity → **parallel** projection rays. So in an affine stereo pair:
+
+**📏 what goes parallel**
+
+- all **projection rays are parallel**, so all **epipolar lines are parallel** (and epipolar planes too);
+
+- parallel epipolar lines meet at infinity ⇒ the **epipoles lie at infinity**: $\mathbf e=(e_1,e_2,0)^{T}$.
+
+## 2.  the affine fundamental matrix
+
+Because the epipoles are at infinity, the top-left $2\times2$ block of $F$ vanishes — only **5 entries** survive:
+
+affine fundamental matrix
+
+$$ F_A=\begin{bmatrix}0&0&a\\0&0&b\\c&d&e\end{bmatrix} $$
+
+**✅ why this is so convenient**
+
+- **4 DOF** (5 non-zero entries − scale) ⇒ only **4 point correspondences** to estimate (vs 8/7 for the full $F$).
+
+- **Singularity is automatic**: with that zero block $\det F_A=0$ by construction — no SVD repair needed.
+
+- Epipoles read straight off (both at infinity): the **right** epipole solves $F_A\mathbf e=\mathbf 0\Rightarrow\mathbf e=(d,-c,0)^{T}$ (from the last-row entries $c,d$); the **left** epipole solves $\mathbf e'^{T}F_A=\mathbf 0\Rightarrow\mathbf e'=(-b,a,0)^{T}$ (from the last-column entries $a,b$).
+
+Estimate it by the same linear (DLT) setup on epipolar-constraint equations, or compute an affine plane-induced homography (needs 3 points) and read epipoles off the epipolar-line directions.
+
+## 3.  the whole stereo module on one page
+
+**📌 two-view geometry cheat-sheet**
+| concept | the key fact |
+| epipolar geometry | $X$, both centres & both image points are coplanar; matches lie on epipolar lines through the epipoles |
+| fundamental matrix $F$ | $3\times3$, rank-2, $\det F=0$, **7 DOF**; $\mathbf x'^{T}F\mathbf x=0$; $\mathbf l'=F\mathbf x$; $F\mathbf e=\mathbf 0$, $\mathbf e'^{T}F=\mathbf 0$; swap cameras → $F^{T}$ |
+| compute $F$ | from cameras $F=[\mathbf m]_\times M$ (or $[\mathbf e']_\times H_\infty$, $H_\infty=M'M^{-1}$) |
+| estimate $F$ | normalized 8-point (or minimal 7-point); enforce rank-2 by zeroing the smallest singular value |
+| essential matrix $E$ | calibrated: $E=[\mathbf t]_\times R$, 5 DOF, two equal singular values (third 0) |
+| cameras from $F$ | only up to a projective $4\times4$ $H$; canonical $P'=[[\mathbf e']_\times F\mid\mathbf e']$ |
+| cameras from $E$ | SVD → 4 poses, pick by cheirality (point in front of both) |
+| triangulation | midpoint / reprojection-error / linear DLT ($AX=\mathbf 0$) → 3-D structure |
+| plane-induced $H$ | coplanar scene ⇒ $H=A-\mathbf a\mathbf v^{T}$; $F=[\mathbf e']_\times H$ |
+| affine stereo | parallel epipolar lines; $F_A$ has 4 DOF, auto-singular, 4 points |
+
+### affine stereo = the easy case: parallel epipolar lines, a 4-DOF $F_A$ that's singular by construction.
+
+and the module in one line: epipolar constraint $\mathbf x'^{T}F\mathbf x=0$ → estimate $F$/$E$ → recover cameras → triangulate structure.
+
+### Self-check quiz
+
+1. In an affine stereo pair, what do the epipolar lines and epipoles look like?
+
+→ Answer: all epipolar lines are parallel; the epipoles are at infinity $(e_1,e_2,0)^{T}$
+
+2. How many DOF does the affine fundamental matrix have, and why is its singularity free?
+
+→ Answer: 4 DOF; the top-left $2\times2$ block is zero, so $\det F_A=0$ automatically
+
+3. State the single most important equation of two-view geometry.
+
+→ Answer: the epipolar constraint $\mathbf x'^{T}F\mathbf x=0$
+
+4. What is the full pipeline from two images to 3-D structure?
+
+→ Answer: match points → estimate $F$ (or $E$) → recover camera pair → triangulate the scene points
+
+— end of Lecture 23 · end of Week 5 ✏️🎉

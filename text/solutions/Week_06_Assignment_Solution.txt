@@ -1,0 +1,286 @@
+# Week 6 — Feature Detection and Description — assignment solution
+(source: NPTEL, 10 PDF pages; fractions/matrices from the PDF may be flattened in this text)
+
+Nptel Online Certification Course
+Indian Institute of Technology Kharagpur
+Computer Vision
+Assignment - Week 6
+Number of questions: 10
+Total marks: 10x2=20
+QUESTION 1:
+Type: MCQ
+Given two features each of size 7 as 𝑓(3, 6, 2, 5, 1, 4, 7) and 𝑔(3, 4, 3, 1, 2, 3, 9). Compute 𝐿1
+and 𝐿2 norms between 𝑓and 𝑔, respectively.
+a) 11 and 3.16
+b) 11 and 5.20
+c) 10 and 5.20
+d) 10 and 3.16
+Correct Answer: b)
+Detailed Solution:
+𝐿1 norm is Í𝑛
+𝑖=0 | 𝑓−𝑔| and 𝐿2 norm is (Í𝑛
+𝑖=0 | 𝑓−𝑔|2)1/2.
+QUESTION 2:
+Type: MCQ
+Consider the following matrix representing 4 sample data points (1, 2), (2, 1), (3, 2), (2, 3) as
+𝑋=
+
+1
+2
+2
+1
+3
+2
+2
+3
+
+. Compute the covariance matrix using data points from 𝑋.
+a)
+1
+0
+0
+1
+
+b)
+0.5
+0
+0
+0.5
+
+c)
+0.25
+0
+0
+0.25
+
+d)
+2
+0
+0
+2
+
+Correct Answer: b)
+Detailed Solution:
+Compute the mean vectors as [ 1+2+3+2
+4
+, 2+1+2+3
+4
+] = [2, 2]. Now compute
+˜𝑋=
+
+1 −2
+2 −2
+2 −2
+1 −2
+3 −2
+2 −2
+2 −2
+3 −2
+
+=
+
+−1
+0
+0
+−1
+1
+0
+0
+1
+
+.
+The covariance matrix is given by ˜𝑋𝑇˜𝑋
+4 .
+QUESTION 3:
+Type: MCQ
+Consider the set of parametric equations 𝑥= 2𝑡3 −𝑡2 and 𝑦= 𝑡3 + 3𝑡. representing a 2D
+curve. Compute the tangent vector at 𝑡= 2.
+a) (4, 15)
+b) (20, 15)
+c) (20, 5)
+d) (15, 5)
+Correct Answer: b)
+Detailed Solution:
+Perform derivation 𝑥′ = 6𝑡2 −2𝑡and 𝑦′ = 3𝑡2 + 3. Compute the tangent at 𝑡= 2.
+QUESTION 4:
+Type: MSQ
+Which of the following is/are true?
+a) RANSAC is best suited for fitting outliers.
+b) Hough transform is best suited for line fitting in presence of many lines.
+c) Kullback-Leiber Divergence is best suited to find the ‘optimal’ line parameters when
+points belonging to a line are given.
+d) The average case time complexity of NN Search using K-D tree is 𝑂(𝑙𝑜𝑔(𝑁) + 2𝑑) where
+𝑑is the dimension of the feature space.
+Correct Answer: b), d)
+Detailed Solution:
+Kullback-Leibler (KL) Divergence is used to measure the statistical difference between two
+probability distributions, not geometric distances.
+QUESTION 5:
+Type: MCQ
+Gradient along 𝑥and 𝑦directions at a pixel location (𝑥𝑖, 𝑦𝑖) can be given as 𝑥𝑖+1−𝑥𝑖−1
+2
+and
+𝑦𝑖+1−𝑦𝑖−1
+2
+, respectively. The top left corner of the matrix is considered as (1, 1) and indices
+increment for 𝑥and 𝑦axes along horizontal right and vertical downward directions,
+respectively.
+Consider a 3 × 3 matrix 𝐴=
+
+0.2
+0.7
+0.4
+0.4
+0.2
+0.9
+0.3
+0.5
+0.5
+
+, compute gradients along 𝑥(𝐼𝑥) and 𝑦(𝐼𝑦)
+directions, respectively at the center pixel location in 𝐴.
+a) 𝐼𝑥= -0.05 and 𝐼𝑦= 0.15
+b) 𝐼𝑥= 0.05 and 𝐼𝑦= -0.15
+c) 𝐼𝑥= 0.25 and 𝐼𝑦= -0.1
+d) None of these
+Correct Answer: c)
+Detailed Solution:
+At the center pixel, 𝐼𝑥= 0.9−0.4
+2
+and 𝐼𝑦= 0.5−0.7
+2
+.
+QUESTION 6:
+Type: MCQ
+If an octave in SIFT operator has 10 images, then the scale factor by which each image in
+octave differs from the next image is
+a) 1.080
+b) 1.065
+c) 1.071
+d) 1.090
+Correct Answer: a)
+Detailed Solution:
+Within an octave, the adjacent scales differ by a constant factor 𝑘. If an octave contains 𝑠+ 1
+images, then 𝑘= 21/𝑠. The scale factor is 2 in an octave. Therefore, 𝑘= 21/9.
+QUESTIONS 7:
+Type: MCQ
+Find the eigen values of the matrix
+1
+−2
+2
+1
+
+.
+a) 1, −2
+b) 1 ± 2𝑖
+c) −1 ± 2𝑖
+d) 1, 2
+Correct Answer: b)
+Detailed Solution:
+Setting up the characteristic determinant:
+
+1 −𝜆
+−2
+2
+1 −𝜆
+
+ = 0
+(1 −𝜆)2 −(−4) = 0
+𝜆2 −2𝜆+ 1 + 4 = 0
+𝜆2 −2𝜆+ 5 = 0
+Using the quadratic formula 𝜆= −𝑏±
+√
+𝑏2−4𝑎𝑐
+2𝑎
+:
+𝜆= 2 ±
+√︁
+(−2)2 −4(1)(5)
+2
+= 2 ±
+√
+−16
+2
+= 1 ± 2𝑖
+QUESTIONS 8:
+Type: MSQ
+Which of the following is/are true for edge and corner detection?
+a) A corner will have low maximal and minimal curvatures.
+b) A corner will have high maximal and minimal curvatures.
+c) An edge will have low maximal curvature, but very high minimal curvature.
+d) An edge will have high maximal curvature, but very low minimal curvature.
+Correct Answer: b), d)
+Detailed Solution:
+A corner will have high maximal and minimal curvatures. An edge will have high maximal
+curvature, but very low minimal curvature.
+QUESTION 9:
+Type: Numeric
+Consider a 3 × 3 neighborhood with grey scale pixel values 𝐴=
+
+80
+200
+130
+120
+192
+100
+290
+180
+132
+
+, obtain a
+single Local Binary Pattern (LBP) code for this matrix considering the center pixel as the
+reference. Weight table to be used is given as
+
+20
+21
+22
+27
+23
+26
+25
+24
+
+, where top right corner is
+considered as the first neighbor and this order moves clockwise.
+a) 66
+b) 64
+c) 2
+d) 62
+Correct Answer: a)
+Detailed Solution:
+Since the value of center pixel is 192, matrix elements greater than 192 become 1 and 0
+otherwise. Hence, after this operation, matrix becomes
+
+0
+1
+0
+0
+0
+1
+0
+0
+
+. Now, multiplying these
+values with a weight table
+
+20
+21
+22
+27
+23
+26
+25
+24
+
+and summing up the corresponding values gives 66.
+QUESTION 10:
+Type:MSQ
+Which of the following is/are true for SIFT and SURF?
+a) Computation of scale space and histograms of gradient direction are approximated in
+SURF compared to SIFT.
+b) Integral of images are used in SURF to speed up computation.
+c) Small Gaussians used in SIFT are approximated by box filters in SURF.
+d) Haar wavelet responses are used to accumulate the orientation in SIFT and SURF
+descriptors.
+Correct Answer: a), b), c)
+Detailed Solution:

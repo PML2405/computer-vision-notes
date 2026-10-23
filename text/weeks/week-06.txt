@@ -1,0 +1,2278 @@
+Computer Vision (NPTEL 106105216, IIT Kharagpur, Prof. Jayanta Mukhopadhyay)
+WEEK 6: Feature Detection and Description
+Lectures:
+  - Lecture 24: Feature Detection And Description – Part I (transcript p.5)
+  - Lecture 25: Feature Detection And Description – Part II (transcript p.24)
+  - Lecture 26: Feature Detection And Description – Part III (transcript p.43)
+  - Lecture 27: Feature Detection And Description – Part IV (transcript p.60)
+  - Lecture 28: Feature Detection And Description – Part V (transcript p.85)
+
+This file concatenates, in order: study notes, assignment solution, slides, transcript.
+Hub: https://pml2405.github.io/computer-vision-notes/
+
+==============================================================================
+PART: STUDY NOTES
+==============================================================================
+
+# Week 6 — Feature Detection and Description — study notes
+(Feature Detection & Description; Prof. Jayanta Mukhopadhyay · Lectures 24–28. Re-taught-from-scratch notes written from the slides + transcript; math is LaTeX between $...$ / $$...$$. Pretty version: https://pml2405.github.io/computer-vision-notes/notes/week6_notes.html)
+
+COMPUTER VISION · NPTEL · IIT KHARAGPUR
+
+Week 6
+
+**Feature Detection & Description**
+
+Prof. Jayanta Mukhopadhyay · Lectures 24–28
+
+### 📒 what's inside this week
+
+1. Lecture 24 — Feature Detection · Part I
+why corners, the structure matrix, the Harris corner detector
+
+2. Lecture 25 — Feature Detection · Part II
+scale invariance, Gaussian pyramid, LoG/DoG, SIFT keypoints
+
+3. Lecture 26 — Feature Detection · Part III
+the SIFT descriptor, SURF & integral images, FAST/BRIEF/ORB
+
+4. Lecture 27 — Feature Detection · Part IV
+matching by distance, HOG, LBP, co-occurrence, Laws texture energy
+
+5. Lecture 28 — Feature Detection · Part V
+global descriptors: Bag of Visual Words, VLAD, image retrieval
+
+# LECTURE 24 — Feature Detection & Description — Part I
+
+why corners · the SSD window measure · the structure matrix · the Harris corner detector
+
+🧠 the big picture, first
+
+Every earlier topic assumed we already had matched points across images. Now we **find them automatically**. The trick: pick points that are distinctive in every direction — and those turn out to be **corners**. Slide a little window; if the image changes no matter which way you nudge it, you've found a corner.
+
+## 1.  the matching problem
+
+Given two views of a scene, we want **corresponding points**. Three stages:
+
+**🧩 detect → describe → match**
+
+1. **Detect** repeatable landmark points (this lecture);
+
+2. **Describe** each with a distinctive signature of its neighbourhood;
+
+3. **Match** descriptors across images.
+
+All three must survive transformations — translation, rotation, scale, illumination.
+
+## 2.  flat vs edge vs corner
+
+Take a small window and shift it a little in various directions; watch how much the intensities change:
+| region | shift the window… | change |
+| **flat** | any direction | ≈ no change |
+| **edge** | along the edge / across it | no change / big change |
+| **corner** | **any** direction | **big change every way** ✅ |
+
+## 3.  the change measure & the structure matrix
+
+Quantify "how much it changes" when we shift the window by $(u,v)$ with the **sum of squared differences**:
+
+$$ E(u,v)=\sum_{(x,y)\in W}\big[\,I(x+u,\,y+v)-I(x,y)\,\big]^2 $$
+
+For small shifts, first-order Taylor $I(x+u,y+v)\approx I+I_x u+I_y v$ turns $E$ into a neat quadratic form:
+
+the structure (second-moment) matrix
+
+$$ E(u,v)\approx\begin{bmatrix}u&v\end{bmatrix}H\begin{bmatrix}u\\v\end{bmatrix},\quad H=\sum_{W}\begin{bmatrix}I_x^2 & I_xI_y\\ I_xI_y & I_y^2\end{bmatrix} $$
+
+**⚠️ average of squares, not square of average**
+$H$ sums the **squared**/product gradients over the window. If you instead squared the averaged gradient, $\det H$ would be $0$ everywhere — and corner detection would fail.
+
+## 4.  eigen-analysis — reading $H$
+
+The eigenvectors of $H$ are the directions of largest and smallest change; the eigenvalues $\lambda_+\ge\lambda_-$ are the amounts of change:
+
+#### the (λ₊, λ₋) map
+
+[diagram text: λ₋ | λ₊ | flat | edge | CORNER]
+
+flat: both small · edge: one large, one small · corner: **both large**.
+
+**read it as:** a corner needs the **smaller** eigenvalue $\lambda_-$ to be large — that guarantees a big change even in the least-changing direction. So the corner score is $\min$ over all shift directions $=\lambda_-$.
+
+### see it on a chessboard — the whole point of $\lambda_-$
+
+Run the eigen-analysis at every pixel of a chessboard and map the eigenvalues. This is the figure that makes the idea click:
+
+input: a chessboard
+**λ₊** — bright on **edges AND cornersλ₋** — bright on **ONLY the corners**
+
+Uniform squares → both eigenvalues ≈ 0 (black). Edges light up $\lambda_+$ but not $\lambda_-$. Only the **corners** light up $\lambda_-$ — which is exactly why $\lambda_-$ (not $\lambda_+$) is the corner score. (figure adapted from the course slides)
+
+## 5.  the detection algorithm
+
+1. Compute image gradients $I_x,I_y$ everywhere.
+
+2. At each pixel, build $H$ from windowed sums of $I_x^2,\,I_y^2,\,I_xI_y$.
+
+3. Compute the eigenvalues; keep points where $\lambda_-$ exceeds a threshold.
+
+4. Take the **local maxima** of the response → precise corner locations. 📍
+
+(On a chessboard: $\lambda_+$ lights up edges and corners, but $\lambda_-$ lights up **only** the corners.)
+
+## 6.  the Harris measure (skip the square roots)
+
+Computing eigenvalues needs a square root. **Harris** uses a cheaper response built from the determinant and trace instead:
+
+Harris corner response
+
+$$ f=\frac{\det H}{\operatorname{tr}H}=\frac{\lambda_+\lambda_-}{\lambda_++\lambda_-} $$
+
+$\det H=\lambda_+\lambda_-$ (product), $\operatorname{tr}H=\lambda_++\lambda_-$ (sum) — no eigen-decomposition, no roots. Both eigenvalues large ⇒ $f$ large. Compute $f$ everywhere, take local maxima → the famous **Harris corner detector**.
+
+**📎 exam note — which "Harris" is this?**
+The measure taught here, $f=\dfrac{\det H}{\operatorname{tr}H}=\dfrac{\lambda_+\lambda_-}{\lambda_++\lambda_-}$, is the **harmonic mean** of the eigenvalues (the Noble/Brown variant). The **original Harris–Stephens** response is $R=\det H-k(\operatorname{tr}H)^2$ (with $k\approx0.04$–$0.06$), and **Shi–Tomasi** uses $\min(\lambda_+,\lambda_-)=\lambda_-$ directly. All three fire on corners; know all three names for the exam.
+
+### corners = points where the windowed gradient matrix $H$ has **two large eigenvalues**.
+
+$E(u,v)\approx[u\,v]H[u\,v]^T$; corner score = $\lambda_-$; Harris uses $f=\det H/\operatorname{tr}H$ (no roots) + local maxima.
+
+### Self-check quiz
+
+1. Why are corners better feature points than edges or flat regions?
+
+→ Answer: a small window shift changes the intensity in every direction only at a corner — it's distinctive and localizable
+
+2. What do the two eigenvalues of the structure matrix $H$ tell you?
+
+→ Answer: the amount of intensity change in the most- and least-changing directions; a corner has both large
+
+3. Which eigenvalue is the corner score, and why?
+
+→ Answer: the smaller one $\lambda_-$ — it must be large so change is big even in the weakest direction
+
+4. What is the Harris response and why is it used instead of eigenvalues?
+
+→ Answer: $f=\det H/\operatorname{tr}H=\lambda_+\lambda_-/(\lambda_++\lambda_-)$ — it avoids square-root/eigen computation
+
+— end of Lecture 24 notes ✏️
+
+# LECTURE 25 — Feature Detection & Description — Part II
+
+scale invariance · the Gaussian pyramid · LoG & DoG · SIFT keypoints (edge culling & orientation)
+
+🧠 the big picture, first
+
+Harris finds corners but is **scale-blind**: shrink the image and its corners shift. The fix is to search for features not just over position but over scale too — a 3-D search $(x,y,\sigma)$. This is the heart of **SIFT**.
+
+## 1.  detection, description & the scale problem
+
+Both **detection** and **description** must be invariant to transformation. Translation and rotation are relatively easy; **scale is the hard one** — a blob that looks like a corner up close may vanish when the image is shrunk. The idea: represent the image at **many scales** and find features that are strong at their own best scale.
+
+## 2.  multi-scale — the Gaussian pyramid
+
+Repeatedly blur (Gaussian) and down-sample the image → a stack of ever-coarser versions, the **Gaussian pyramid**. A feature is now a **local maximum in position AND scale** (a 3-D search).
+
+**🎚️ octaves & the scale step $k$**
+The scales are grouped into **octaves** — an octave spans a doubling of $\sigma$ (scale factor $2$). If one octave holds $s{+}1$ blurred images, there are $s$ intervals, so **adjacent scales differ by**
+
+$$ k=2^{1/s} $$
+
+e.g. $10$ images per octave $\Rightarrow s=9 \Rightarrow k=2^{1/9}\approx 1.080$. (At the top of each octave the image is down-sampled by 2 and the next octave begins.)
+
+#### blur + subsample → a pyramid
+
+[diagram text: σ, full res | 2σ, ½ res | 4σ, ¼ res]
+
+Each level: convolve with a Gaussian, then subsample.
+
+## 3.  the detector kernels — LoG & DoG
+
+Start from the 2-D **Gaussian** (its width $\sigma$ = the "scale"):
+
+$$ G(x,y,\sigma)=\frac{1}{2\pi\sigma^2}\exp\!\Big(-\frac{x^2+y^2}{2\sigma^2}\Big) $$
+
+Two blob-detecting measures, searched for extrema over scale:
+
+scale-normalized Laplacian (LoG)
+
+$$ \nabla^2_{\text{norm}}=\sigma^2\big(G_{xx}+G_{yy}\big) $$
+
+Difference of Gaussians (DoG)
+
+$$ \text{DoG}=G(x,y,k\sigma)-G(x,y,\sigma) $$
+
+The $\sigma^2$ makes the Laplacian **scale-invariant**. And DoG is a cheap stand-in for LoG — because $\dfrac{\partial G}{\partial\sigma}=\sigma\nabla^2G$, so
+
+$$ G(x,y,k\sigma)-G(x,y,\sigma)\approx (k-1)\,\sigma^2\nabla^2G $$
+
+i.e. DoG $\propto$ scale-normalized Laplacian (the constant $(k-1)$ doesn't move the extrema). So you just **subtract adjacent pyramid levels** — no derivatives to compute.
+
+## 4.  SIFT keypoint detection
+
+**🔺 the two popular detectors**
+
+- **SIFT** (David Lowe): build a **DoG pyramid**, then find **extrema in the 3-D DoG scale-space** (compare each sample to its neighbours in position and the scales above/below).
+
+- **Harris–Laplacian:** Harris corner response computed across a Laplacian pyramid; take maxima over scale & space.
+
+## 5.  culling bad keypoints (edges out)
+
+The raw extrema include many weak/edge points. As in Harris, corners are robust but edges aren't. Use the **Hessian of the DoG** $H=\begin{bmatrix}D_{xx}&D_{xy}\\D_{xy}&D_{yy}\end{bmatrix}$ — its eigenvalues are the **principal curvatures**. An edge has one large, one small (very different) → reject via the trace/determinant ratio:
+
+edge-rejection test
+
+$$ \frac{(\operatorname{tr}H)^2}{\det H}<\frac{(r+1)^2}{r}\quad(r=10) $$
+
+Keep a keypoint only if its curvatures are comparable (ratio below threshold); reject if $\dfrac{(\operatorname{tr}H)^2}{\det H}$ exceeds it. (E.g. 832 keypoints → 729 after a gradient threshold → fewer after this ratio test.)
+
+## 6.  orientation → rotation invariance
+
+To be rotation-invariant, give each keypoint a **canonical orientation**: histogram the gradient directions in its neighbourhood (bins over $0$–$2\pi$), smooth it, and take the **peak**. Then describe everything relative to that direction.
+
+**so a SIFT keypoint carries:position + scale + orientation.** (If the histogram has two strong peaks, the keypoint gets two descriptors.) Next lecture builds the descriptor itself.
+
+**(a)** the image · **(b)** all detected keypoints (each arrow = position, scale & orientation) · **(c)** after the contrast/gradient threshold · **(d)** after the edge (curvature-ratio) test. Culling drops weak/edge points (e.g. 832 → 729 → fewer), keeping only robust corners. (from the course slides)
+
+### search for features over position AND scale: DoG extrema in a Gaussian pyramid = SIFT keypoints.
+
+DoG $\propto\sigma^2\nabla^2G$; cull edges by the Hessian ratio $(\operatorname{tr}H)^2/\det H$; a keypoint = position + scale + orientation.
+
+### Self-check quiz
+
+1. Why isn't the Harris detector scale-invariant, and what's the remedy?
+
+→ Answer: its window is one fixed size; search over a multi-scale (Gaussian pyramid) representation — find maxima in position and scale
+
+2. Why can SIFT use Difference-of-Gaussians instead of the Laplacian?
+
+→ Answer: DoG $\approx (k-1)\sigma^2\nabla^2G$ — it's proportional to the scale-normalized Laplacian, but only needs subtracting adjacent blurred levels
+
+3. How does SIFT throw out keypoints that lie on edges?
+
+→ Answer: via the DoG Hessian's principal curvatures: reject if $(\operatorname{tr}H)^2/\det H$ exceeds $(r+1)^2/r$ (one curvature ≫ the other = edge)
+
+4. What three things define a SIFT keypoint, and which gives rotation invariance?
+
+→ Answer: position, scale, and orientation; the orientation (peak of the gradient histogram) provides rotation invariance
+
+— end of Lecture 25 notes ✏️
+
+# LECTURE 26 — Feature Detection & Description — Part III
+
+the SIFT descriptor · SURF & integral images · fast binary methods: FAST, BRIEF, ORB
+
+🧠 the big picture, first
+
+We have keypoints (position + scale + orientation). Now give each a **signature** — a vector describing its neighbourhood — so we can match them. SIFT is the classic; then a family of **faster** descriptors (SURF, BRIEF, ORB) trade a little accuracy for real-time speed.
+
+## 1.  the SIFT descriptor (128 numbers)
+
+Around a keypoint, take a **$16\times16$ window**, first **rotated** to the keypoint's canonical orientation (that's what makes it rotation-invariant). Then:
+
+**🧵 building the 128-D vector**
+
+1. At each pixel compute the gradient; weak-magnitude ones are discarded.
+
+2. Split the $16\times16$ window into a **$4\times4$ grid of cells** (16 cells).
+
+3. Each cell → an **8-bin orientation histogram** (votes weighted by gradient magnitude) = an 8-vector.
+
+4. Concatenate all 16 cells: $16\times8=\mathbf{128}$-dimensional descriptor. 🎯
+
+**SIFT** (David Lowe, 1999) is robust to illumination and up to ~$60^\circ$ out-of-plane rotation.
+
+## 2.  SURF — speed via integral images
+
+**SURF** (2006) approximates SIFT's expensive Gaussian work with **box filters** (weights $\pm1$) evaluated using an **integral image**:
+
+integral image
+
+$$ I_\Sigma(x,y)=\sum_{i\le x}\sum_{j\le y} I(i,j) $$
+
+**why it's fast:** once $I_\Sigma$ is built in **one scan**, the sum over **any** rectangle is just $I_\Sigma$ at 4 corners (add two, subtract two) — **3 additions, 4 look-ups**, independent of box size. So box-filter convolutions are $O(1)$ per pixel.
+
+- **Detector:** local maxima of the **determinant of the Hessian**, $\det H_{\text{approx}}=D_{xx}D_{yy}-(w\,D_{xy})^2$ ($w\approx0.9$), with box-filter approximations of the 2nd derivatives across scales.
+
+- **Descriptor:** Haar-wavelet responses in a $4\times4$ grid; each cell stores $(\sum d_x,\ \sum|d_x|,\ \sum d_y,\ \sum|d_y|)$ = 4 numbers → $16\times4=\mathbf{64}$-D.
+
+## 3.  fast binary methods — FAST, BRIEF, ORB
+
+**⚡ real-time detectors & descriptors**
+
+- **FAST** (detector): look at 16 pixels on a circle around a candidate; if **12 consecutive** are all brighter (or all darker) than the centre → corner. A trained decision tree (darker/similar/brighter) speeds it further. Not rotation/scale invariant.
+
+- **BRIEF** (descriptor): pick $n$ random point-pairs in the patch; each test $\tau=\mathbb 1[\,I(\mathbf p_i)binary string (128/256/512). Compared with Hamming distance — extremely fast. Not rotation invariant.
+
+- **ORB** = **O**riented FAST + **R**otated BRIEF: adds orientation via the **intensity centroid** (intensity-weighted centre gives a direction), then "steers" BRIEF to that angle + uses a scale pyramid. → rotation & scale aware, still fast.
+
+## 4.  the descriptor zoo, compared
+| method | detector | descriptor | note |
+| **SIFT** | DoG extrema | 128-D gradient histograms | gold standard; slow |
+| **SURF** | Hessian det (box) | 64-D Haar responses | integral image → fast |
+| **FAST/BRIEF** | 12-point circle test | binary string | fastest; no rot/scale |
+| **ORB** | oriented FAST | steered/rotated BRIEF | fast + rotation/scale |
+
+### a descriptor turns a keypoint's neighbourhood into a matchable vector — SIFT (128-D) for accuracy, ORB for speed.
+
+SIFT = 4×4 cells × 8-bin gradient histograms; SURF uses integral images + box filters; BRIEF/ORB = binary strings via intensity tests.
+
+### Self-check quiz
+
+1. How does the 128-dimensional SIFT descriptor arise?
+
+→ Answer: an orientation-corrected $16\times16$ window → $4\times4$ cells × 8-bin gradient-orientation histograms = $16\times8=128$
+
+2. What makes SURF fast, and how does an integral image help?
+
+→ Answer: box filters instead of Gaussians; an integral image gives any rectangle's sum in 3 add/4 look-ups regardless of size
+
+3. What is the FAST corner test?
+
+→ Answer: on 16 pixels around a circle, ≥12 consecutive brighter-or-darker than the centre ⇒ a corner
+
+4. How does ORB make FAST+BRIEF rotation-invariant?
+
+→ Answer: it computes an orientation from the intensity centroid and steers (rotates) the BRIEF sampling pattern to it
+
+— end of Lecture 26 notes ✏️
+
+# LECTURE 27 — Feature Detection & Description — Part IV
+
+matching by distance · region descriptors: HOG · texture: LBP, co-occurrence matrix, Laws energy
+
+🧠 the big picture, first
+
+Once every keypoint is a vector, **matching** is just "find the nearest vector." Then we zoom out from points to **regions**: how to describe a whole patch or texture (HOG for shapes, LBP / co-occurrence / Laws for textures) — the descriptors behind object and material recognition.
+
+## 1.  matching by distance
+
+Two keypoints match if their descriptors are **close**. Measure closeness with a norm between feature vectors $\mathbf u,\mathbf v$:
+
+$$ L_1=\sum_i|u_i-v_i|,\quad L_2=\sqrt{\sum_i (u_i-v_i)^2},\quad L_p=\Big(\sum_i |u_i-v_i|^p\Big)^{1/p} $$
+
+($L_1$ = Manhattan, $L_2$ = Euclidean; both special cases of $L_p$.) The nearest descriptor is the candidate match. **Non-maximal suppression** then removes duplicate/overlapping detections greedily: keep the best-scoring window, suppress those too close, repeat.
+
+## 2.  region descriptor — Histogram of Oriented Gradients (HOG)
+
+**HOG** (2005) describes a whole patch by its gradient-orientation statistics — great for **shape** (famously, pedestrian detection):
+
+**📐 HOG recipe (for a 64×128 patch)**
+
+1. Compute gradients (no smoothing); for colour, use the channel with the largest gradient.
+
+2. Divide into $16\times16$ **blocks** with 50% overlap → ~**105 blocks**; each block = $2\times2$ cells of $8\times8$.
+
+3. Per cell: a **9-bin** orientation histogram, votes weighted by magnitude (interpolated, Gaussian-weighted).
+
+4. Concatenate: $105\times4\times9=\mathbf{3780}$-D descriptor → feed a classifier (SVM / random forest).
+
+## 3.  texture — first, what is it?
+
+**Texture** is a **spatial arrangement of intensities/colours** in a region — a quantitative measure of that arrangement distinctly identifies a material (sky vs road vs foliage). The professor lists **four** texture techniques: **edge density & direction**, **LBP**, **co-occurrence matrix**, and **Laws energy**.
+
+### method 1 — edge density & direction
+
+Compute the gradient at every pixel in the region, then build **two normalized histograms** — one of gradient **magnitudes**, one of gradient **directions** (normalized so each histogram's area = 1, i.e. a probability density; typically a small number of bins, ~10). The concatenated pair is the texture descriptor; compare textures with an $L_1$/$L_2$ distance.
+
+## 4.  texture descriptor — Local Binary Pattern (LBP)
+
+Compare a central pixel $c$ to its 8 neighbours; each is a bit (1 if brighter). Read the 8 bits as a number:
+
+local binary pattern
+
+$$ \text{LBP}(c)=\sum_{i=0}^{7} b(i)\,2^{i},\qquad b(i)=\begin{cases}1 & I_i\ge I_c\\ 0 & \text{else}\end{cases} $$
+
+So each pixel gets a value $0$–$255$; a **normalized histogram** over the region is the texture descriptor. It's invariant to monotonic illumination change, but **not rotation**.
+
+**🔄 rotation-invariant & uniform LBP**
+
+- Use a **circular** neighbourhood ($P$ points, radius $R$; interpolate off-grid points). For rotation invariance, take the **minimum** over all circular bit-shifts (rotating the image just rotates the string).
+
+- **Uniform** patterns have $\le 2$ bit-transitions (e.g. 11100011); for $P=8$ there are 9 uniform patterns → a compact **10-bin** histogram (9 uniform + 1 "all others"). Add local **variance** for intensity contrast.
+
+## 5.  texture descriptor — co-occurrence matrix
+
+Count how often two grey levels appear at a fixed spatial offset $\mathbf t=(a,b)$: the $(x,y)$ entry is the number of pixel pairs with values $x$ and $y$ at that relation.
+
+$$ C_{\mathbf t}(x,y)=\#\{\, \mathbf p:\ I(\mathbf p)=x\ \text{and}\ I(\mathbf p+\mathbf t)=y\,\} $$
+
+**worked example — a 2-level 4×4 image, offset "one step right"**
+Counting each ordered pair $(x,y)$ across the image gave the professor:
+
+$$ C=\begin{bmatrix}4 & 2\\ 2 & 4\end{bmatrix} $$
+
+i.e. $(0,0)$ occurred 4×, $(0,1)$ and $(1,0)$ twice each, $(1,1)$ 4×. Normalize (divide by the total) → a probability matrix; from it derive features like **correlation, contrast, energy, homogeneity**. Different offsets → different matrices → a richer texture signature.
+
+## 6.  texture descriptor — Laws energy
+
+**Laws' texture energy** builds masks from four 1-D filters — **L5** (level/average), **E5** (edge), **S5** (spot), **R5** (ripple):
+
+- Take **outer products** of pairs (e.g. $\mathbf{E5}\,\mathbf{L5}^{T}$) → $5\times5$ 2-D masks; combine symmetric pairs down to **9 masks**.
+
+- Convolve, then compute **energy** = sum of squared/absolute responses in a window (e.g. $15\times15$) → a **9-D** feature per pixel.
+
+All these region descriptors feed the same downstream task: match to a labelled library or train a classifier (segmentation, object/material recognition).
+
+### match points by nearest descriptor; describe regions by gradient/texture statistics (HOG, LBP, co-occurrence, Laws).
+
+$L_1/L_2$ distances + non-max suppression; HOG = 9-bin gradient histograms; LBP = thresholded-neighbour bit string; co-occurrence counts grey-level pairs.
+
+### Self-check quiz
+
+1. Two SIFT descriptors — how do you decide if they match, and what removes duplicate detections?
+
+→ Answer: nearest descriptor by an $L_1$/$L_2$ distance; non-maximal suppression removes overlapping duplicates
+
+2. What does HOG capture and what is a classic application?
+
+→ Answer: gradient-orientation histograms over a grid (shape); pedestrian detection
+
+3. Write the LBP value formula and state one invariance it lacks.
+
+→ Answer: $\text{LBP}=\sum_i b(i)2^i$ (bit = neighbour ≥ centre); it is not rotation-invariant (fixed by circular LBP + min-over-shifts)
+
+4. What does a grey-level co-occurrence matrix count?
+
+→ Answer: how often each pair of grey values $(x,y)$ occurs at a fixed spatial offset $\mathbf t$
+
+— end of Lecture 27 notes ✏️
+
+# LECTURE 28 — Feature Detection & Description — Part V
+
+describing a whole image · Bag of Visual Words · VLAD · content-based image retrieval
+
+🧠 the big picture, first
+
+We've described points and regions; now the **whole image** in one vector — so you can **search by picture**. The trick borrows from text search: build a dictionary of "visual words" and describe any image by which visual words it contains.
+
+## 1.  Bag of Visual Words (BoVW)
+
+Text documents are described by which dictionary words they contain. Images have no ready-made dictionary — so we **build** one from local descriptors:
+
+**📖 building & using the visual dictionary**
+
+1. Over a **library** of images, extract keypoints (SIFT/SURF/FAST) and their descriptors → a huge pile of vectors.
+
+2. **Cluster** them with **K-means** into $K$ groups; each cluster **mean** is a **visual word**. The $K$ words are the **codebook**.
+
+3. For any image: describe each keypoint, assign it to its **nearest visual word**, and **count** → a $K$-bin **histogram**.
+
+Every image becomes a fixed **$K$-dimensional** vector, regardless of how many keypoints it had. 🎯
+
+## 2.  VLAD — remember the residuals
+
+BoVW only counts words. **VLAD** (Vector of Locally Aggregated Descriptors) keeps **more**: for each visual word $C_i$, it sums the **differences** between the descriptors assigned to it and the centre:
+
+VLAD aggregation
+
+$$ \mathbf v_i=\!\!\sum_{\text{NN}(\mathbf x)=C_i}\!\!(\mathbf x-C_i) $$
+
+Concatenate all $K$ residual vectors (each of the descriptor dimension $D$, e.g. $D=128$ for SIFT) → a $K\times D$ vector, then **L2-normalize**:
+
+$$ \text{VLAD}=\frac{[\,\mathbf v_1;\mathbf v_2;\dots;\mathbf v_K\,]}{\big\lVert[\,\mathbf v_1;\dots;\mathbf v_K\,]\big\rVert} $$
+
+It's higher-dimensional than BoVW (so $K$ is kept small), but more discriminative — it records where descriptors sit relative to each word, not just how many.
+
+## 3.  application — content-based image retrieval
+
+A global descriptor lets you **search by image**: describe every library image; given a query image, compute its descriptor and return the library images whose descriptors are **closest**, ranked.
+
+**in practice:** "photograph this temple carving, find what it is." (The professor's examples: the chariot at Hampi's Vithala temple and the Bishnupur terracotta temples.) Occasional wrong matches happen because different images can land on similar feature vectors.
+
+## 4.  look-ahead — matching & robust model fitting
+
+These tools belong to the next topic (matching & model fitting) but are the natural sequel to descriptors — and show up in the assignment, so know them:
+| tool | what it does |
+| **RANSAC** | **Robust model fitting with outliers:** randomly sample a minimal set, fit a model, count inliers (points within a threshold), repeat, keep the model with the most inliers. Tolerates a large fraction of wrong matches — the standard way to fit $F$/$H$ from noisy correspondences. |
+| **Hough transform** | **Voting-based line/shape fitting:** each point votes for all lines through it in parameter space; peaks in the accumulator = detected lines. Strong when there are **many** lines / much clutter. |
+| **K-D tree** | **Fast nearest-neighbour** search for matching descriptors: a binary space-partition tree; average query $\approx O(\log n)$ (grows with dimension $d$). Speeds up "find the closest descriptor." |
+| **KL divergence** | A **statistical distance** between two probability distributions $D_{KL}(P\Vert Q)=\sum_i P_i\log\tfrac{P_i}{Q_i}$ — used to compare histograms/distributions. **Not** a geometric line-fitting criterion (a common distractor). |
+
+## 5.  the whole feature topic on one page
+
+**📌 feature detection & description cheat-sheet**
+| stage | methods |
+| **detection** | Harris corner (here $f=\det M/\operatorname{tr}M$ on the structure matrix $M$; canonical Harris–Stephens is $\det M-k(\operatorname{tr}M)^2$); scale via Laplacian/DoG extrema (SIFT); Hessian-det (SURF); FAST |
+| **keypoint = ** | position + scale + orientation (from the gradient histogram peak) |
+| **point descriptors** | SIFT (128-D), SURF (64-D, integral image), BRIEF/ORB (binary) |
+| **region descriptors** | HOG (gradient histograms, shape) |
+| **texture descriptors** | edge density, LBP (+rotation-invariant/uniform), co-occurrence matrix, Laws energy |
+| **global descriptors** | Bag of Visual Words, VLAD → image retrieval |
+| **matching** | nearest descriptor ($L_1/L_2$), non-maximal suppression, or a trained classifier |
+| **uses** | stereo correspondence → $F$/homography; object/pedestrian/character detection; image search |
+
+### describe a whole image by its "visual words" (BoVW) or their residuals (VLAD) — and you can search by picture.
+
+K-means codebook → K-bin histogram (BoVW) or K×D normalized residuals (VLAD); nearest-descriptor retrieval = CBIR.
+
+### Self-check quiz
+
+1. How is a Bag-of-Visual-Words dictionary built, and what does an image become?
+
+→ Answer: K-means-cluster all library descriptors → $K$ visual words; an image → a $K$-bin histogram of nearest-word counts
+
+2. What does VLAD store that BoVW discards, and what's its dimension?
+
+→ Answer: the residuals $\sum(\mathbf x-C_i)$ (not just counts); dimension $K\times D$, then L2-normalized
+
+3. What is content-based image retrieval?
+
+→ Answer: search-by-image: match a query image's global descriptor to a library's descriptors and rank the closest
+
+4. Name one use of keypoint descriptors that ties this topic back to earlier weeks.
+
+→ Answer: automatically finding corresponding points across views → estimating the fundamental matrix / homography (Weeks 2, 4–5)
+
+— end of Lecture 28 · end of Week 6 · end of the course 🎓✏️
+
+==============================================================================
+PART: ASSIGNMENT SOLUTION
+==============================================================================
+
+# Week 6 — Feature Detection and Description — assignment solution
+(source: NPTEL, 10 PDF pages; fractions/matrices from the PDF may be flattened in this text)
+
+Nptel Online Certification Course
+Indian Institute of Technology Kharagpur
+Computer Vision
+Assignment - Week 6
+Number of questions: 10
+Total marks: 10x2=20
+QUESTION 1:
+Type: MCQ
+Given two features each of size 7 as 𝑓(3, 6, 2, 5, 1, 4, 7) and 𝑔(3, 4, 3, 1, 2, 3, 9). Compute 𝐿1
+and 𝐿2 norms between 𝑓and 𝑔, respectively.
+a) 11 and 3.16
+b) 11 and 5.20
+c) 10 and 5.20
+d) 10 and 3.16
+Correct Answer: b)
+Detailed Solution:
+𝐿1 norm is Í𝑛
+𝑖=0 | 𝑓−𝑔| and 𝐿2 norm is (Í𝑛
+𝑖=0 | 𝑓−𝑔|2)1/2.
+QUESTION 2:
+Type: MCQ
+Consider the following matrix representing 4 sample data points (1, 2), (2, 1), (3, 2), (2, 3) as
+𝑋=
+
+1
+2
+2
+1
+3
+2
+2
+3
+
+. Compute the covariance matrix using data points from 𝑋.
+a)
+1
+0
+0
+1
+
+b)
+0.5
+0
+0
+0.5
+
+c)
+0.25
+0
+0
+0.25
+
+d)
+2
+0
+0
+2
+
+Correct Answer: b)
+Detailed Solution:
+Compute the mean vectors as [ 1+2+3+2
+4
+, 2+1+2+3
+4
+] = [2, 2]. Now compute
+˜𝑋=
+
+1 −2
+2 −2
+2 −2
+1 −2
+3 −2
+2 −2
+2 −2
+3 −2
+
+=
+
+−1
+0
+0
+−1
+1
+0
+0
+1
+
+.
+The covariance matrix is given by ˜𝑋𝑇˜𝑋
+4 .
+QUESTION 3:
+Type: MCQ
+Consider the set of parametric equations 𝑥= 2𝑡3 −𝑡2 and 𝑦= 𝑡3 + 3𝑡. representing a 2D
+curve. Compute the tangent vector at 𝑡= 2.
+a) (4, 15)
+b) (20, 15)
+c) (20, 5)
+d) (15, 5)
+Correct Answer: b)
+Detailed Solution:
+Perform derivation 𝑥′ = 6𝑡2 −2𝑡and 𝑦′ = 3𝑡2 + 3. Compute the tangent at 𝑡= 2.
+QUESTION 4:
+Type: MSQ
+Which of the following is/are true?
+a) RANSAC is best suited for fitting outliers.
+b) Hough transform is best suited for line fitting in presence of many lines.
+c) Kullback-Leiber Divergence is best suited to find the ‘optimal’ line parameters when
+points belonging to a line are given.
+d) The average case time complexity of NN Search using K-D tree is 𝑂(𝑙𝑜𝑔(𝑁) + 2𝑑) where
+𝑑is the dimension of the feature space.
+Correct Answer: b), d)
+Detailed Solution:
+Kullback-Leibler (KL) Divergence is used to measure the statistical difference between two
+probability distributions, not geometric distances.
+QUESTION 5:
+Type: MCQ
+Gradient along 𝑥and 𝑦directions at a pixel location (𝑥𝑖, 𝑦𝑖) can be given as 𝑥𝑖+1−𝑥𝑖−1
+2
+and
+𝑦𝑖+1−𝑦𝑖−1
+2
+, respectively. The top left corner of the matrix is considered as (1, 1) and indices
+increment for 𝑥and 𝑦axes along horizontal right and vertical downward directions,
+respectively.
+Consider a 3 × 3 matrix 𝐴=
+
+0.2
+0.7
+0.4
+0.4
+0.2
+0.9
+0.3
+0.5
+0.5
+
+, compute gradients along 𝑥(𝐼𝑥) and 𝑦(𝐼𝑦)
+directions, respectively at the center pixel location in 𝐴.
+a) 𝐼𝑥= -0.05 and 𝐼𝑦= 0.15
+b) 𝐼𝑥= 0.05 and 𝐼𝑦= -0.15
+c) 𝐼𝑥= 0.25 and 𝐼𝑦= -0.1
+d) None of these
+Correct Answer: c)
+Detailed Solution:
+At the center pixel, 𝐼𝑥= 0.9−0.4
+2
+and 𝐼𝑦= 0.5−0.7
+2
+.
+QUESTION 6:
+Type: MCQ
+If an octave in SIFT operator has 10 images, then the scale factor by which each image in
+octave differs from the next image is
+a) 1.080
+b) 1.065
+c) 1.071
+d) 1.090
+Correct Answer: a)
+Detailed Solution:
+Within an octave, the adjacent scales differ by a constant factor 𝑘. If an octave contains 𝑠+ 1
+images, then 𝑘= 21/𝑠. The scale factor is 2 in an octave. Therefore, 𝑘= 21/9.
+QUESTIONS 7:
+Type: MCQ
+Find the eigen values of the matrix
+1
+−2
+2
+1
+
+.
+a) 1, −2
+b) 1 ± 2𝑖
+c) −1 ± 2𝑖
+d) 1, 2
+Correct Answer: b)
+Detailed Solution:
+Setting up the characteristic determinant:
+
+1 −𝜆
+−2
+2
+1 −𝜆
+
+ = 0
+(1 −𝜆)2 −(−4) = 0
+𝜆2 −2𝜆+ 1 + 4 = 0
+𝜆2 −2𝜆+ 5 = 0
+Using the quadratic formula 𝜆= −𝑏±
+√
+𝑏2−4𝑎𝑐
+2𝑎
+:
+𝜆= 2 ±
+√︁
+(−2)2 −4(1)(5)
+2
+= 2 ±
+√
+−16
+2
+= 1 ± 2𝑖
+QUESTIONS 8:
+Type: MSQ
+Which of the following is/are true for edge and corner detection?
+a) A corner will have low maximal and minimal curvatures.
+b) A corner will have high maximal and minimal curvatures.
+c) An edge will have low maximal curvature, but very high minimal curvature.
+d) An edge will have high maximal curvature, but very low minimal curvature.
+Correct Answer: b), d)
+Detailed Solution:
+A corner will have high maximal and minimal curvatures. An edge will have high maximal
+curvature, but very low minimal curvature.
+QUESTION 9:
+Type: Numeric
+Consider a 3 × 3 neighborhood with grey scale pixel values 𝐴=
+
+80
+200
+130
+120
+192
+100
+290
+180
+132
+
+, obtain a
+single Local Binary Pattern (LBP) code for this matrix considering the center pixel as the
+reference. Weight table to be used is given as
+
+20
+21
+22
+27
+23
+26
+25
+24
+
+, where top right corner is
+considered as the first neighbor and this order moves clockwise.
+a) 66
+b) 64
+c) 2
+d) 62
+Correct Answer: a)
+Detailed Solution:
+Since the value of center pixel is 192, matrix elements greater than 192 become 1 and 0
+otherwise. Hence, after this operation, matrix becomes
+
+0
+1
+0
+0
+0
+1
+0
+0
+
+. Now, multiplying these
+values with a weight table
+
+20
+21
+22
+27
+23
+26
+25
+24
+
+and summing up the corresponding values gives 66.
+QUESTION 10:
+Type:MSQ
+Which of the following is/are true for SIFT and SURF?
+a) Computation of scale space and histograms of gradient direction are approximated in
+SURF compared to SIFT.
+b) Integral of images are used in SURF to speed up computation.
+c) Small Gaussians used in SIFT are approximated by box filters in SURF.
+d) Haar wavelet responses are used to accumulate the orientation in SIFT and SURF
+descriptors.
+Correct Answer: a), b), c)
+Detailed Solution:
+
+==============================================================================
+PART: LECTURE SLIDES
+==============================================================================
+
+# Week 6 — lecture slides
+(source: NPTEL, 78 slides; text layer, plus OCR on 10 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Feature detection and description
+(Week 06: Lectures 24-28)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+
+### Slide 2
+Can you match the scene
+points?
+Translation, rotation, scale ..
+o Detection
+o Description
+o Matching
+
+### Slide 3
+Feature detection
+“flat” region:
+no change in
+all directions
+“edge”:  no
+change along
+the edge
+direction
+“corner”:
+significant
+change in all
+directions
+n How does the measure change on shifting windows at
+different points?
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+A local measure for uniquely identifying the  feature.
+
+### Slide 4
+• how do the pixels in W change?
+• compare each pixel before and
+after by summing up the squared
+differences (SSD).
+• this defines an SSD “error” of
+E(u,v).
+Feature detection
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+Consider shifting the window W by (u,v).
+
+### Slide 5
+Small motion assumption
+For small u and v
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 6 (OCR)
+pore detection
+I(a+u,y+v) ~ I(x,y) + Seu t+ Seo ~I(x,y) + Use Ty] |
+EQurv) = So at+uy+uy— La,y))
+(z,y)Ew
+~ ted tt | * | ~1(2,y))
+(x,y)EWw
+EPO
+7 PP Inly]fuj -&’ ; aan
+
+### Slide 7
+Feature detection
+For the example above
+• Suppose the center of the green window
+moved to anywhere on the blue unit circle.
+• Directions for the largest and the smallest E
+values?
+• Eigenvectors of H.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 8 (OCR)
+Quick eigenvalue/eigenvector
+4 eview
+Ax = Ax
+The eigenvectors of a matrix 4 are the vectors x that satisfy:
+hiy —A h
+det(A — AI) =O. dew} “+! M2 = 0
+( ) hoy hoo — A
+The scalar 4 is the eigenvalue corresponding to x
+» The eigenvalues are found by solving:
+At = $ nn + hog) + \/4hizghar + (hi — hoa)
+=» For eigen vector solve the following:
+hi —X hip x
+hai me [EG]
+Once you know 4, you find eigen vector [x y]' by solving the
+above. Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 9
+Feature detection
+Eigenvalues and eigenvectors of H
+• Define shifts with the smallest and
+largest change (E value)
+• x+ = direction of largest increase in E.
+• l+ = amount of increase in direction x+
+• x- = direction of smallest increase in E.
+• l- = amount of increase in direction x-
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 10
+Feature scoring function
+E(u,v) to be large for small shifts in all
+directions
+• the minimum of E(u,v) should be large,
+over all unit vectors  [u v].
+• this minimum is given by the smaller
+eigenvalue (l-) of H
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 11
+Feature detection
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 12
+Feature detection:  Algorithm
+• Compute the gradient at each point in the image.
+• Obtain the H matrix from the entries in the gradient.
+• Compute eigenvalues of H.
+• Locate points with large response (l- > threshold)
+• Select points where l- is a local maximum as
+features.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 13
+Local maximum: illustration
+• Points with l- as a local maximum.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 14
+The Harris operator
+l- is a variant of the “Harris operator” for feature detection.
+• The trace is the sum of the diagonals, i.e.,
+trace(H) = h11 + h22
+• Very similar to l- but less expensive (no square root)
+• Called the “Harris Corner Detector” or “Harris Operator”
+• Lots of other detectors, this is one of the most popular.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 15
+The Harris operator
+Harris
+operator
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 16
+Harris detector example
+Input image
+f-Value
+Local maxima
+
+### Slide 17 (OCR)
+Feature matching
+| 1 Oe
+| 2 ; hi
+| i F - ;
+! 9 i,
+| ! | ] 7 | i
+- £ i: : “ nyo cece + I ;
+as fem
+
+### Slide 18
+Matching with Features
+o Detect feature points in both images.
+o Describe them by local statistics.
+o Find corresponding pairs (Matching).
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 19
+Invariance
+o Is it possible to select same features under
+various transformations?
+o Rotation
+o Change of illumination
+o Scale
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 20
+Scale invariant detection
+Key idea for detecting corners
+Find scale that gives local maximum of f.
+n f is a local maximum in both position and
+scale
+n Common definition of f:  Laplacian
+(or difference between two Gaussian filtered
+images with different s.d.’s.).
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 21
+Invariance
+Consider two images I1 and I2 so that I2 is
+a transformed version of I1
+n For example,
+n Translation
+n Rotation
+n Scale
+n Reflection
+n Non-uniform scaling
+n Illumination
+n View …
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+Tranformational Invariance:
+Detection of the same
+features regardless of the
+transformation.
+
+### Slide 22
+Detection and description: to
+be invariant
+Both should be ensured.
+1. Detector to be transformational invariant.
+n Harris measure is invariant to translation and rotation.
+n Scale requires handling of  multi-resolution representation
+n Usual approach: Computing features at multiple scales using
+a Gaussian pyramid.
+n More precise computation locates features at  “the best scale”
+(e.g., SIFT)
+2. Feature descriptor to be transformational invariant.
+captures the information in a region around the detected
+feature point.
+n e.g. histogram of gradient directions in a square window centering a
+feature point.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 23
+Finding Keypoints – Scale,
+Location
+n How do we choose scale?
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 24
+Scale Invariant Detection
+n Functions for determining scale
+Kernels:
+where Gaussian
+Laplacian
+Difference of Gaussians
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+Convolve with image and observe extrema in 3-D.
+
+### Slide 25 (OCR)
+4 Kernel plots in 1-D
+0.2
+A NIX
+-0.1 E :
+-0.2 | :
+-0.3
+—— DoG
+-0.4
+5 -4 3 -2 Al 0 1 2 3 4 5
+Both kernels are invariant to scale and rotation.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 26
+Relationship between LoG and
+DoG operator
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+The factor (k-1) is kept constant across scales.
+èdoes not influence extrema locations.
+
+### Slide 27
+Finding Keypoints
+– Scale, Location
+Convolve with
+Gaussian
+Downsample
+Find extrema
+in 3D DoG space
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 28
+Scale Invariant Detectors
+n Harris-Laplacian (Mikolajczyk & Schmid)
+n Apply Laplacian operation with varying scale.
+n Get local maxima of Harris corner response in space
+and scale.
+D.Lowe. “Distinctive Image Features from Scale-Invariant Keypoints”.  IJCV
+2004
+• SIFT (Lowe)
+• Find local maximum Difference of Gaussians in
+space and scale
+K. Mikolajczyk, C.Schmid. “Indexing Based on Scale Invariant Interest Points”.
+ICCV 2001.
+
+### Slide 29
+Scale Invariant Detection:
+Summary
+n Given: two images of the same scene with a large
+scale difference between them.
+n Goal: find the same interest points independently in
+each image.
+n Solution: search for maxima of suitable functions in
+scale and in space (over the image).
+Methods:
+1. Harris-Laplacian [Mikolajczyk, Schmid]: maximize Laplacian
+over scale, Harris’ measure of corner response over the
+image.
+2. SIFT [Lowe]: maximize Difference of Gaussians over scale
+and space.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 30
+Keypoint localization
+n There are still a lot of points, some
+of them are not good enough.
+n The locations of keypoints may be
+not accurate.
+n Eliminating edge points.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 31
+Eliminating edge
+points
+n Edge point: large principal curvature across the
+edge but a small one in the perpendicular
+direction.
+n The eigenvalues of H are proportional to the
+principal curvatures, so two eigenvalues
+shouldn’t differ too much.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+D(.)=DoG of the function.
+Eliminate keypoint if
+the ratio greater than
+the threshold.
+
+### Slide 32
+Orientation assignment
+n Create histogram of local
+gradient directions at selected
+scale.
+Assign canonical orientation at
+peak of smoothed histogram.
+Each key specifies stable 2D
+coordinates (x, y, scale,
+orientation).
+If there are two major orientations, use both.
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 33 (OCR)
+Keypoint localization with
+agp orientation
+| — initial
+* = b wee .
+a | <gteoa Es keypoints
+ss — ; Matt Lie a 2) mat Pitt
+233x189 acta UE
+“it et mT ge Rie pwat sg. 832
+(a) (b) lias 1
+re Be Teg 536
+reypoints peta ANE ne ES keypoints
+cf i a owes 8 after
+a oe ee
+FESTONC scenic (hich threshold
+Slide adapted from Darya Frolova, Denis Simakov, Weizmann Institute.
+
+### Slide 34
+Keypoint Descriptors
+n At this point, each keypoint has
+n location
+n scale
+n orientation
+n Next is to compute a descriptor for the local
+image region about each keypoint that is
+n highly distinctive
+n invariant as possible to variations such as
+changes in viewpoint and illumination
+
+### Slide 35
+• Take 16x16 square window (orientation corrected)
+around detected feature
+• Compute edge orientation (angle of the gradient - 90°)
+for each pixel
+• Throw out weak edges (threshold gradient magnitude)
+• Create histogram of surviving edge orientations
+Scale Invariant Feature
+Transform (Lowe’99, ICCV)
+Adapted from slide by David Lowe
+2p
+angle histogram
+
+### Slide 36
+SIFT descriptor
+• Divide the 16x16 window into a 4x4 grid of cells
+(2x2 case shown below).
+• Compute an orientation histogram for each cell
+• 16 cells * 8 orientations = 128 dimensional
+descriptor.
+Adapted from slide by David Lowe
+
+### Slide 37
+Robustness
+n changes in viewpoint
+n Up to about 60 degree out of plane rotation
+n significant changes in illumination
+n Sometimes even day vs. night
+Capable of handling
+
+### Slide 38
+Speeded-Up Robust Features
+(SURF): Another descriptor
+n Speeded-Up Robust Features (SURF)
+n (Bay et al. ECCV, 2006)
+n Box-type convolution filters and use of
+integral images to speed up the
+computation.
+n Use of Hessian operator for key point
+detectionà Local maxima of det(H).
+n Accumulate orientation corrected Haar
+wavelet responses.
+
+### Slide 39
+Hessian Operator
+Convolution with the Gaussian
+second order derivative with image.
+Keypoint: Maximum of det(H(.)) over space and scale.
+Bay et al, Speeded up robust features (SURF), CVIU, 2008
+
+### Slide 40 (OCR)
+Approximation of Gaussian by
+| Box fi lte rs Bay et al, Speeded up robust features (SURF), CVIU, 2008
+FCCC Coo Se
+SSEmmEECE a, Boe
+S.C] > be
+Se 9x9 Box-fi ers a re annnenoe
+Seem «| et PRfOxImation OF Ee
+Co ae Gaussian width 1.2.7 11 3a
+———_ . =CCCC eee
+Coe TT <> |
+_— | ae
+PEPE Cre D EEC
+FCLEL CE »
+det (Happrox) — DrrDyy (wDry)?. w0.9
+
+### Slide 41
+Fast computation using the
+integral image
+Only 3 additions
+and four
+memory access.
+Bay et al, Speeded up robust features (SURF), CVIU, 2008
+
+### Slide 42
+Haar Filter Responses
+n Dominant orientation by accumulating
+Haar horizontal and vertical responses
+in a rotated sliding window (of width
+600) at the scale of key point.
+n The longest vector provides the
+dominant direction.
+Haar Filters
+Box filter implementation.
+Bay et al, Speeded up robust features (SURF), CVIU, 2008
+6 operations needed for
+computing each filter response
+using integral image.
+
+### Slide 43
+SURF: Sum of Haar Wavelet
+responses
+Size of the window=20 x scale
+o Partitioned into 4x4
+square sub-regions.
+o Haar wavelet
+responses at
+regularly spaced
+5x5 sample patches
+in each sub-region.
+o Each sub-region
+has 4D vector.
+o Concatenate them
+to 64 D vector.
+Bay et al, Speeded up robust features (SURF), CVIU, 2008
+
+### Slide 44
+Other types of detectors and
+descriptors
+n FAST: Features from Accelerated
+Segment Test (Rosten et al, PAMI,
+2010).
+n BRIEF: Binary Robust Independent
+Elementary Features (Colonder et al,
+ECCV, 2010).
+n ORB: Oriented FAST and Rotated BRIEF
+(Rublee et al, ICCV, 2011)
+
+### Slide 45 (OCR)
+FAST: Principle
+; TT TILL
+— “CL SLLLLL
+7 wait |i
+nn ttt
+[I] SEER EE
+OBEGEEOORn
+a ) OOD BEREEDOSS
+im
+i RI naan
+SLE LLU Le
+Yt I Cholele! | | lo
+FCCP eet Ce ie
+Tee
+o 12 point test: Ifthere exists 12 consecutive
+points in the set of 16 points brighter than
+the central pixel (Rosten et al ICCV’05).
+o Modified strategy: Train decision tree on the
+boolean conditions given labelled data.
+Rosten et al, Faster and Better: A Machine Learning
+Approach to Corner Detection, PAMI, 2010
+
+### Slide 46
+FAST: Partitioning  of points on
+the circle and Training a DT
+o Classification of points in three
+classes and create three partitions
+for a point.
+o Train a decision tree.
+Rosten et al, Faster and Better: A Machine Learning
+Approach to Corner Detection, PAMI, 2010
+
+### Slide 47
+BRIEF: Principle
+o Generate randomly a set of nd pairs of locations
+(xi,yi) in a patch centered around a point.
+o Perform  the following boolean test.
+BRIEF descriptor: nd Dimensional binary string
+128, 256, 512
+Colonder et al, BRIEF: Binary Robust Independent
+Elementary Features, ECCV, 2010
+
+### Slide 48
+ORB: Principle
+n FAST does not operate across scale.
+n Apply FAST detector on pyramid of
+smoothened images.
+n Orientation by intensity centroid: The vector
+from the center of the patch and to a centroid
+considering the intensity distribution
+(intensity weighted center of patch).
+n Rotate the patch by the angle and compute
+BRIEF called steered BRIEF.
+
+### Slide 49
+Matching
+n Representation of a key-point by a feature vector.
+n e.g. [f0 f1 … fn]T
+n Use distance functions / similarity measures.
+n L1 norm
+n L2 norm
+n Lp norm
+
+### Slide 50
+Region descriptors
+n Patch descriptors
+n Texture descriptors
+n Image / Sub-Image  global descriptors
+
+### Slide 51
+Patch Descriptor: Histogram of
+Gradients (HoG)
+n Compute centered horizontal and vertical
+gradients with no smoothing.
+n Compute gradient orientation and magnitudes,
+n For color image, pick the color channel with the
+highest gradient magnitude for each pixel.
+n For a 64x128 image, divide the image into 16x16
+blocks of 50% overlap. à7x15=105 blocks in
+total.
+N.Dalal and B. Triggs, Histograms of oriented gradients for
+human detection, CVPR-2005
+
+### Slide 52
+Histogram of Gradients (HoG)
+n Each block: 2x2 cells with size 8x8.
+n Quantize the gradient orientation into 9 bins.
+n The vote is the gradient magnitude.
+n Interpolate votes between neighboring bin center.
+n The vote can also be weighted with Gaussian to
+down-weight the pixels near the edges of the block.
+n Concatenate histograms.
+n Feature dimension: 105x4x9 = 3,780
+N.Dalal and B. Triggs, Histograms of oriented gradients for human
+detection, CVPR-2005
+
+### Slide 53
+Object detection with patch
+descriptors.
+n Typical examples:
+n Pedestrian detection
+n Character recognition
+n Detection as a classification task.
+n Generate labeled sample feature descriptors.
+n Train a classifier.
+n NN, SVM, Decision Tree, Random Forest …..
+n Label an unknown patch using its descriptor.
+
+### Slide 54
+Non-maximal suppression
+n Expected to get a high detection score with
+neighboring overlapping patches.
+n Select the patch with locally maximal score.
+n A greedy approach:
+n Select the best scoring window
+n It is expected to cover the target object.
+n Suppress the windows that are too close to the
+selected window.
+n Search next top-scoring windows out of the rest.
+
+### Slide 55
+Texture descriptor
+n Texture: spatial
+arrangement of the
+colors or intensities in
+an image
+n A quantitative measure
+of the arrangement of
+intensities in the region.
+Computer Vision by Shapiro and Stockman, Pearson,  (2001)
+
+### Slide 56
+Texture descriptors
+n Edge density and direction
+n Local Binary Pattern (LBP).
+n Co-occurrence Matrix.
+n Laws’ texture energy features.
+
+### Slide 57
+Edge density and direction
+n Compute gradient at each pixel.
+n The descriptor: normalized  histograms of
+magnitudes and directions of gradients over a
+region.
+n (HR(mag),HR(dir))
+n Numbers of bins in histograms kept small (e.g.
+10).
+n Use L1 norm between the feature vectors as a distance
+measure.
+Normalized histogram
+of magnitudes.
+Normalized histogram
+of directions.
+Normalized histogram à Area =1;
+
+### Slide 58
+Local Binary Pattern (LBP).
+T. Ojala, M. Pietikainen, and D. Harwood, A Comparative Study of Texture Measures with
+Classification Based on Feature Distributions, Pattern Recognition, vol. 29, pp. 51-59, 1996.
+o Values range from 0 to 255.
+o Obtain normalized histogram over a region.
+o Not rotational invariant.
+o Invariant to illumination and contrast.
+You may have
+different ordering of
+neighbors.
+
+### Slide 59
+Variations of LBP
+n Making it rotational invariant.
+n A circular neighborhood of radius R, with P pixels at
+equal intervals of angles.
+n Use interpolation if does not belong to the discrete grid.
+where ROR(x , i) performs a circular bit-wise right shift on the
+P-bit number x, i times.
+T. Ojala, M. Pietikainen, and T.i Maenpaa , Multiresolution Gray-Scale and Rotation Invariant
+Texture Classification with Local Binary Patterns, TPAMI, VOL. 24, NO. 7, JULY 2002, pp. 971-987
+LBP8,1 ß à LBP
+36 distinct values for LBPri
+8,1.
+
+### Slide 60
+Variations of LBP
+n Uniform pattern
+n Not more than 2 spatial transitions in the bit sequence.
+n U(11111111)=0
+n U(11101111)=2
+n U(10001001)=4
+T. Ojala, M. Pietikainen, and T.i Maenpaa , Multiresolution Gray-Scale and Rotation Invariant
+Texture Classification with Local Binary Patterns, TPAMI, VOL. 24, NO. 7, JULY 2002, pp. 971-987
+Use rotation invariant value
+by computing minimum
+applying ROR operator. Exactly P+1
+uniform
+patterns, hence
+P+2 distinct
+values.
+
+### Slide 61
+Nine uniform patterns of
+LBP8,R
+riu2
+n The nine uniform patterns and the
+numbers inside them correspond to
+their unique codes.
+T. Ojala, M. Pietikainen, and T.i Maenpaa , Multiresolution Gray-Scale and Rotation Invariant
+Texture Classification with Local Binary Patterns, TPAMI, VOL. 24, NO. 7, JULY 2002, pp. 971-987
+
+### Slide 62
+Variance Measures of the
+Contrast
+T. Ojala, M. Pietikainen, and T.i Maenpaa , Multiresolution Gray-Scale and Rotation Invariant
+Texture Classification with Local Binary Patterns, TPAMI, VOL. 24, NO. 7, JULY 2002, pp. 971-987
+n Local variance of intensities of uniform
+pattern.
+n Normalized histogram of local variances.
+
+### Slide 63
+Co-occurrence Matrix (Cr)
+n Cr(x,y): How many times elements x
+and y occur at a pair of pixels related
+spatially (designated by r in the
+notation).
+n e.g. p r q denotes q is shifted from p by a
+translation of t=(a,b), i.e. q=p+t.
+n C(a,b)(x,y): Number of cases in an image where
+I(p)=x and I(p+t)=y.
+
+### Slide 64
+Co-occurrence Matrix (Cr)
+1 1
+0 0
+0 0
+1 1
+C(0,1)
+C(1,0)
+C(0,1)
+
+### Slide 65 (OCR)
+Co-occurrence Matrix (C,.)
+0 1 0 1
+4) 2
+ppolaa) ol 44KAM 04 | 2
+OO tt aa 1 2i 4
+Ata} oft Cvo,1) 0 1 Cu)
+fafa
+(| 2) 3
+C11)
+
+### Slide 66
+Normalized Co-occurrence
+Matrix (Nr)
+1 1
+0 0
+0 0
+1 1
+C(0,1)
+C(1,0)
+C(1,1)
+1/3
+1/6
+1/6
+1/3
+1/3
+1/6
+1/6
+1/3
+2/9 2/9
+2/9
+1/3
+Divide by the sum of frequencies in a matrix.
+
+### Slide 67
+Symmetric Co-occurrence
+Matrix (Sr)
+1 1
+0 0
+0 0
+1 1
+C(0,1)+C(0,-1)
+C(1,0)+C(-1,0)
+C(1,1)+C(-1,-1)
+4+4 2+2
+2+2 4+4
+4+4 2+2
+4+4 2+2
+2+2 2+2
+2+2 3+3
+Sr(x,y)=Cr(x,y)+C-r(x,y)
+
+### Slide 68 (OCR)
+Features from Normalized Co-
+| occurrence Matrix
+Energy = ». ». Ne (x,y)
+x oy
+Entropy = — >. ») N,-(x, y) logs N,(x,y)
+xy
+Contrast = ». »@ — y)?N,.(x, y)
+x oy
+Homogeneity = 2 2 ee
+
+### Slide 69 (OCR)
+Features from Normalized Co-
+occurrence Matrix
+Correlation = Dix Lay re) y _ y) Nr)
+ar
+Mean.and s.d. Mean and s.d.
+of row sums of cnn sums
+f=) MG) 90) = > NG)
+y x
+
+### Slide 70
+Laws’ texture energy features
+n A set of 9 5x5 masks used to compute
+texture energy.
+K. Laws, “Rapid Texture Identification”, in SPIE Vol. 238: Image Processing for
+Missile Guidance, 1980, pp. 376-380.
+L5 (Level): [1 4 6 4 1]
+E5 (Edge): [-1 -2 0 2 1]
+S5 (Spot):  [-1 0 2 0 -1]
+R5 (ripple): [1 -4 6 -4 1]
+A mask: Outer
+product of any pair.
+e.g. E5L5: E5.L5T
+Computation with mask:
+Convolution
+
+### Slide 71
+Laws’ texture energy features
+n A set of 9 5x5 masks used to compute
+texture energy.
+K. Laws, “Rapid Texture Identification”, in SPIE Vol. 238: Image Processing for
+Missile Guidance, 1980, pp. 376-380.
+L5 (Level): [1 4 6 4 1]
+E5 (Edge): [-1 -2 0 2 1]
+S5 (Spot):  [-1 0 2 0 -1]
+R5 (ripple): [1 -4 6 -4 1]
+16 such masks possible.
+Combine a few pairs to make 9 masks.
+L5E5 and E5L5
+L5R5 and R5L5
+E5S5 and S5E5
+L5S5 and S5L5
+E5R5 and R5E5
+S5R5 and R5S5
+S5S5
+R5R5
+E5E5
+Take
+average of
+responses
+of two
+masks.
+
+### Slide 72
+Laws’ texture energy
+Subtract local
+average at each
+pixel.
+Convolve
+with 16
+masks.
+Compute
+energy map for
+each channel.
+Combine a few
+symmetric pairs
+to 9 channels.
+Input image
+9 dimensional
+feature space.
+15x15
+window
+Sum of
+absolute
+values
+in a
+15x15
+window.
+L5E5 and E5L5
+L5R5 and R5L5
+E5S5 and S5E5
+L5S5 and S5L5
+E5R5 and R5E5
+S5R5 and R5S5
+S5S5
+R5R5
+E5E5
+
+### Slide 73
+Use of texture descriptors
+n Detection of object patches
+represented by textured patterns.
+n Segmentation of images.
+n Classification / Matching
+n Generate a Library of labelled feature
+descriptors.
+n Detection of classes (class labels).
+n Matching to the nearest texture descriptor.
+
+### Slide 74
+Image / Object Descriptor
+n Bag of visual words
+n Compute key-point based feature descriptors
+over a library of images.
+n Quantize them (clustering) to form a finite set of
+representative descriptors (visual words).
+n For an image assign the nearest visual word
+corresponding to the feature descriptor of a key
+point.
+n Represent by each image by a histogram of
+visual words.
+Sivic et. al., Discovering objects and their location in images, ICCV’ 2005.
+K-means
+clustering
+
+### Slide 75
+Vector of locally aggregated
+descriptors (VLAD)
+n Form the codebook of visual words as in BoVW
+representation.
+n C1, C2, …, Ck
+n Each local descriptor x in an image is associated
+to one of these visual words.
+n Accumulate the differences w.r.t. the
+corresponding cluster center.
+Cluster centers of dimension D (say).
+o Form V=[v1 v2 …. vk]
+o VLAD descriptor=V/||V||
+Dimension: k.D
+Jegou et al., Aggregating local descriptors into a
+compact image representation, CVPR, 2010.
+
+### Slide 76
+Application of global image
+descriptor
+n Content based image retrieval
+n Image search based on visual content
+Query
+image
+Retrieved images from a database.
+
+### Slide 77
+Summary of Techniques
+n Scale and
+transformation
+invariant feature
+detection:
+n Harris corner-
+Laplacian Maximum.
+n DOG Maximum.
+n Intensity weighted
+FAST.
+n Scale and
+transformation
+invariant Feature
+descriptor:
+n SIFT, SURF, ORB
+
+### Slide 78
+Summary of Techniques
+n Region and texture
+descriptors.
+n HoG
+n Edge density
+n LBP
+n Co-occurrence matrix
+n Laws’ texture energy
+n Image global descriptor
+n BoVW
+n VLAD
+n A few applications
+n Key point descriptor:
+Matching corresponding
+points of a scene.
+n Region descriptor:
+Object detection
+n Global descriptor :Image
+retrieval.
+
+==============================================================================
+PART: LECTURE TRANSCRIPT
+==============================================================================
+
+# Week 6 — Feature Detection and Description — lecture transcript
+(source: NPTEL, 95 PDF pages; [p.N] marks the page in the PDF)
+
+## Lecture 24 — Feature Detection And Description – Part I  (transcript PDF page 5)
+
+[p.5] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur
+
+Lecture - 24 Feature Detection and Description Part - 1
+
+In this lecture we will talk about Feature Detection and Description.
+
+(Refer Slide Time: 00:23)
+
+So far we discussed about camera geometry, stereo geometry where we considered that how to obtain the projection matrix of a single view camera or homography between two scenes or fundamental matrix between two images of the same scene in a stereo camera or in a stereo imaging setup. Now, there we have considered that the corresponding points of the images are given to us and using those corresponding points we have obtained those quantities. But in this lecture what we would like to explore is how do you automate that process of detection and getting the set of corresponding pairs of scene points. That would be primarily the issue what we will be considering in this particular topic. So, here for an example, you can see that there are two images of the same scene. There is a structure of an ancient temple and in two different views we have taken this image. So, the question is that how do you match the scene points? For example, we know from 394
+[p.6] this image that this particular part of this image and for the other image they correspond to each other. But how do you precisely define the points of correspondences even in those regions. So, detecting the regions where they match approximately or crudely, but then again the preciseness of locating the same points of the scene point that is also a requirement and there are several complexities of this problem as we can see that the images they call they are transferred in this case you know you get a view from a different view from a 3 dimensional perspective, but even for a 2 dimension image also there could be various kinds of transformation. For example, the same image could be translated, it could be rotated say for example, this is the one kind of rotation and even the scale can vary, which means that you can get a shrinked version of this image or you can get the image from a distant viewing point, where objects they look small, but still in that case also you need to identify the corresponding points of the structures. So, these are the challenges in detecting these points and there are several issues regarding these computations. So, some of these issues are highlighted here like detection. I told how to detect these points even though you detect the structural points first you have to consider that what are the land mark points which are easily detectable even after transformation. So, there is a problem of detection then you need to uniquely characterize those landmarks points. So, you need to describe the point by its neighboring statistics by looking at the texture around it in the image and finally, you need to match them. So, there are several candidates of such land mark point. So, out of them which pairs they correspond to the same point in the scene. So, in this lecture we will be considering several such issues, particularly the detection and description that is the primary theme of this particular topic here in this lecture. Later on we will also consider the computation of matching of pair of points. 395
+[p.7]
+(Refer Slide Time: 04:46)
+
+So, while we are considering detecting a feature the idea is that you need to characterize a feature point and which should have some uniqueness with respect to others. That uniqueness should be preserved even after different kinds of transformation as we mentioned earlier like translation, rotation, scaling etc. So, in this case particularly there are various mathematical techniques by which you we would like to define this uniqueness. So, we would like to consider the local statistics around a point and we call it as a local measure and we desired that this property should be invariant with respect to transformation. So, in this diagram we are trying to show that with the green square block those are the regions of interest say central point of that green squares. We considered that this is a point of interest and we are trying to find out the statistics around these points and suppose we move this particular window and this is a same point around different image points. So, what kind of structural property that would show us some variations in the measures if you move it? So, you consider this particular aspect that if I consider this particular region which is a flat region. So, even if we move the windows in different directions still the local statistics they would look almost similar which is a kind of uniform distribution of intensities in particular this example. But when you consider the other image where we are moving in the edges, then if I move along the direction of edge you will not get any change it would look almost similar kind of distributions specially, but if I move along the perpendicular 396
+[p.8] direction of this edge we can find out there is change as we move in the perpendicular directions. But the significant change that you will get even if you move in any direction that we will get in this kind of structure when two edges are meeting here. In fact, this kind of structure is a corner structure and even a slight movement of your window will disturb the local distribution and that can be reflected by some measure some local statistics we will see later on how can we define this statistics. So, the summary of this discussion or the highlight of this particular example is that some structures (Refer Time: 08:16) have certain uniqueness in describing their neighborhoods or they could be conveniently characterized by some local statistics. So, these structures are mostly the corners that we can see in this kind of 2 dimensional images. So, let us proceed just to understand what kind of statistics we can define.
+
+(Refer Slide Time: 08:47)
+
+So, consider a window in the same example what you have discussed in the previous slide and the kind of measure which will be changing when we shift the window in different directions. So, we will be considering the intensity distribution around a point and intensity distribution within the window and you would like to see how intensity values are changing because of the changing of these windows. So, how this intensity distributions are changing in this window and there is a particular measure what we can consider during the shifting we can find out the difference between the intensity values with respect to the corresponding point. 397
+[p.9] So, every pixel when there is a just (Refer Time: 09:53) translator motion. So, every pixel is shifted by a constant vector in a particular direction say (u, v) what has been shown here and if I take the difference between the intensity values between those two pixels in the shifted window and in the original window and if I take the sum of square. So, what is the expected that if it is a uniform region or flat region this sum of square of differences would be very small. They will be almost 0 when it is an edge there would be some difference at those edge points, but when it is a corner this difference would be very prominent. 𝐸(𝑢, 𝑣) = ∑[𝐼(𝑥+ 𝑢, 𝑦+ 𝑣) −𝐼(𝑥, 𝑦)]2 (𝑥,𝑦)є𝑊
+
+So, you take the difference between these two values and take the square and consider all the pixels in that window for this major you accumulate these differences square of differences for all the pixels in that number that is what is the measured what is described here.
+
+(Refer Slide Time: 12:12)
+
+So, we will be expressing this particular measure with respect to the differential geometric corporations and how you can compute this one in a very general situation. 𝐼(𝑥+ 𝑢, 𝑦+ 𝑣) = 𝐼(𝑥, 𝑦) + 𝜕𝐼 𝜕𝑥𝑢+ 𝜕𝐼 𝜕𝑦𝑣= 𝐼(𝑥, 𝑦) + [𝐼𝑥 𝐼𝑦][𝑢 𝑣] 398
+[p.10] So, for small u and v this higher order term; that means, those are the terms which are considering higher differential quantities. So, those can be ignored. So, I can simply write in this from, we will use only the first order changes. And then this can be conveniently represented by this expression. As you can see this is just a representation of the same equation here. 𝐼𝑥= 𝜕𝐼 𝜕𝑥
+
+(Refer Slide Time: 13:57)
+
+And expanding it further what we can see that how we can write this sum of square of differences. We can write it conveniently in this particular notation simply using only the first order changes along certain directions. So, you can see that only the differential changes are needed for computing this you do not require the absolute pixel values in those windows we can eliminate them by these simple expressions. In fact, this quantity as you can see that this quantity can be expressed in terms of quadratic expressions of with using the matrix representations. So, and there is a typical representation and what is shown in here that you can see that this could be written as 𝐸(𝑢, 𝑣) = ∑[[𝐼𝑥 𝐼𝑦][𝑢 𝑣]]2 = ∑ 𝑋𝑇𝑋 (𝑥,𝑦)є𝑊 (𝑥,𝑦)є𝑊
+
+399
+[p.11] And you can see this is that quadratic expression what I was talking about. So, this quantity particularly shown here is actually reflecting the local statistics. So, there are three particular measures those are characterizing locally, one is square of the differential in the direction of x then square of the differential in the direction of y those are denoted by u and v directions also and also the differential along x and differential along y. What you should note here that this major is an aggregation over the local statistics. So, it is not a major at that particular point. It is an aggregation. So, we should consider it as a distribution and for any typical distribution is the expectation of those values that would be considered or averages of those values that would be considered to form this matrix. Now, this matrix characterizes the local statistics of the point and we will see how this matrix will help us in characterizing a feature point.
+
+(Refer Slide Time: 17:02)
+
+So, this is the summary of this particular expression. Once again it is written in a more prominent form here as we can see that this is the matrix I was talking about. 𝐻= [ 𝐼𝑥 2 𝐼𝑥𝐼𝑦 𝐼𝑦𝐼𝑥 𝐼𝑦 2 ] We will denote this matrix as H. 400
+[p.12]
+(Refer Slide Time: 17:22)
+
+See we will continue with this representation. As the sum of square of differences represented by the function E there can be represented in this form where locally around a pixel you need to measure the differential changes along x direction and y directions take the averages of them. And you need to take the averages over the square of those changes and individual averages of along x direction and y direction. So, big question once again that if the centre of the green window move to anywhere on the blue unit circle then how this particular quantity changes? So, that is the question we need to ask and we need to find out. So, this is what we are considering that we need there are observing the changes and which are the directions for which these changes would be the largest and also the smallest. Now mathematically this can be found out. If I perform the Eigen analysis of that particular matrix what I have referred here referred and we denote this matrix by H. So, we will make an Eigen analysis for this one and the eigenvectors they would give us those directions one of them corresponds to the higher eigenvalue or larger eigenvalue that would give us the changes along the largest changes along the direction of largest change and the smaller eigenvalue you will give us the direction along the smallest change and from the properties of linear algebra that eigenvectors they are orthogonal. So, there are two orthogonal directions that you would get. 401
+[p.13]
+(Refer Slide Time: 19:25)
+
+So, just a quick overview of computation of eigenvalue and eigenvector in this particular case we have a very simple situation because our matrix is just 2x2 matrix and as you know the definition of eigenvector of a matrix A is that you know if I perform this multiplication if I transform a vector x in the same dimensional space with this transformation A, I should get the same vector in the same direction with a the change of the magnitude will be there. So, it’s a scaled vector that you would get and that scale value is the eigenvalue and the vector which is not changing its direction that vector is called eigenvectors. So, one of the ways that you can find out these eigenvalues is that as you can 𝐴𝑥= 𝜆𝑥 det(𝐴−𝜆𝐼) = 0, det (ℎ11 −𝜆 ℎ12 ℎ21 ℎ22 −𝜆) = 0 So, there will be two values of lambda and particularly if the matrix is symmetric then you would get the real values there. So, we would see these summarizations of this competition. So, this is what the competitions of determinant in these cases are shown here. Now, there will be coefficients of 𝜆2 and also the constant term there and it is in the form of that equations like 𝐴𝑥2 + 𝐵𝑥+ 𝐶= 0 and then you know what the solutions are. 402
+[p.14]
+(Refer Slide Time: 22:28)
+
+In fact, I will just show you that solution here of this in terms of this elements. So, this is the solution of these equations and you can see that in this case you are denoting this two values one is lambda plus which is the larger value. So, 𝜆± = 1 2 [(ℎ11 + ℎ22) ± √4ℎ12ℎ21 + (ℎ11 −ℎ22)2] We need to solve this particular equation and one of them would be redundant or you can rather use the y equal to sum constant value assuming that is not 0 and then you can find out the corresponding eigenvector. 403
+[p.15]
+(Refer Slide Time: 23:37)
+
+So, once you know the lambda then you find eigenvector by solving the other. So, this is the review of the competitions of eigenvalue and eigenvector given this kind of matrices. Now let us see that how these quantities help us in characterizing the point. So, once again we have shown here the matrix H and we can compute the larger eigenvalues 𝜆+ and the smaller eigenvalue 𝜆− corresponding eigenvectors are denoted here x+ and x-. So, if you want to define the shift with the smallest and the largest change of E value. So, x+ is the direction of largest increasing in E, 𝜆+is amount of increase in direction x and x- is the direction of smallest increase in E and 𝜆− is the amount of increase in direction x-. 404
+[p.16]
+(Refer Slide Time: 24:29)
+
+So, our objective is that we should define a feature point where these values of E(u, v) should be large for small shifts in all directions, because that is how we are trying to characterize a point. We told that local measures will be disturbed even if small shift which means is this value should be large in that the difference should be very large. So, u, v should be large, so which means that if I consider the direction of the largest change and smallest change. So, just to ensure that it should be large the smallest change should be also very high. So, that is how the smaller eigenvalue is more important in this case to identify or to characterize a feature point here. So, this is what the minimum of u, v should be large over all unit vectors and this minimum is given by the smaller eigenvalue lambda minus of H that we discussed. 405
+[p.17]
+(Refer Slide Time: 25:37)
+
+So, some examples here are taken from the slides which has been shown here that is they are adapted from the Weizmann institute slides by Darya Frolova and Denis Simakov. In fact, all the preceding slides those are adapted from those lecture slides, just to acknowledge those sides. Now as we can see in this very nice example that there is a chess board pattern and if I perform the Eigen analysis of that sum of square of differences at every point then we can get a distribution of larger eigenvalue which is shown as 𝜆+over this space, so which is given by this. So, you can find out that we can see that actually all the uniform regions this larger eigenvalue is almost 0. So, that is why it is black whereas, in edges there quite prominent. In fact, they should be more prominent in the intersection points which are the corners just because of optical illusion. Now they look little darker, but it would be clear if I consider the smaller eigenvalue if I plot the smaller eigenvalue then we will see actually those intersection points those are highlighted. So, even for edges smaller eignevalues are also almost 0. So, only those intersection point of edges which we can called as a corner points of those black and white squares you can find out that those corner points are prominently highlighted and this is how we can detect the detect those corner points in this particular example. 406
+[p.18]
+(Refer Slide Time: 27:24)
+
+So, we can now design and algorithm based on this discussion for detecting features which are actually corner points in an image. So, what we can do that we can compute the gradient point at each point in the image and then we can obtain the matrix H from the entries in the gradient as we discussed. So, in fact, this is how the elements of H is defined. As I mentioned that you need to compute the gradient along x direction and y direction and also compute the square of the gradients because (Refer Time: 28:00) when you take the averages you need to take the averages over the square of the gradients not just you now you just take the average over only on gradient on x and then you make a square. 𝐻= 𝐼 𝑥2 𝐼𝑥𝐼𝑦 𝐼𝑦𝐼𝑥 𝐼𝑦2 So, you have to note this particular point because when you implement this algorithm you have to be careful, otherwise you can see that this determinant of this H would be 0 always. So, that would be a problem for characterizing it. 407
+[p.19]
+(Refer Slide Time: 28:45)
+
+And then we should compute the eigenvalues of H as we discussed. Locate the points with large response of minimum eigenvalue and we can define a large response by considering some empirically chosen threshold that if it is greater than such in certain threshold we can considered that is as a point, but that is not a very precise characterizations there could be even the neighboring points of a particular corner point we can have this large response. So, just to precisely locate the corner point we need to consider the local maxima of those responses. So, that would give us the feature points. 408
+[p.20]
+(Refer Slide Time: 29:30)
+
+So, this is a once again a very nice example from the slides, it’s like as you can see in this computations what would look appeared is a very tiny dot in that resolution of images. If I zoom this image and look at the distributions of the pixels in a smaller neighborhood in a larger resolution over the display then effectively I can see a distribution of intensity values that you can see here a kind of a star pattern as what you can see in the central part. In fact, they are lies a local maxima. And that is the corner points and that is how precisely it is defining a particular feature point and we will be considering that local maxima. This is importance of computation of local maxima. So, points with 𝜆− as local maxima that should be considered for the feature point. 409
+[p.21]
+(Refer Slide Time: 30:35)
+
+So, this gives us this computation gives us the famous Harris operator and in this case we are considering the 𝜆− as the major, but there is a variant in computing this major instead of computing directly 𝜆− we can compute similar measures which will give you the proportional quantity. So, one of this measure which he has been shown here by the symbol f is you are considering the product of eigenvalues and which is normalized by the sum of the eigenvalues. 𝑓= 𝜆1𝜆2 𝜆1+𝜆2 = 𝑑𝑒𝑡𝑒𝑟𝑚𝑖𝑛𝑎𝑛𝑡(𝐻) 𝑡𝑟𝑎𝑐𝑒(𝐻)
+
+You can see that since both the eigenvalues should be large this product should be very large and then it is normalized with respect to the overall eigenvalues and the determinant. So, these computations can be conveniently carried out without doing any square root operations or anything. This is the same as computation of the finding computing the determinant of the matrix H, which will give us the product of eigenvalues and the sum of the eigenvalues, would be defined by the trace of the matrix H which we have defined. So, using this measure we can look at those points. So, this is called Harris operator, because by applying this operation, by computing these measures and by computing the local maxima of this measure we can detect those features. So, this is the reason why Harris corner detector is efficient than computing directly the eigenvalues. So, there could be so many other detectors, but this is one of the most popular detectors in the literature. 410
+[p.22]
+(Refer Slide Time: 32:32)
+
+So, it just shows that how these two operations are almost equivalent you can see at the top the pair of images they are showing the distribution of those functional values using Harris operator where it looks little flattered though, but still the local maxima is retained and the sharper one is of course, the eigenvalue smaller eigenvalues, but we have also discussed the advantages of Harris operator, because here you do not require any square root operation simply you can compute detect determinant and trace of matrix and get the ratios and that would give you this operation.
+
+(Refer Slide Time: 33:09)
+
+411
+[p.23] Some examples of this detector, it has been shown here say input image has been shown and then the distribution f value has been shown and if I get the local maxima we can get some precise locations of those points which are like corners in the intensity distribution there are sharp changes in those particular points.
+
+(Refer Slide Time: 33:32)
+
+So, let us stop here in this particular lecture, we will continue this discussion of you know feature detection and description and the motivations for obtaining the descriptor that is feature matching that we will be discussing in the next lectures. Thank you very much. Keywords: Harris corner detector, local maxima, match scene points, feature detection. 412
+
+## Lecture 25 — Feature Detection And Description – Part II  (transcript PDF page 24)
+
+[p.24] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur
+
+Lecture - 25 Feature Detection and Description Part - II
+
+We are discussing the topic of Feature Detection and Description and in the last lecture we discussed how the interesting points or key points which will remain mostly invariant of different transformation those can be detected those are the corner points. So, the question is that now how do you characterize those corner points?
+
+(Refer Slide Time: 00:39)
+
+For example take these two images of the same view which I have shown in this particular lecture in the beginning of this lecture. So, here as you can see that there are many various interesting points, if I perform the same computations of Harris operator, then we can obtain the corresponding feature values and there you can see that these are the corner points which are looking little faded in this display. But these are the corner points which are here and there are various corners. So, out of them which pairs of corner points or which pairs of key points their corresponding to the same point. So, this is the question. So, how do you get those pairs of points and how do you establish those correspondences? This is the problem of feature matching that we would be considering. So, let us consider that what are the stages are there. 413
+[p.25]
+(Refer Slide Time: 01:47)
+
+So, these are the three stages of computation of matching that we need to detect the feature points in both images. For example, we have applied the Harris operator and we considered those key points which have been extracted those are the feature points. But we do not know that which point corresponds to which one in the other image. So, then just to uniquely describe every point we can describe them by some local statistics. So, we will discuss how the statistics could be described that is what we have to build up a descriptor for each feature point we call it feature descriptor. And then of course, using those description we have to find the corresponding pairs of points this task is known as matching. 414
+[p.26]
+(Refer Slide Time: 02:37)
+
+So, again the main issue is that can you select the same features under various transformations; as we did also for consider this particular issue while detecting features this is a major concern and. Even after detecting the key points can you detect the same pair of true pairs of key points on various transformation?. So that means, your description should be also invariant to those transformation. For example, it could be rotation, change of illuminations, and variation of scale like many other such transformation.
+
+(Refer Slide Time: 03:23)
+
+415
+[p.27] So, the key idea for detecting the corners is that we need to find out a scale. So, one of the major concern in this detection is scale that we will find out. So, because the scale how to make the description scale independent there lies lot of tricks. Usually you can make descriptions rotation independent or translation independent that is easier to do but scale is much more trickier. So, to get a little more scale independent what we can do or to get that scale independence features we can consider the image representation in multiple scales which means multiple resolutions. And observe that what kind of local measures of that ‘f’ you are considering how it varies with scales. In a proper scale it is expected that if this value which should be very high compared to the other scales which are not very appropriate for reflecting that measure. So, we will continue and we will understand this process. So, it is a local maxima in both position and scale that is what we will be considering and there are various kinds of such measurements like Laplacian measurements which is a second derivative operations over the images. We will define this measure mathematically soon or we can consider differences between two Gaussian filtered images with different scales at different standard deviations. Standard deviations of Gaussian mask there also called scale in the image processing jargon. So, you can hear the similar terms.
+
+(Refer Slide Time: 05:15)
+
+So, we discussed this particular thing. Let us elaborate this particular fact; say you have two images I1 and I2 and say I2 is a transformed version of I1 and as I mentioned different 416
+[p.28] kinds of transformation not only translation rotation scale it could be non-uniform scaling, it that could be illumination changes, that could be view changes, it could be reflected and so you need to get transformation invariance. Transformational invariance of this measure which means we have to detect the same features regardless of the transformation and detection in the sense now in the description also should be unique. So, that your matching should be successful even after transformation.
+
+(Refer Slide Time: 06:11)
+
+So, both the detection and description should be invariant and both should be ensured and as we have discussed that Harris measure is invariant to translation and rotation but we did not consider the variation over scale. So, we will see that how this could be ensured as the in the previous slide we discussed that we can use multi-resolution representation of images. Just to explain a little bit about this resolution representation, what we can consider? Suppose you have an image and with an object this and it is given in its say original resolutions; that means, the camera resolutions the number of pixels whatever you have got in the sensors and the spatial resolution (Refer Time: 07:06) that particular number of pixels that gives you the; to gives you the highest resolution given that imaging. 417
+[p.29] But then what you can do, you can sub-sample you can down sample this pixels and get the smaller size of images. So, and in some cases even this particular it can could be so small that that this may appear like a dot. So, you can see that depending upon different resolution the structured structural information will vary. So, it may it may not retain the same structural information and sometimes the larger objects with when it has a very high resolution but once we increase the high resolution say you have a very very tiny objects. Now, in this resolution it could be detected whereas in this resolution this would be lost. But you have a very large object in an image now with using local measures to get the overall ideas of the shape would be difficult to comprehend difficult to analyze. But if I get a smaller resolution of this image, then even a smaller window will be able to capture this particular feature then the local measure corresponding to that particular representation should give a higher value. So, that is the idea of having multi-resolution representation. So, you vary the resolution but highest resolution that is already constrained by the imaging system. But only thing you what you can do you can get lower resolution versions and try to see that you know some of the structures in those lower resolutions are becoming more prominent and easily detective. So, this idea has been used to in particular this feature detection.
+
+(Refer Slide Time: 09:27)
+
+418
+[p.30] So, this is an approach, so you can compute features at multiple scales, you can use a Gaussian pyramid which means; you smoothen the image using some Gaussian mask varying standard deviation. So, scale would be higher iteratively; iteratively scale will be increasing and also you can down sample the image and you can get a pyramidal structure of that representation you have an image. So, if I show it in this form say let me show the image it is a bottom resolution higher resolution. In the next version after smoothing this image using a Gaussian mask and such sampling you get this resolution you use further smoothing; that means, effectively you are using a very larger mask over this image. So, you’re smoothing this image and you are getting coarser distribution and sub-sampling it. So, you get a next level of resolution. So, this kind of representation is useful. Since the shapes looks like a pyramid if I place them if I stack those images in this particle vertical order it’s just a visualization. So, that is a very popular term which is used for this multi resolution representation we call it a representation following a Gaussian pyramid representation. Which means every image is convolved by a Gaussian mask and then subsampled and you get multiple representation. So, for single image you get ‘n’ number of images of varying sizes by this process. So, this is what Gaussian pyramid representation is. And in fact, there is a very efficient and effective you know method by which you can compute the best scale for feature detection and that method I will be discussing in a method called sift method which is scale invariant feature transformation. So, we will be discussing then and. So, the basic idea is a feature descriptor should be transformation invariant. 419
+[p.31]
+(Refer Slide Time: 11:53)
+
+And it captures the information in a region around the detected feature point that should be the property. For example, we can consider histogram of gradient directions in a square window centering a feature point. So, these are the two steps one is the detection which should be invariant to transformation including scale, the other one is a description. So, you should consider now description at that scale. So, whatever local statistics you collect you should collect the image which has been transformed through that multi-resolution processing; that means, which has been convolved using a Gaussian mask of that scale and then consider the point which is been detected at that scale and consider the neighboring statistics at that scale. So, these are the two policies which are used in particular to get it transformation invariant scale invariant description. 420
+[p.32]
+(Refer Slide Time: 12:51)
+
+So, it just explains what I wanted to show through the diagram you can see at different resolution the local descriptions they two vary at an appropriate resolution. The alphabet ‘a’ is visible, but if you look at very closely then ‘a’ gets missing. So, if there is any measure of this interestingness of a particular resolution, then there is an appropriate resolution in the middle where you get more interestingness and that is what is shown here hypothetically, it has been shown by this particular curve.
+
+(Refer Slide Time: 13:31)
+
+421
+[p.33] So, for scale invariant detection one of the major task is that to determine the appropriate scale and for that we need to convolve with image. And since now we have a 3 dimensional space because not only the 2 dimensional special locations of say x and y direction, you have a direction along scale. So, you observe the measures in both position and scale that would give the three dimensional space. And there are different kernels which we are going to define here like Laplacian kernels and difference of Gaussians which means kernels are here this is the masks as we defined earlier and which needs to be convolved with the image to give a measure and you would like to find out a local maximum of those measure.
+
+(Refer Slide Time: 14:33)
+
+So, just to define it, first let us consider the definition of a Gaussian function. As you can see, this is a 2 dimensional Gaussian function and uniformly scaled along directions which means standard deviations is uniform in all directions if particular in two principal directions x and y directions and this is the you know Gaussian function and this is a continuous function. 𝐺(𝑥, 𝑦, 𝜎) = 1 2𝜋𝜎2 𝑒−𝑥2+𝑦2 2𝜎2
+
+422
+[p.34] So, for a discrete processing you need to get a discrete representation of this function over a mask or over a window. Say if I choose a mask size of say 10 x 10, then that fixes you have to find out considering the center of the mask as the origin you get the functional values in other locations. And the mask size depends upon the values of sigma. So, the one of the criteria could be that it should be say 2√2𝜎 sigma which is a very large mask size. So, this is a definition of the Laplacian mask and we have you have defined using the Gaussian function. 𝐿= 𝜎2(𝐺𝑥𝑥(𝑥, 𝑦, 𝜎) + 𝐺𝑦𝑦(𝑥, 𝑦, 𝜎)) As you can see that these are the second derivatives of those Gaussian functions it’s some of the second derivatives along x direction and y direction and this is normalized by multiplying with sigma squared to make it scale invariant description. And difference of Gaussian this descriptor is defined in this fashion 𝐷𝑜𝐺= (𝐺(𝑥, 𝑦, 𝑘𝜎) −𝐺(𝑥, 𝑦, 𝜎)) It is just from the nomenclature itself. It is understood that it’s mask which is defined from the difference of two Gaussian functions of two different scales; one scale is 𝑘𝜎 the other scale is 𝜎.
+
+(Refer Slide Time: 16:25)
+
+423
+[p.35] These are the shape of the kernel; that means, shape of those functions in 1-D you have shown and no any 2-D you just rotate it along the axis of symmetry in the center and; that means, about y axis if you rotate, then you will get the 3 dimensional mask. That means, it’s a function of 2 dimensional space, but we will get the values in a represents as a 3 dimensional representation on that particular function. So, you can see from this particular plot that both difference of Gaussian and Laplacian they are quite similar.
+
+(Refer Slide Time: 17:13)
+
+They are quite similar in fact, mathematically also one can show you can perform these operations; that means, take the Gaussian functions take the partial derivative along sigma, then you can show that that is equal to sigma into this Laplacian of G, Laplacian of that Gaussian mask. 𝜕𝐺 𝜕𝑥= 𝜎Δ2𝐺= 𝜕2𝐺 𝜕𝑥2 + 𝜕2𝐺 𝜕𝑦2 So, this can be shown in this problem and you can see that the Gaussian difference of Gaussian mask is proportional to the corresponding Laplacian mask and this factor is (k- 1) is kept constant across scales. 𝐺(𝑥, 𝑦, 𝑘𝜎) −𝐺(𝑥, 𝑦, 𝜎) = (𝑘−1)𝜎2Δ2𝐺
+
+424
+[p.36] So, it does not influence extreme locations.
+
+(Refer Slide Time: 18:17)
+
+So, figuratively it is showing how this computation proceed. So, you have to convolve with a series of Gaussian masks and then at different layers sometimes you have to down sample it and produce that 3 dimensional functional distributions in a three dimensional space and then you have to get the local extreme. So, that is what you will be considering. So, in this particular particular figure it has been shown the order of computation. So, this is the original image, you perform the Gaussian mask you perform the Gaussian operation. So, this is a Gaussian and then you get the subtraction that is a difference of Gaussian. So, this is the first representation of difference of Gaussian. Again you smooth using the Gaussian image Gaussian convolution subtract this one from this one. So, you get the second layer of difference of Gaussian images. So, in this way you are producing the representation in a 3 dimensional space of scale and positions and then you have to find out the extrema in 3 dimensional DoG space or Difference of Gaussian space. 425
+[p.37]
+(Refer Slide Time: 19:37)
+
+So, just to summarize that we have discussed about two different kinds of detectors the difference of Gaussian detector is used in this sift descriptor which I will be discussing next and which has been proposed by David Lowe which has been found to be very popular. And also Harris Laplacian; that means, Harris operator with applied over the Laplacian pyramid representations of the particular with varying scale and then you get local maxima varies corner response in that space and scale that would also give you the transformation invariant. So, these are the two major you know detectors which are popular in particular in the literature.
+
+(Refer Slide Time: 20:27)
+
+426
+[p.38] So, just to summarize the scale invariant detection that given two images of the same scene with a large scale difference between them, we have to find the same interest points independently in each image and so the solution is that you have to search for maxima of suitable functions in scale and space over the image. And these are the two methods which I mentioned one is Harris Laplacian and this it maximizes the Laplacians over scale and Harris is measure of corner responses that has to be used in those Laplacian over scale representation and then the sift is maximize the difference of Gaussians over scale and space.
+
+(Refer Slide Time: 21:17)
+
+Now, the thing is that what you get out of this process is you get lot of key points. Now, some of this key points are not so important and some of them may not be structurally very robust because a small disturbance can disturb them. So, we would like to get only those key for a points which are more robust to the transformation and which has a very precise location locations are to be very precisely defined there. And for example, a many key points will lie on edges and as we have discussed that, corners are more robust than edges. So, even some edge points can give a very high response and can be a local maxima, but we need to eliminate those edge points. 427
+[p.39]
+(Refer Slide Time: 22:11)
+
+So, there are certain operations like you can perform over the key points you can apply this particular operations. For example, if you apply this particular Laplacian operator that is edge operator what you can see, if these are the double derivatives over the difference of Gaussian functional values and it is expected that this would give you the curvature value. So, the Eigen values of this particular matrix. 𝐻= [𝐷𝑥𝑥 𝐷𝑥𝑦 𝐷𝑥𝑦 𝐷𝑦𝑦] will be giving the principal curvatures and it is expected that for edge points it would be large across the edge, but a small one in the perpendicular directions. So, both the curvatures should be also very large. So, this is one characterization of edge point by which you can eliminate those edge points. 𝑇𝑟(𝐻)2 𝐷𝑒𝑡(𝐻) < (𝑟+ 1)2 2 𝑓𝑜𝑟 ℎ𝑖𝑔ℎ 𝑣𝑎𝑙𝑢𝑒 𝑜𝑓 𝑟 (𝑠𝑎𝑦 10) S so you compute the eigenvalues and eigenvalue should be large they should not differ much too much. And this is how this computation is carried out and this is equivalent once again to you know equivalently computed by computing traces of this matrix H which has been defined 428
+[p.40] here, this H is different than what we discussed for Harris operator because these are all double derivatives of the difference of Gaussian functions as you can see from the definition. So, the ratios of square of trace and determinant it should be very high then only for high value of ‘r’. So, it should be less than this and then you should we should take this value. So, eliminate key point if the ratio greater than this threshold it occurs if the ratio is greater than this then those key points are eliminated.
+
+(Refer Slide Time: 24:19)
+
+So, now the question is that how do you characterize a key point? So, there are some local statistics that we need to consider, one of the attribute that we would be considering that what the major orientation around that neighborhood is. So, we can assign that orientation because if you get the major orientation, then the local statistics could be made orientation independent you can perform a transformation. So, that your reference axis is aligned to that major orientation or major oriented directions and then you can aggregate those local statistics by performing those transformation that is how you can make it rotational invariant. So, computation of orientation is important. So, what we can do that, in that case is locally you can get gradient directions around its neighborhood and then you can compute a histograms and bin them. You can see that in this particular example this binning of the directions are shown by this angles because this directions can be considered with respect to some x axis with respect to the reference x axis the angle what is formed by this direction 429
+[p.41] that is what is of our interest. So, you can discretize this range of this angles varying from 0 to 2π into some intervals and then put those directions into one of those bin. So, that is what is known as binning of these directions in a histogram and then find out know which is the prominent one out of this discrete options and we can assign that directions to that particular feature vector to that key point actually. So, assign canonical orientation at peak of smoothed histogram. So, even you can perform smoothing of this histogram and then you compute the peak of that particular functional value and that peak will give you the orientation. So, in this way a key point is described by its position scale and orientation because as I mentioned that scale is determined where you get also the local maxima in position and scale that is of the scale and positions have obtained and then orientation is computed in this in this fashion. There could be some situations where you can have two major orientation. So, you may have to use both; that means, multiple descriptor description of the same key point.
+
+(Refer Slide Time: 27:05)
+
+So, these are some examples which are again taken from this slides. In fact, it is also in the book by Zisserman. So, you can see that I mean Zisserman and Hartley there are multiple authors. So, there are there are some examples that you have key points after gradient threshold and key points after ratio threshold this example shows that how key points are you know reduced using those different kinds of processing. 430
+[p.42] So, initially you have this many number of key points on the same image 832 and it there are different orientations it shows a orientations and also you know the scale is associated with a position is associated with position has been shown scale is difficult to show in this particular diagram. And then after performing a gradient threshold you can reduced to a number 729 and then after performing that ratio threshold which means using this curvature analysis of the Hessian matrix that is called Hessian matrix of you know difference of Gaussian function and from there you can perform this ratio threshold, you can get reduce more number of key points.
+
+(Refer Slide Time: 28:33)
+
+. So, this is a summary of a key point characterizations that it has a location, it has a scale it has an orientation. So, next we need to discuss that how to compute a descriptor for the local image region about each key point and that should be very highly distinctive and also it should be invariant as possible as for the variations such as changes in view point and elimination. So, we will continue this discussion in the next lecture. Thank you very much for your listening. Keywords: Feature matching, detectors, descriptors, keypoints 431
+
+## Lecture 26 — Feature Detection And Description – Part III  (transcript PDF page 43)
+
+[p.43] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur
+
+Lecture – 26 Feature Detection and Description Part – III
+
+We are discussing about the detection of features, feature points and also how do you describe those feature points uniquely, so that both Detection and Description becomes transformation invariant.
+
+(Refer Slide Time: 00:33)
+
+In the last lecture, we discussed how a feature point can be very distinctive robust to the transformation of scale and rotation, translation, and they are characterized by their position scale and also orientation. Now, we will be considering a descriptor, which is a very popular descriptor used widely in the image processing techniques and this descriptor is called scale invariant feature transform. It was proposed by David Lowe in 1999. In fact, these slides are adapted from his presentation and we will be considering how these descriptors are not, right. So, we can consider once we detected a key point. So, around that key point we can take a 16x16 square window. You should note that it is orientation corrected; that means, once you have the orientation dominant orientations around a key point then you perform the 432
+[p.44] rotation to align it with your reference axis, for example, x-axis. And rather the x axis to rotate it along this direction. And then in that rotated image now you take a 16x16 square window. And let us see how these descriptors or local statistics is accumulated. In fact, there are some diagrams I will be explaining them. So, what we need to do? We need to compute edge orientation; that means, angle the gradient minus 90 degree. So, that is how the edge orientation is defined. So, the gradient operations in the very first lecture itself I discussed that, you have to compute the derivatives along x direction and derivatives along y direction. So, these two vectors would give a direction and that is angle of the gradient. And then if I subtract 90 degree from it you will get the edge orientation for each pixel. And then you can throw out weak edges; that means, the magnitude give a threshold over the magnitude. And then create histogram of surviving edge orientations which are shown here figuratively in those diagrams. You can see here that typically in this picture it is showing that in that 16x16 window at every pixels how it is shown of course, in a smaller window. How the directions are shown at every pixels; that means, at every pixel you computed gradients and these are the directions. Some of them are thrown out from the consideration of the magnitudes if they are weak. And then you bring those directions into a histogram which I discussed earlier that because directions can be considered a range it ranges from 0 to 2π radian angle, and then you discretize those intervals. Each interval is called a bin. So, in this case as you can see from the diagram itself, there are 8 directions. So, there would be 8 such intervals each by 45 degree (π/4) and within that you are binning those directions and then now you can get the histograms. So, the length of the vector in this particular diagram is showing the magnitude, that is showing the number of pixels or even you can add those magnitudes of a gradient to get the magnitude of this histogram to get that angle histogram. 433
+[p.45]
+(Refer Slide Time: 04:34)
+
+So, next what we do that now you can divide this 16x16 window into a 4x 4 grid of cells. So, in this case it has been shown 2x2 in this particular diagram for typical examples and for each grid of cells you get the histogram. So, compute an orientation histogram. So, what I discussed is the histogram of composition of the orientation histogram that was not over 16x16 cell. It was each of 4x4 grid of cells and each one will have 8 bins of histogram. So, each one will give you 8 dimensional vectors corresponding to each histogram. So, since there are 16 cells, so finally, if you concatenate all those vectors into some order that would give you 128 dimensional descriptor. That is what is your sift descriptor.
+
+(Refer Slide Time: 05:26)
+
+434
+[p.46] So, the properties of sift descriptor is that it is capable of handling changes in viewpoint and there is a significant changes in illumination, just to qualify that it even it is observed that it can handle up to about 60 degree out of plane rotation and it is found to be invariant even the illumination variations due to day and night.
+
+(Refer Slide Time: 05:55)
+
+So, this is what about this sift descriptor. But, now there are various other descriptors. I will briefly summarize them in this particular lecture. One of them followed by sift descriptor is a speeded up robust features or SURF descriptor which has been proposed in 2006. And this descriptor also is very popular because there are various modifications which have been introduced in computing this descriptor, so that it could be computed efficiently. That means, your compressional speed increases significantly using this descriptor. Mostly, in the sift descriptor the major computation that we need to carry out by using the Gaussian convolution. So, in this case in surf descriptor, instead of Gaussian convolutions what we can do? We can perform a box type convolutions; that means, we can compute the same gradients or and also same double derivative. So, we will show how. What are the detectors that have been used in this particular case and they convert using a box type filters. I will explain what is meant by this box type of filters. And in fact, which means in this case the convolutional masks they have only weights of say 1 and minus 1, and there are patches where all are 1 and all are minus 1. Then those 435
+[p.47] patches are square patch and that is how this kind of the shape of this filter is called box type of filters. And these computations can be carried out using an integral image which again I will explain in this particular discussion. So, the key point detection using this descriptor is performed using Hessian operator. Instead of the difference of Gaussian operator we consider the Hessian operator of the image itself. So, Hessian operators are those no double derivative operations in the direction. So, in this case for an intensity images, you perform double derivatives along x direction then along x and y, y and x, and y directions. So, this is what is Hessian operator. And you perform the local maxima of the determinant of this Hessian. So, now you can perform these operations over multiple resolution representation, where instead of convolving using the Gaussian mask this Hessian operator itself; that means, this computation of this double derivative they are computed with a different sizes of masks. So, with increasing masks site you are obtaining the larger scales, you are equivalently performing largest smoothening of the more smoothening of the images which means of lower resolution representation of the images, and from there you try to capture the local maxima in that representation in that kind of representation of images compute the local maxima.
+
+(Refer Slide Time: 09:43)
+
+So, we have to accumulate the orientation corrected Haar Wavelet responses in this case also. So, in the sift we have accumulated orientation corrected gradient directions and in 436
+[p.48] this case the gradient computation also is carried out using Haar Wavelets which can be easily implemented by box filters. So, I will elaborate in subsequent slides.
+
+(Refer Slide Time: 10:09)
+
+So, this is what is the Hessian operato. So, the convolution with Gaussian second order derivative with images, but this is actually replaced by a box filter in the sharp cases. So, key point is maximum determinant of this over space and scale.
+
+(Refer Slide Time: 10:35)
+
+So, this is approximation. You can see in this picture how the box filters they look like. So, here you can find out that this representation. So, the brighter values are shown by the 437
+[p.49] values of 1 and the darker values are shown by values are -1. So, it is not only 1, there could be other integral values also. det(𝐻𝑎𝑝𝑝𝑟𝑜𝑥) = 𝐷𝑥𝑥𝐷𝑦𝑦−(𝑤𝐷𝑥𝑦)2 And here the value of ‘w’ is taken as 0.9. And particularly 9x9 box filters are an approximation of Gaussian weight 1, 2. So, I should say approximating convolutions using Gaussian masks or double derivatives of Gaussian masks.
+
+(Refer Slide Time: 11:59)
+
+About the use of integral images that is also explained nicely here in this slide. Here you can what is an integral image. You can see that integral image is the cumulative sum of pixel values over a over a rectangular region. 𝐼∑ (𝑥) = ∑∑𝐼(𝑖, 𝑗) 𝑗≤𝑦 𝑗=0 𝑖≤𝑥 𝑖=0
+
+∑= 𝐴−𝐵−𝐶+ 𝐷 So, over this image at every point suppose I would like to compute the integral value at this point. What I have to do? I have to compute the sum of pixel values in this particular region and that value will be replaced here. 438
+[p.50] Now, these computations can be efficiently performed in one scan, because this could be accumulated. This sum could be accumulated over computations of other integer values which has been already computed. So, in one scan we can compute an integral image. Now, given that integral image I can compute sum over any rectangular zone by using these operations; that means, this is the integral image value at these points. I need to take the sum over all this region and then subtract these values over this particular particular term, and then revalue this one, because this is twice subtracted. So, if I do that, then actually I will get the corresponding sum over this particular value. So, when you are applying box filter over a space. So, what you are doing? You are simply performing either addition accumulating those value addition of the pixel values along that region and then in subsequently you are using this value for subtraction weighted, you can multiply it by that weight then you are using this value for subtraction or addition. You can see the box filtered implementations earlier for computing the determinant of the Hessian matrix what we discussed. And so every kind of computations of the sum of these pixel values it requires only 3 additions and 4 memory access, and that is how efficiently or it increases the speed of computations.
+
+(Refer Slide Time: 14:57)
+
+And next what I said that is a computation of Hessian and finding out the corresponding key points by computing the local maxima of Hessians implement using box filters. 439
+[p.51] Now, for describing the key point, once again like sift, here also around its neighborhood you are accumulating the statistics of the orientations. But in this case the orientations are once again computed using Haar Wavelets. Once again this is nothing but in this case as it is computation of gradients along different scales. So, these are the two particular filters and which has been shown here and they can be implemented by box filters. And to get the orientation, what you can do? You can rotate the image and then apply these filters and find out where you get the maximal responses. So, the longest period that would provide the dominant directions. And this could be implemented by box filters as we have discussed earlier also that white portions would be say for example, we are summing them all those pixels in the white regions and after summing all the dark pixels you are performing subtraction, which means in these computations. For example, if I am applying this particular convolutions operations, so for summing up the pixels around this we will take 3 operations for integral image. Similarly, summing up will take 3 operations. So, total 6 operations and then you require also a subtraction, so another addition operations. But with 6 operations you can compute two particularly these two values. So, 6 operation units for computing each filter response using integral image, actually you require one more operation because after that you need to perform the subtraction. So, you sum this value you take the summations of this value suppose this is over region A, so and then this is the region B and then you have to perform a subtraction. So, this is how you can compute these particular operations. So, instead of 6, 6 is for this 3 plus 3, but this will require another additional operation. 440
+[p.52]
+(Refer Slide Time: 17:43)
+
+And to get the final descriptor, what we do? We do not know collect like the meaning of histogram, so I did in this case of sift. So, instead of that in this case after performing these orientation corrections we partition these square sub regions into 4x4, partition sub regions into 4x4 quiet sub regions and in each region we are computing this particular quantities. That means, after performing the Haar Wavelets, so we are taking the summation of the convert responses and also the summation of the magnitudes of the converted responses of Haar Wavelets along the x direction. Similarly, those two along y directions. So, as you can see that each region each cell of 4x4 cell will give me a 4x4 dimensional vector, and there would be and size of the window is twenty cross scale that is the size of the window and since there are 4 cross 4 square regions. So, each region will give me a 4 dimensional vector. So, you will get, so the it is regularly spaced 5x5 sample patches in each sub region and then each sub region has 4 dimensional vector, and if you concatenate them then it would be a 64 dimensional vector and that is how the surf response is given. So, you can see the reference of this paper is given here for the details you should look at this paper which you can know read in details and you can get all this description. 441
+[p.53]
+(Refer Slide Time: 19:44)
+
+So, we discussed about two such descriptors like sift and surf, but still they are computationally quite intensive. So, there are different other descriptors which are proposed later and they also quiet becoming popular in various applications. Particularly, you require first computations in real time applications. So, one of such detectors is called FAST detector. By the name FAST it is implying that it is very it computes first, the detection of feature point. So, but the acronym is features from accelerated segment test. I will have a BRIEF description of that particular method. And also there are different descriptors like BRIEF or binary robust independent elementary features or ORB which makes the description rotational invariant by considering oriented FAST detection. So, FAST is not a rotation invariant detection. But in ORB we know that limitation has been overcome by performing some operations which I will be also discussing. And also the rotated BRIEF, so BRIEF is also not orientation independent descriptor. So, in ORB those are taken care of. 442
+[p.54]
+(Refer Slide Time: 21:10)
+
+So, this is the principle of detection of a key point or feature point in FAST. and there is a test which is called 12 point test and where it considers much defined locations around a pixel. And those are shown in the diagram which are the locations shown by the square thick squared edges. So, you can say that the size of the mask in this case is about is 7x7 mask and there are location centering this particular pixel. So, this is the central pixel and this location, so this is 1 2 3. So, if I consider these are the locations say 1 2 3 like this, so there are in fact 16 such, no, locations which are shown here. But out of them if they are exist 12 consecutive points which are brighter than the central pixel then we consider that point is an interesting point which is a key point, that is the principle. So, it has been shown that this works well for detecting various key points. So, there are also modification of these strategies which improves this performance. Now, we can train decision tree on the Boolean conditions given level data. So, the details you can find those details in this particular paper which has been shown here. It is a paper published in transaction, transactions of pattern analysis and machine intelligence in 2010 and is written by Rosten et al. So, you can look at this paper and get the details. 443
+[p.55]
+(Refer Slide Time: 23:20)
+
+So, just a little more elaborations about this particular point. So, there are even for the decision trees that partitioning of points on this circle and you can train them as a decision tree. So, you can characterize them as a point which is in the category of darker and a point which are similar with respect to center of pixel, either it is darker than the central pixel or almost similar or it is brighter. So, then it is a trinary logic. So that means, there are 3 steps for every location, every point which are shown out of those 16 points. And then based on them you can train a decision tree based on those values. And given training samples of interesting key points and their neighborhoods, use that decision tree later on to identify key points. So, the problem is the classification of points in 3 classes and create 3 partitions for a point and then you can train a decision tree. 𝑆𝑝→𝑥= { 𝑑, 𝐼𝑝→𝑥≤ 𝐼𝑝−𝑡 (𝑑𝑎𝑟𝑘𝑒𝑟) 𝑠, 𝐼𝑝−𝑡< 𝐼𝑝→𝑥< 𝐼𝑝+ 𝑡 (𝑠𝑖𝑚𝑖𝑙𝑎𝑟) 𝑏, 𝐼𝑝+ 𝑡< 𝐼𝑝→𝑥 (𝑏𝑟𝑖𝑔ℎ𝑡𝑒𝑟) } 444
+[p.56]
+(Refer Slide Time: 24:27)
+
+So, now let me discuss about a descriptor around a key point. So, the previous one is a replacement of the detector operator like Harris operator or difference of Gaussian operations, max local maximum of difference of Gaussian, local maxima of Laplacian measure. So, first replaces them and as you can see the computation is very simple based on those heuristics and those principles. Now, let us see that how a descriptor also could be computed without too much complex computation. So, in this case this is a principle that we considered randomly a set of 𝑛𝑑 pairs of locations which is denoted here a set(𝑥𝑖, 𝑦𝑖) that is 𝑖𝑡ℎ point in that set in a patch centered on a point. Actually, 𝑥𝑖 is not x coordinate, 𝑥𝑖is the point, 𝑦𝑖is the point and they are coupled together. 𝜏(𝑝; 𝑥, 𝑦) = {1, 𝑖𝑓 𝑝(𝑥) < 𝑝(𝑦) 0, 𝑜𝑡ℎ𝑒𝑟𝑤𝑖𝑠𝑒 } So, suppose you have a pixel here, some central pixel ‘c’ and around its neighborhood you have you have randomly defined certain pairing a point. So, these are the positions and then you are getting a binary value 1, right. So, you get a binary string. So, there are 𝑛𝑑 such pairs, so you get a binary string of length𝑛𝑑. In fact, that is what is supposed to your future descriptor. 445
+[p.57]
+(Refer Slide Time: 26:32)
+
+𝑓𝑛𝑑(𝑝) = ∑2𝑖−1𝜏(𝑝; 𝑥𝑖, 𝑦𝑖) 1≤𝑖≤𝑛𝑑
+
+So, it is n dimensional binary string and as you can see this computation is very fast and it has been found that this is also giving a feature descriptor around key point which is quite unique. And you can consider a value of this point also, you can you can know it since it is a binary representation, so you can also convert this into a decimal value. So, the typical dimensions which are used to in experiments like 128, 256, 512, you can see that a very large dimension. 446
+[p.58]
+(Refer Slide Time: 27:10)
+
+But the problem is that as we can see that now there is no concept of making it rotational invariant, there is no concept of making it scale invariant. Even the FAST also there is no concept of rotational invariant or scaling variant. So, in ORB that is another descriptor this these are taken care of. So, again the multi resolution images are representation is used and orientation compensation has been done in a very simple and tricky way that now, you consider an intensity centroid. So, that is the characteristic. So, what is an intensity centroid? Say, you have a key point which is given by c, now this is a geometric center. Now, if I consider the centroid of the intensity values; that means, a pixel which contains the average of the intensity values which is close to the average of the intensity values then that is intensity weighted center of patch it is not average. So, we are considering the location where intensity is acting like a weight and taking the intensity weighted central location. So, that is the different point. And this gives me an orientation. It is something like it will try to simulate the gradient direction. So, this is the orientation. So, now, you describe all those, you perform all those operations by performing rotations by aligning your reference access to this orientation and you can make it this rotational invariant in this way. So, rotate the patch by the angle and compute degree, and this is called actually steered BRIEF. 447
+[p.59]
+(Refer Slide Time: 28:56)
+
+So, let me stop here at this point, where we have discussed know various descriptors, I mean other than surf and sift which are quite computationally intrinsic, but in there are also additional descriptors like BRIEF, ORB and also a FAST detector which acronym is also FAST and they are computationally efficient. So, next we will we will continue this discussion once again just to understand that how these descriptors could be used in matching a pairs of key points, and also there are other kinds of descriptors which are also useful in the in various other bit processing of images on analysis of images that we will also discuss. So, let us stop at this point for this particular lecture. Thank you very much.
+
+Keywords: SIFT, SURF, FAST, BRIEF 448
+
+## Lecture 27 — Feature Detection And Description – Part IV  (transcript PDF page 60)
+
+[p.60] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur
+
+Lecture – 27 Feature Detection and Description Part – IV
+
+We are discussing about techniques for Detecting Features and also Describing those feature points, so that we can use them later for matching with respect to various tasks.
+
+(Refer Slide Time: 00:34)
+
+So, let us consider briefly that what is meant by these operations matching and how you can compute it. In our next topic we will have much more elaboration on these particular computations, but to understand the motivation behind feature detection and descriptions let us also go through briefly about this competition. So, one of the thing that we discuss that we can represent a key point by a feature vector. And suppose we have two images and they are related. They are of the same sign and we would like to find out the corresponding pair of points which are of the same scene point. So, the key points which are of the same scene points needed to be identified. And they are the descriptors like feature vectors to be used, they are relevant in that case. And then you can use different distance functions or similarity measures to find out how close these points are. And accordingly we can take a decision. 449
+[p.61] So, for example a key point could be represented by feature vector. In this case we can see that the fields of the vectors are shown. And there are distance function for example, if I consider two feature vectors in the same way, so there are different norms which are defined mathematical in this way. So, this is a 𝐿1 norm where you can see it is a sum of absolute differences between the fields of two feature vectors or components of two feature vectors. 𝐿1(𝑓⃗, 𝑔⃗) = ∑|𝑓𝑖−𝑔𝑖| 𝑛 𝑖=0
+
+𝐿2 Norm which is Euclidian distance functions between two points or between two vectors. 𝐿2(𝑓⃗, 𝑔⃗) = (∑|𝑓𝑖−𝑔𝑖|2 𝑛 𝑖=0 )1/2 𝐿𝑝(𝑓⃗, 𝑔⃗) = (∑|𝑓𝑖−𝑔𝑖|𝑝 𝑛 𝑖=0 )1/𝑝 So, you can see that the special case of 𝐿𝑝 norm is𝐿1 norm when p=1, and 𝐿2norm when p=2. So, using this distance function, you can find out the proximities between two feature vectors into particular images. And which are more proximal we can assign those feature vector as the best. The closest one can be assign to a particular feature vector.
+
+(Refer Slide Time: 03:37)
+
+450
+[p.62] So, this is the kind of overview of how a matching could be performed using key point descriptors and then compute the corresponding points. So, let us consider different kinds of descriptors. It is not only the point descriptors sometimes to identify or to detect an object we require to describe their region instead of a point. And we call those descriptors like patch descriptors or it could be a texture of a region. So it could be texture descriptors or some parts of image, or sub image. And they represent the whole content of that. So those are like global descriptors with respect to those regions. So, we will be discussing some of these techniques which we can derive this descriptors.
+
+(Refer Slide Time: 04:30)
+
+So, one of the very popular technique for patch descriptors is histogram of gradients representation. So, this particular method is proposed in 2005 as it is shown in the reference paper here and we can go through that paper to get the details. So, I will give you a brief overview of this particular technique. So, you are computing the horizontal and vertical gradients without any smoothing here. So, you are collecting the gradient statistics like what we did in the serve descriptor etcetera, but here what we are doing? You are doing over a patch. So, we will be partitioning that patch and in each patch we will be computing this horizontal and vertical gradients. So that means, you have to compute gradient orientation and magnitudes and if you consider a colored image then you can pick that color channel where it is giving the highest gradient and use that directions in that case. So, typically say if you have a 64x128 451
+[p.63] image so, divide the image into 16x16 blocks of 50 percent overlap and then you have say 105 blocks in total.
+
+(Refer Slide Time: 05:59)
+
+Then each block, partition into 2x2 cells with size 8x8 this is typically done in this papers. So, these statistics are taken from this paper. It has been found that this works well for certain object recognition and it has been found also in other techniques. Then you can quantize the gradient orientation into 9 bins and you can vote is the gradient magnitude. That means, you have each orientation as qualified or attributed by some of their gradient magnitudes along those directions. So, it is like forming a histogram without counting each vector as a unit, we consider their magnitude as the weight of that particular directions. And accumulation of that magnitude gives the corresponding histograms weights of the histogram. So, interpolate votes between neighboring bin center, so you have to smooth the corresponding histograms and it could be weighted with Gaussian to down weight the pixels near the edges of the block. Then you concatenate at the histograms. So, it would give you a feature dimension as you have seen earlier there were 105 blocks and each block has 4 cells and each histogram has 9 bins. So, finally, you get a feature dimension of 3780 for a block of 64x128 patch. 452
+[p.64]
+(Refer Slide Time: 07:26)
+
+So, how do you use this particular descriptor? So, this is a description and there are various examples of the application of these kind of descriptors. Like in that paper they have applied for pedestrian detection who are walking on a road. So, their detection then character recognition in the text document. It has been found in various other applications where this hog descriptors are found to be useful with certain modifications. Usually these are descriptors and as you can see these problems are kind of a classification problem. So, instead of matching using a distance function we can consider training a classifier. So, you can get a labeled sample feature descriptors and you can train a classifier, we can use distance function also considering that as representative samples of classes. And then find out how close your unknown feature vector to those representative samples. But there are various techniques of machine learning which could be used for you know training this classifiers like support vector machine, decision tree, random forest and use them for that. So, by using those classifier later on you can once it is strained then you can label an unknown patch using this descriptor. 453
+[p.65]
+(Refer Slide Time: 09:00)
+
+One of the operations that is often needed in this case is called non maximal suppression of this detection; which means that, sometimes when you detect a particular patch with certain class, even the neighboring patch also should give a high score. But as you understand that there exist only singularly one object should cover that particular radii and those matches are duplicate matches. And many of them will give you unnecessarily some false positive or redundant matching. The wise thing to do that is we ignore those matches. So, that is the suppression; that means, as we did for key point detection. So, we consider the maximal response around a neighborhood here also we can consider maximal response around neighborhood patches and select that patch with locally maximal score. So, a greedy approach what has been discussed here is you have to select the best scoring window and then you suppress the windows that are too close to that selected window. And then again you carry out search on the remaining windows which are outside that region. 454
+[p.66]
+(Refer Slide Time: 10:24)
+
+So, that is what a typical example of a patch descriptor and we will consider other kind of image descriptions particularly texture descript. And texture also describe a region and in this particular image you can see there are sunflower beds which has given a typical texture not only that the texture of sky, texture of road which are quite distinct. And those patches or those regions can be leveled with some of those classes. So, in brief, texture is a special arrangement of the colors or intensities in an image and we can define a quantitative measure to such arrangements and that measure itself distinctly identify a particular texture. 455
+[p.67]
+(Refer Slide Time: 11:19)
+
+So, we will see how the texture descriptors are designed. So, there are various techniques for describing texture regions like these are certain techniques like edge density and direction, there are techniques using local binary pattern I will elaborate all these techniques. Then co-occurrence matrix and also ‘Laws’ texture energy features. So, ‘Laws’ is a researcher who has proposed long back this energy features and which have been found very effective in identifying textures.
+
+(Refer Slide Time: 11:55)
+
+456
+[p.68] So, first the edge density and direction; In this method what we are doing is we are computing the gradient at each pixel and then we can get the histogram of that gradient and normalized histograms of magnitudes and directions of gradients over a region. So, you can get two histograms one for the magnitudes, one for the directions and you have to normalize it. So, in this case normalization means that you are normalizing with respect to the area of histogram so it is like giving a probability density function. So, while making the area as one, so this is the representation that there are two histograms; one for magnitude, one for directions and they are normalized histogram of magnitudes, normalized histogram of directions as I mentioned. Typically number of bins in histogram they are kept small for example, 10 and then you can use some distance function like L1 norm between feature vectors to find out the levels of a texture. So, if you have a library of textures you can use this distance function, we will elaborate again this kind of matching letter.
+
+(Refer Slide Time: 13:21)
+
+This is another method by which textures are represented and this is a very popular technique called local binary pattern. So, let me define this particular feature. 457
+[p.69]
+(Refer Slide Time: 13:50)
+
+As it has been shown that in this image you consider a central pixel and these are the positions which are numbered here. So, these are the neighboring pixels of the pixel ‘c’, but again they have given some positional number ordinal numbers. 3 2 1 4 𝑐 0 5 6 7
+
+So, what we are trying to find out that we are comparing the pixel values between these two locations between the central pixel and the pixel at the locations. 𝐿𝐵𝑃(𝑐) = ∑𝑏(𝑖)2𝑖 7 𝑖=0
+
+If the pixel value is greater than ‘c’, we will have a value 1 otherwise if it is smaller we will have a value 0, which means all these values will be a binary value. And that is a local binary pattern and which can be represented in an aggregated form by simply the value of that binary string. So, which is represented here by the above equation. It is simply the decimal value of that binary string. So, that would describe this feature itself that binary value itself will describe the features and as you understand this will range from 0 to 255 in this particular case. So, this is the 458
+[p.70] local binary pattern for an image and it can be shown it is invariant elimination and contrast this particular description local descriptions. However, for a texture region what we need to do that this is the definition of b(i) as I mentioned that it could be either 1 or 0 depending upon whether the pixel at their location ‘c’ is greater than the central pixel or not. This is the typical example you may have different ordering of neighbors in some other work and accordingly the value would also changed. But the values would range from 0 to 255 and then what you do, you obtain a normalized histogram over a region. So, you compute these value at each pixels then collect the statistics over that region in the form of a histogram and normalize that histogram. You should note that this is not rotational invariant. This description is not rotational invariant.
+
+(Refer Slide Time: 16:04)
+
+There are different variations of local binary pattern, so that you can make it rotational invariant. And in fact one of the reference paper has been cited here that is multi resolutions gray scale and rotational invariant texture classification with local binary pattern, it was published in a transactions of pattern analysis and machine intelligence in 2002. So, I will be briefly describing this particular method as you can go through this paper and get the details. So, how do you make it rotational invariant ?. You consider a circular 459
+[p.71] neighborhood of radius R with P pixels at equal intervals of angles. So, instead of having a fix 3x3 neighborhood let us extend this definition.
+
+(Refer Slide Time: 17:09)
+
+You are selecting P pixels in that neighborhood which means suppose I have a central pixel ‘c’. And then any neighborhood any radius if I draw a circle. And then at equal interval I will be selecting P pixels out of this, so the total number of pixels will be P. And then you consider the local binary patterns at those positions. So, suppose since it is a discrete grid, if the pixel does not coincide with that particular location because of discrete grid. So, you can interpolate in a grid it is represented by 2 pixel locations in this continuous form, so, you have to interpolate them. The thing is that after those values you can get a local binary pattern value, and those are characterized by these parameters: number of pixels ‘P’ that has been taken over that circular neighbor and also the radius. So, typically the ordinary local binary pattern what we define in the previous case that would be the same when the radius is kept as 1 and where the number of pixel is kept as 8. Now, the rotational invariant LBP is defined that you consider the rotation of this binary string on those locations P that you perform rotational right rotation operations for example. And in every rotation you compute whatever the value decimal value you get and the minimum one you will be choosing. 460
+[p.72] So, finally, as you can see when you if rotate the image, the same value will be there because you are always taking the minimum out of all possible rotations. So, that is how you make it rotational invariant, so if you are performing a circular bitwise right shift operations for this rotation. And it has been shown that there are 36 distinct values if I consider a rotation invariant representation when radius is 1 and P value is 8.
+
+(Refer Slide Time: 19:23)
+
+There is another variation instead of choosing all sorts of local binary pattern, in this case we will be considering only those pattern which we will considered uniform. And rest of them would be put in the same class or in a separate class 𝐿𝐵𝑃𝑃,𝑅 𝑟𝑖𝑣2(𝑐) = {∑𝑏(𝑖)2𝑖, 𝑃−1 𝑖=0 𝑖𝑓 𝑈(𝐿𝐵𝑃𝑃,𝑅(𝑐)) ≤2 𝑃+ 1, 𝑜𝑡ℎ𝑒𝑟𝑤𝑖𝑠𝑒 } So, which means there would be exactly you know P+1 class is when we define the uniform pattern in this way that there, it is the pattern where there is not more than two special transitions in the bit sequence. And so, it is you know the number of transition is 0, so it is an uniform pattern. 𝑈(11111111) = 0 Consider, in this case there is a special transitions say 1 to 0 and 0 to 1 only that is number is 2, so this is also an uniform pattern. 461
+[p.73] 𝑈(11101111) = 2 Whereas, you consider the third example and you can find the transitions in the beginning there is 1 to 0 then in the middle there is 0 to 1 and 1 to 0 and at the end there is 0 to 1. So, there are four transitions, so this is not a uniform pattern. 𝑈(10001001) = 4 So, now, how do you define the LBP in this case rotational invariant that you are considering only those pattern which is uniform you are taking their rotation invariant value? So, which means you perform right shift operations take the minimum value; right shift rotations to the minimum value otherwise you put them in a separate class in a separate value as P+1. So, in this way there could be at most P+2 distinct values. So, you have to use rotation invariant range value by computing minimum applying ROR operator.
+
+(Refer Slide Time: 21:13)
+
+So, it has been found there are 9 uniform patterns in the number inside them that correspond to their unique codes, so these are certain examples which have been shown in that paper itself. So, these are the uniform patterns, rest of them will be non uniform and you get 9+1, so in total there would be 10 distinct classes. So, if I take the histogram of this local binary patterns there would be only 10 bins in this case. 462
+[p.74]
+(Refer Slide Time: 21:47)
+
+𝑣𝑎𝑟𝑃,𝑅(𝑐) = 1 𝑃∑ (𝑔𝑝−µ)2 𝑃−1 𝑝=0 µ = 1 𝑃∑ 𝑔𝑝 𝑃−1 𝑝=0
+
+And also this could be further augmented by other rotational invariant measures or other measures which would make it intensity invariant. So, local variance of intensities can be considered for uniform pattern, so this is the definition of variance over those values. So, it is only those pixel intensities for uniform patterns those are the positions and you are taking the variance. So, only for uniform pattern you are considering the local variance and this is the main thing. And then you got the normalized histogram of local variances also, so this is another feature. So, you can get normalized histogram of LBP or you can get normalized histogram of local variances and in fact, you can get another robust representations when you take this ratios. So, these are different representations by which a region can be described either you can describe it as an histogram of rotational invariant local binary patterns as we defined or histogram of local variances as it is defined here or even histogram of you know ratios of this two quantities. 463
+[p.75]
+(Refer Slide Time: 23:15)
+
+So, let us understand what is meant by a co occurrence matrix as it has been already shown in the slide. That it is a matrix where every element of that matrix defines or contains that how many times the indexes of those elements. That means, x and y those are the pixel values how many times they occurred together with respect to certain spatial relationships. So, in this notation you note here that we have use to a subscript ‘r’, here ‘r’ is denoting that pixel location. So, for an example we consider there are two pixel ‘p’ and ‘q’ which is shifted by a translation vector a b, then the pixel values; that means, if their intensity values. Then ‘x’ is intensity values at location ‘p’ and ‘y’ is intensity value at location ‘q’, and an occurrence of (x, y) that would be considered that would be counted in this case. So, now throughout the image you find out any pixel location, so let me explain once again suppose we have an image and suppose this is ‘p’ and this is ‘q’ and there is a horizontal and vertical shift a and b there is a translation term, so this is how the p and q is located. So, if I take another pixel say [laughter], then once again its corresponding pixel L prime would be here which is also shifted by the same amount. So, in that case we will consider what is the intensity values at l and l prime and this pairing will be considered that would provide you the corresponding you know statistics of how many times this pairs have occurred. So it is a frequency distribution of all such pairs. So, suppose in an image there are 256 levels, so you will get 256 square such pairs and for each combination you have to find out how many times that combination occurs 464
+[p.76] throughout the image. So, when you have a matrix in this form; that means, (i, j) th element of that matrix denotes the pixel value i and pixel value j in corresponding locations with satisfying this special relationships between those locations throughout the images how many times that has occurred. So, this will give you the frequency distribution that is how the co occurrence matrix is defined.
+
+(Refer Slide Time: 26:48)
+
+So, this is also explained here, so if I consider a relationship ‘r’ where there is a translation of a and b as we denoted. So, number of cases in an image where I p equal to x and I p plus t which is a translation vector a b that is equals y. 465
+[p.77]
+(Refer Slide Time: 27:20)
+
+So, let us workout a simple case from where we will be able to understand this particular relationship in a better way. Considered a small image a 4x4 image and the image has only two levels which is 0 and 1. So, if I consider the special relationships of 0 and 1 then if I define a particular location for example, if this is my location p then its corresponding q location as per the relations would be this one so we will be considering the pairing value 1 0. So, this denotes the value of the location ‘p’ or the originating locations or the reference location if I say and this is the other second locations in that couplet, so this denotes those values of second location. So, if I say it is 1 0, so 1 and 0, so there will be a count for this one. So, in this way let us see what are the locations where 1 0 has occurred. So, this is one, this is another instance where which satisfies this relationship, so we can take this then I think that is all. Let us consider the other cases, say this is 0 0, so we will take this, this is also 0 0 we will take this we will go on doing this see this is 0 1. So, 0 1 this one this is 1 1, so 1 1 this one we have already considered this location this is 0 1. So, 0 and 1, this one this is 1 1 this one similarly this value is 1 1. Now this has been already considered see this is 0 0. So, 0 0 will be this one this is 1 1, 1 1 this one oh not sorry this 1 is 1 1, so here is 1 1 earlier then this is 0 0. 466
+[p.78] So, now, you count how many times it has occurred, this has occurred 4 times; these has occurred 2 times, 2 times, 4 times. So C (0, 1) this co occurrence matrix will look like this. [4 2 2 4] So, similarly you can compute to other frequency distributions and which will give you these are the values that you can find out that.
+
+(Refer Slide Time: 30:52)
+
+So, every different positional relation we will have a different co-occurrence matrix. So, depending upon the definition of the coupled locations of the pixel you get a different co occurrence matrix. And this set of co occurrence matrices they represent a texture feature. 467
+[p.79]
+(Refer Slide Time: 31:22)
+
+You can normalize this co occurrence matrix by dividing them by their sum of frequencies in a matrix.
+
+(Refer Slide Time: 31:30)
+
+𝑆𝑟(𝑥, 𝑦) = 𝐶𝑟(𝑥, 𝑦) + 𝐶−𝑟(𝑥, 𝑦) Or you can also modify the definition by using symmetric co-occurrence matrix; that means, you can consider the directions in the opposite directions also say shift (a, b) again minus a-b. Like 0 1 0 minus 1 and find out the counts at for each case and then aggregation of those counts will give you a co-occurrence matrix for each element of that matrix. 468
+[p.80]
+(Refer Slide Time: 32:00)
+
+𝐶𝑜𝑟𝑟𝑒𝑙𝑎𝑡𝑖𝑜𝑛= ∑∑(𝑥−µ𝑥)(𝑦−µ𝑦)𝑁𝑟(𝑥, 𝑦) 𝑦 𝑥 𝜎𝑥𝜎𝑦
+
+So, from this co-occurrence matrix you can define different features and those features can describe a region. So, co-occurrence matrix is not just describing region; from the co occurrence matrix different measures can be defined like correlation measure. So, we can see that this is a normalized correlation measure which means it is weighted by the corresponding you know value of the co-occurrence matrix.
+
+(Refer Slide Time: 33:22)
+
+469
+[p.81] So, in this way you can define many other features and you can represent them by a feature vector. The last technique which I will be discussing for texture representation is Laws’ texture energy features. I have already cited the paper which you can go through. It is a very old paper in 1980, but these features are found to be very effective. So, how this features are computed there are set of 9, 5x5 masks which is to compute this texture image, so let us define how this 9 masks derive. In the base level you can see there are 4 one dimensional filters. And their element is there are 5 such elements of the filters that is why this abbreviations L5, E5, S5, R5 those are denoted here and each one has its purpose of competitions. So, if you have a one dimensional filtering you can see that L5 it is just performing an weighted small thing. Where is E5 it is performing a gradient computations along the x direction [-1 -2 0 2 1] in one dimension it is computing the gradient directions. Say spot S5 is computing spot which means you know the central pixel is the higher one and then you are taking the differences it is a center surround model. So, you are masking the surroundings surrounding excitations or surrounding responses are subtracted from the central response that the, and R 5 is a ripple it is also given by this particular mask. Now, this is for one dimensional computation’s, but when you do it for two dimension then you perform outer product of any pair, so outer product that it is a product of this matrices. So, if I represent them in the form of a column vector say all these vectors you can represent as a column vector, then outer product is the column vector into a row vector. Suppose the outer product of E5, L5 we will give you E5L5 transpose. Say this is one example of outer product of E5 and L5 transpose and this will give you a mask. And then you perform the convolution with the corresponding texture. So, this is typically one example of a 5x5 mass which computes a texture response. 470
+[p.82]
+(Refer Slide Time: 36:12)
+
+And from there we compute the energy, which means that has to be sum of square of all these responses. We will come to that details. So, this is a set of 9 5x5 masks so, 16 such masks are possible because, there are four. There are four pairing possible but, we combine if you pair to make them 9 masks. So, the list is given here we can see that some of them are trying to provide you the symmetric measures like L 5, E 5, E 5, L 5 they are combined. So, in this way we can find that there are 6 into 2; 12 masks they are combined in each pair and they make it 6 and then there are masks S5, S5, R5, R5, E5, E5 they produce 3 masks. So, they take average of responses of 2 masks that is how you combine them. 471
+[p.83]
+(Refer Slide Time: 37:13)
+
+So, finally, as I representation these are the steps that you have an input image, then you can subtract the local average at each pixel convolve with 16 masks computer energy map for each channel then combine a few symmetry pairs to 9 channels. So, you have a nine dimensional feature space; that means, every pixel in the textured region has a 9 dimensional vector representation. So, this is a 15x15 window and this is a sum of absolute values in a 15x15 window, and you know these are the masks which are combined.
+
+(Refer Slide Time: 37:49)
+
+472
+[p.84] Some of the use of texture descriptors is like detection of object patches. It is represented by textured patterns, then segmentation of images and classification or matching. Usually, the problem is considered as a classification problem as the object the detections with using the region descriptors. Here also we can generate a library of labelled feature descriptors and then you can detection of classes using class labels. Here also you can use different classifiers, you can use matching to the nearest texture descriptors using a. So, matching to the nearest texture descriptor using some distance function.
+
+(Refer Slide Time: 38:33)
+
+So, with this let me stop here where, we have discussed different kinds of region descriptors. And we will continue this discussion still we will be discussing how globally also an image could be represented by a feature descriptor. So, let us stop at this point. Thank you very much.
+
+Keywords: Descriptors, matching, detection, feature 473
+
+## Lecture 28 — Feature Detection And Description – Part V  (transcript PDF page 85)
+
+[p.85] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur
+
+Lecture – 28 Feature Detection and Description Part – V
+
+We are discussing about descriptors, different kinds of featured descriptors in an image. In our previous lectures we discussed how key points could be described, then we also considered description of patches or regions. And after that we have also discussed about similar kind of descriptors of regions, where textures are described. And, today we will discuss another kinds of description of images. When the whole image is required to be described, the whole visual content in an image needs to be represented. And, in that scenario let us see what kind of techniques are there for image description. Typically, we will discuss two such popular techniques. One of them is known as bag of visual words and then we will consider vector of locally aggregated descriptions.
+
+(Refer Slide Time: 01:21)
+
+So, we will see that kind of descriptors. So, bag of visual words in this representation what we do. First we compute the key point based feature descriptors over a library of images. So, in this case we need to construct visual words from a set of images and use those visual words. So, it is a kind of dictionary and dictionary in terms of visual words and then 474
+[p.86] describe any image using those visual words whether they are present in the image or not or in what number they are present in that image. So, the analogy of this kind of approach came from natural language processing or document retrieval if I say particularly. So, in the textual documents, there are words which are present in the documents and some of those words which play their distinctive roles on the nature of the documents. So, those are the words which are textual words and a document can be represented by some feature vector where the presence of those words are counted for. Now, the similar kind of concept has been extended when we are trying to describe the visual content of an image, but the problem here is that, we do not have any precisely defined set of words, as we can get it from the documents. Because, dictionaries are independently created by linguists, by any language there are dictionary of words. So, we can use those dictionaries to represent any word and those words could be used for representing the document. But, in the images, the first task could be to create a dictionary of words and which should be dependent on the visual content or local visual features of an image. So, this locality is first addressed by considering the key points of an image because, key points as we understand they play a very important role in defining transformation invariant features in an image. So, they are the locations, they are kind of landmark locations which are easily detectable even after the image is transformed. So, key points are those positions in an image where you are considering those landmarks. then the description of those key points are possible candidate of visual words. So, that is the philosophy when we are considering these step. You consider a set of images for each image you compute the key points by using different kinds of detectors what we discussed earlier. It could be a SIFT detector, it could be a detector based on SURF, it could be other detectors like FAST and those will be giving you those locations. And, also you understand that even the scaling variance is also considered for detection of key points in some of these techniques. And, then around these locations, you are deriving a descriptor which also should have the property of transformational invariance. But the problem here is that you get so many varieties of descriptors that there would be a large number of descriptors in that case and it is very difficult to represent an image with 475
+[p.87] so much of variations. So, what we need to do next is that all these key points we need to put them under some quantization schemes. That means, we would like to get some representatives of these visual words. So, it is not key point, it is a descriptor which we are considering here. A descriptor corresponds to a visual word in our candidate visual word dictionary, but as there could be lot of variations. So, we would like to put those visual words into buckets which are very similar and choose one representative out of them. So, this task in the vector space also it is called quantization, it is also called clustering when you are bucketizing them or when you are grouping them into a similar setup in similar visual words or similar feature vectors and then choose a representative out of it. So, there are different algorithms for clustering and there is a technique called K means clustering technique by which you can easily perform this kind of grouping and we can choose the representatives from that group. So, if I consider a set of feature vectors from a group, then the mean of that feature vector is used as a representative for that set. So, the parameter K, it denotes that how many such representatives or how many such groups you are going to create. And in fact, that would give you the number of visual words in your dictionary and using that fixed number of visual words we are going to describe an image. So, it has certain advantages that dimension of your feature description is determined by this number K and it remains the same for every kind of image under your consideration. So, once again just to summarize these steps: you take a set of images which you can call a library of images from where you are trying to form a dictionary of visual words. For that what you are doing? For each image you are computing the key points, at each key point you are computing its feature descriptors. Then you get a collection of feature descriptors from all such images and use that collection in clustering algorithm, apply a clustering algorithm to that collection of feature descriptors. So, group them into a finite number of clusters like using K means clustering algorithm which I will discuss in later on in some other topic of clustering and classifications in this particular course. Right now, let us understand what it does. It simply partitions the descriptors into K groups or K partitions. So, from each partition you take the mean as a representative of that cluster and they form visual words. So, you have K visual words out of this process. Next, what you are doing? That, now your dictionary is prepared, now you consider any image. And, 476
+[p.88] for any image you again compute its key words, key points and consider a descriptor of that key point and then you find out that which is the nearest visual word corresponding to that feature descriptor and then that description is associated with that word. So, here you are counting how many such representative visual words, how many times they occur in an image. It is the similar strategy where you count how many key words occur in a document from a dictionary, similarly how many key visual words they occur in your dictionary in a particular image that we are doing. And, that can be represented by a histogram because histogram gives you frequency distribution of these visual words of your dictionary and the number of bins in this histogram is fixed by the number K. So, you have a K dimensional feature representation for an image and this is what the representation by bag of visual words is.
+
+(Refer Slide Time: 10:35)
+
+Next we will consider another kind of descriptor which is an extension of bag of visual words description we will see, the concepts of visual words are used here also. But, the summarization of the visual content or the nature of description is bit different and that we would like to see what kind of variation is there in this description. So, this technique is known as Vector of Locally Aggregated Descriptors or in an acronym we call it VLAD. So, the first step is similar, you have to form the codebook of visual words as you did in the bag of visual word representation. 477
+[p.89] So, which means that, once again you should take a set of images, you should extract the key points for each image and at each key point again you form the feature descriptors; you will get a set of feature descriptors. And, then perform K means clustering on those feature descriptors and get K visual words or that is what your bag of K visual words is, that you derive in the first step form the dictionary. Suppose, these representative visual words are denoted by the symbols like you have K such visual words so, each code we can call it also the codebook. So, each is a feature vector and they are denoted by say C1 C2 to Ck. So, they are just the cluster centers of dimension D in this case. So, this D dimension is determined by the dimension of the feature descriptor. For example, we know that for SIFT feature vector the dimension is 128, for SURF feature vector the dimension is 64; likewise there are different other feature descriptors from where these dimensions are defined. These are all conventions as you understand, you can have your own feature descriptor also and accordingly you can determine this dimension. Then after that we consider that aggregation operations with respect to these centers. Let us understand this mathematical operation. So, consider a local descriptor ‘x’ in an image and that is associated to one of these visual words. So, then we are accumulating the differences with respect to the corresponding cluster center. So, this operation can be described by this particular summation operation. 𝑣𝑖= ∑ (𝑥−𝐶𝑖) 𝑥 𝑎𝑠𝑠𝑖𝑔𝑛𝑒𝑑 𝑡𝑜 𝐶𝑖
+
+We can see in this representation x is the unknown local descriptor and Ci is a cluster center. And, such that the distance from x to Ci is the minimum among all cluster centers that is how the x is assigned to Ci. So, if I compute the distance, suppose you use some distance function let me represent the distance function as say‘d’. And, distance between feature vector x and any cluster center Cj that is denoted in this case like this. 𝑑(𝑥, 𝐶𝑖) 𝑑(𝑥, 𝐶𝑖) > 𝑑(𝑥, 𝐶𝑗)
+
+478
+[p.90]
+In this case, you can see equality also in a degenerate case. So, at least all the distances should be either greater or equal to this distance then you can assign x to any such cluster center; if there are multiple centers which are of equal distances and which are also minimum you have to choose one of them. So, then what you are doing? You are simply aggregating the differences of that cluster center and with respect to a cluster center Ci. So, if I geometrically look at it say Ci and then suppose there is another cluster center Cj and there are feature vectors of this document say this is (x1, x2, x3) and say (y1, y2, y3). So, these are all feature vectors of the same document, I could have written x 4 x 4; also let us follow that and what we are doing? You are considering say the Euclidean distances. So, you know that if I draw the perpendicular distance connecting these two feature vectors a perpendicular then this hyper plane will separate into two. So, all these feature vectors that would be close to Ci and all these feature vectors would be close to say Cj and then what you are doing? See this is the vector, this is vector, and this is a vector. So, you are just adding this vector; so, it is a resultant of all these vectors with respect to Ci. Similarly, so if I take the resultant, it would be some resultant direction say this is some resultant direction, this is the resultant direction. Similarly, for Cj also you consider the resultant directions, some resultant directions would be this. So, so that is what is your feature descriptors vi, accumulate the differences with respect to the corresponding cluster center; you are basically concatenating all these descriptors. So, if they are so the dimension is quite large as you can see, that if you have Ci as a dimension say D; so, dimension of vi would be also D. So, what we are doing here so, that if I consider the dimension of Ci is D dimension,  the dimension of vi would be also D and there are concatenation of all D dimensional feature vectors. So finally, you will have a feature dimension of K into D. So, you note that your dimension of feature representation, it increases in VLAD considering the number of bag of visual words. But, in reality what happens that in this representation your number of K is kept small and that is how it matches with the bag of visual word; it can compete with the bag of visual words representation also in terms of the length of a feature vector. It has been found this is also efficiently discriminating an image. 479
+[p.91] So, VLAD descriptor is the normalized vector of this representation of aggregated differences or concatenated aggregated differences. So, that is how the VLAD descriptor is defined. You see that this vector is divided by its magnitude. So, this particular operation is the magnitude of the vector which is L2 norm of that vector and if you divide it, then you will get the normalized representation. So, this is how another kind of representation is obtained. Let us try to understand that what could be the motivation of this kind of representation. So, what are the applications?
+
+(Refer Slide Time: 18:57)
+
+(Refer Slide Time: 19:01)
+
+480
+[p.92] So, one of the application of this kind of global image descriptor is content based image retrieval. So, let us try to understand what is meant by this content based image retrieval. It is the image search that you can perform using any search engine where your query would be an image and it would search similar images in your library of images, from your database or from your library from different repositories scattered over the web. So, content based image retrieval is meant for that so, for that what you need to do? You need to represent all the candidate images or images of your library using some of these descriptors and given any query image you also convert it to its descriptor. And, then try to match between the query descriptor and the descriptors of your library images and which one is closest or rather a set of images which are closer than the others; so, you can even rank them; that means, stop match, next stop matching etcetera. So, in this way you can rank those images say top 50 images, top 5 images you can find out that list and you can report them, which is the way content based image retrieval works. So, it is an image search based on visual content, there is a thing and one such example of these operations can be shown here. Suppose, this is a query image and you have a library of images and as I mentioned all those images in that library they are stored to they are descriptors of stored in your database. And, then your objective would be to match the descriptor of query image to those descriptors of images in your database. So, if I perform this kind of operations and if I report few top ranking matches we can get some results like this. So, this is the operations I am showing from one of the processings, one kind of one of the systems of content based image retrieval and, you can see the image of a chariot with wheel, it is a very famous image from on the heritage site Hampi and there is a temple called Vithala temple where this image has been captured. And, in your library also it contains several such instances taken from different views and some of those instances are also captured by the search and those are shown here. And, the idea is that when you create an image database with the image, images can also keep various other metadata information, its descriptions. Suppose you have captured newly this image while traveling and you would like to know what this particular object is called. So, you give a search and associated images should be shown including their description. 481
+[p.93] So, this is one kind of very useful applications which are presently available in different systems. I can give you another example. So, these are the retrieved images from a database. So, you see that one of them is not really a match, it happens because these are all represented in a feature space and there would be ambiguities in representation. So, many of the images which are different, but they can have similar feature vectors. This is another example, this is from a place called Bishnupur in West Bengal and there are terracotta temples which are very famous. This is image of one such temple and using our image search technique, we could get this kind of representations.
+
+(Refer Slide Time: 23:19)
+
+So, in this way we have seen that there are different kinds of descriptions of an image including its descriptors for the key points or for the points or descriptors for regions even descriptors for the image globally. So, in this topic we discussed all such techniques of descriptions and also detections of the point key points of the images particularly. So, we will summarize this all this topics, all these different issues what we discussed, different techniques what we discussed in this in this lectures on this topic. And so, we have discussed about scale and transformation invariant feature detection. And, some of them are like Harris corner or Laplacian maximum; those are the methods of feature detections. You can use also difference of Gaussian maximum or extremum, it could be minimum also and then we have used intensity weighted first which is also gives a detection in terms of rotational invariant detections in that way. 482
+[p.94] And, we have also discussed different kinds of feature descriptors like they are transformation invariant descriptions; typically the descriptors like you know scale invariant feature transform, SIFT or SURF or ORB. So, these are different kinds of descriptors that we discussed.
+
+(Refer Slide Time: 25:13)
+
+And, we discussed also the region and texture descriptors that is another kind of description related to images. Here you consider a patch or a region instead of a point and usually those patches or regions are there of rectangular shape and in that there are different kinds of descriptors that we discuss like histogram of gradient. And, there are different texture descriptors, edge density based descriptors, local binary patterns and its variations where you can make it rotational invariant. You can also handle noise in this and make it more robust in that way. That is not only rotational invariant there is a concept called uniform pattern that has been used to make it more robust, but for handling noises. And, then there are co-occurrence matrix based description. So, local binary pattern descriptors, you have to create histograms in that particular region of these patterns that gives you a descriptor. In co-occurrence matrix based descriptors you have to form co-occurrence matrix depending upon the coupling of pixel values; that means, pairs of pixel values with respect to predefined relationships of spatial relationships among the paired pixels. So, in this way you can define a frequency distribution of different pairs of values and that would give you the co-occurrence matrix. And, from co-occurrence matrix again different kinds of 483
+[p.95] features, different kinds of measurements and features you can define and which can be used for the description of a region with certain texture. Laws’ texture energy is also another technique which we discussed and finally, we discussed about the global descriptor of an image. And, we have seen its application or content based image retrieval or image based searches and two techniques are particularly discussed. One is bag of visual word representation, another one is vector of locally aggregated differences VLAD technique. So, these are the two techniques we discussed. So, with this of course, you know there are few applications that also we considered, let us look at them also. Like for key point descriptors we know that they could be used for matching corresponding to get corresponding points of a scene in a multi view imaging system, particularly stereo imaging systems. And, they could be used for obtaining different kinds of characteristics matrices of those imaging systems like fundamental matrix of its history imaging system. Then for region descriptors object detection could be one applications, there are using HoG, there are applications of pedestrian detection, there are applications of character recognition etcetera. And, for global descriptors we have discussed about a technique an application of image retrieval. So, with this let me stop this particular lecture and also we conclude this topic with this summarizations. We will move over to our next topic of matching and we will be discussing also matching and model fitting in our next topic. Some parts of matching of feature descriptors we have discussed in this topic also, but we will have more elaborations in the next topic. Thank you very much, for your listening.
+
+Keywords: VLAD, visual words, image descriptor, co-occurrence matrix, local binary pattern. 484

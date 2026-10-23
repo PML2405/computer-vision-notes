@@ -1,0 +1,511 @@
+# Week 6 — Feature Detection and Description — study notes
+(Feature Detection & Description; Prof. Jayanta Mukhopadhyay · Lectures 24–28. Re-taught-from-scratch notes written from the slides + transcript; math is LaTeX between $...$ / $$...$$. Pretty version: https://pml2405.github.io/computer-vision-notes/notes/week6_notes.html)
+
+COMPUTER VISION · NPTEL · IIT KHARAGPUR
+
+Week 6
+
+**Feature Detection & Description**
+
+Prof. Jayanta Mukhopadhyay · Lectures 24–28
+
+### 📒 what's inside this week
+
+1. Lecture 24 — Feature Detection · Part I
+why corners, the structure matrix, the Harris corner detector
+
+2. Lecture 25 — Feature Detection · Part II
+scale invariance, Gaussian pyramid, LoG/DoG, SIFT keypoints
+
+3. Lecture 26 — Feature Detection · Part III
+the SIFT descriptor, SURF & integral images, FAST/BRIEF/ORB
+
+4. Lecture 27 — Feature Detection · Part IV
+matching by distance, HOG, LBP, co-occurrence, Laws texture energy
+
+5. Lecture 28 — Feature Detection · Part V
+global descriptors: Bag of Visual Words, VLAD, image retrieval
+
+# LECTURE 24 — Feature Detection & Description — Part I
+
+why corners · the SSD window measure · the structure matrix · the Harris corner detector
+
+🧠 the big picture, first
+
+Every earlier topic assumed we already had matched points across images. Now we **find them automatically**. The trick: pick points that are distinctive in every direction — and those turn out to be **corners**. Slide a little window; if the image changes no matter which way you nudge it, you've found a corner.
+
+## 1.  the matching problem
+
+Given two views of a scene, we want **corresponding points**. Three stages:
+
+**🧩 detect → describe → match**
+
+1. **Detect** repeatable landmark points (this lecture);
+
+2. **Describe** each with a distinctive signature of its neighbourhood;
+
+3. **Match** descriptors across images.
+
+All three must survive transformations — translation, rotation, scale, illumination.
+
+## 2.  flat vs edge vs corner
+
+Take a small window and shift it a little in various directions; watch how much the intensities change:
+| region | shift the window… | change |
+| **flat** | any direction | ≈ no change |
+| **edge** | along the edge / across it | no change / big change |
+| **corner** | **any** direction | **big change every way** ✅ |
+
+## 3.  the change measure & the structure matrix
+
+Quantify "how much it changes" when we shift the window by $(u,v)$ with the **sum of squared differences**:
+
+$$ E(u,v)=\sum_{(x,y)\in W}\big[\,I(x+u,\,y+v)-I(x,y)\,\big]^2 $$
+
+For small shifts, first-order Taylor $I(x+u,y+v)\approx I+I_x u+I_y v$ turns $E$ into a neat quadratic form:
+
+the structure (second-moment) matrix
+
+$$ E(u,v)\approx\begin{bmatrix}u&v\end{bmatrix}H\begin{bmatrix}u\\v\end{bmatrix},\quad H=\sum_{W}\begin{bmatrix}I_x^2 & I_xI_y\\ I_xI_y & I_y^2\end{bmatrix} $$
+
+**⚠️ average of squares, not square of average**
+$H$ sums the **squared**/product gradients over the window. If you instead squared the averaged gradient, $\det H$ would be $0$ everywhere — and corner detection would fail.
+
+## 4.  eigen-analysis — reading $H$
+
+The eigenvectors of $H$ are the directions of largest and smallest change; the eigenvalues $\lambda_+\ge\lambda_-$ are the amounts of change:
+
+#### the (λ₊, λ₋) map
+
+[diagram text: λ₋ | λ₊ | flat | edge | CORNER]
+
+flat: both small · edge: one large, one small · corner: **both large**.
+
+**read it as:** a corner needs the **smaller** eigenvalue $\lambda_-$ to be large — that guarantees a big change even in the least-changing direction. So the corner score is $\min$ over all shift directions $=\lambda_-$.
+
+### see it on a chessboard — the whole point of $\lambda_-$
+
+Run the eigen-analysis at every pixel of a chessboard and map the eigenvalues. This is the figure that makes the idea click:
+
+input: a chessboard
+**λ₊** — bright on **edges AND cornersλ₋** — bright on **ONLY the corners**
+
+Uniform squares → both eigenvalues ≈ 0 (black). Edges light up $\lambda_+$ but not $\lambda_-$. Only the **corners** light up $\lambda_-$ — which is exactly why $\lambda_-$ (not $\lambda_+$) is the corner score. (figure adapted from the course slides)
+
+## 5.  the detection algorithm
+
+1. Compute image gradients $I_x,I_y$ everywhere.
+
+2. At each pixel, build $H$ from windowed sums of $I_x^2,\,I_y^2,\,I_xI_y$.
+
+3. Compute the eigenvalues; keep points where $\lambda_-$ exceeds a threshold.
+
+4. Take the **local maxima** of the response → precise corner locations. 📍
+
+(On a chessboard: $\lambda_+$ lights up edges and corners, but $\lambda_-$ lights up **only** the corners.)
+
+## 6.  the Harris measure (skip the square roots)
+
+Computing eigenvalues needs a square root. **Harris** uses a cheaper response built from the determinant and trace instead:
+
+Harris corner response
+
+$$ f=\frac{\det H}{\operatorname{tr}H}=\frac{\lambda_+\lambda_-}{\lambda_++\lambda_-} $$
+
+$\det H=\lambda_+\lambda_-$ (product), $\operatorname{tr}H=\lambda_++\lambda_-$ (sum) — no eigen-decomposition, no roots. Both eigenvalues large ⇒ $f$ large. Compute $f$ everywhere, take local maxima → the famous **Harris corner detector**.
+
+**📎 exam note — which "Harris" is this?**
+The measure taught here, $f=\dfrac{\det H}{\operatorname{tr}H}=\dfrac{\lambda_+\lambda_-}{\lambda_++\lambda_-}$, is the **harmonic mean** of the eigenvalues (the Noble/Brown variant). The **original Harris–Stephens** response is $R=\det H-k(\operatorname{tr}H)^2$ (with $k\approx0.04$–$0.06$), and **Shi–Tomasi** uses $\min(\lambda_+,\lambda_-)=\lambda_-$ directly. All three fire on corners; know all three names for the exam.
+
+### corners = points where the windowed gradient matrix $H$ has **two large eigenvalues**.
+
+$E(u,v)\approx[u\,v]H[u\,v]^T$; corner score = $\lambda_-$; Harris uses $f=\det H/\operatorname{tr}H$ (no roots) + local maxima.
+
+### Self-check quiz
+
+1. Why are corners better feature points than edges or flat regions?
+
+→ Answer: a small window shift changes the intensity in every direction only at a corner — it's distinctive and localizable
+
+2. What do the two eigenvalues of the structure matrix $H$ tell you?
+
+→ Answer: the amount of intensity change in the most- and least-changing directions; a corner has both large
+
+3. Which eigenvalue is the corner score, and why?
+
+→ Answer: the smaller one $\lambda_-$ — it must be large so change is big even in the weakest direction
+
+4. What is the Harris response and why is it used instead of eigenvalues?
+
+→ Answer: $f=\det H/\operatorname{tr}H=\lambda_+\lambda_-/(\lambda_++\lambda_-)$ — it avoids square-root/eigen computation
+
+— end of Lecture 24 notes ✏️
+
+# LECTURE 25 — Feature Detection & Description — Part II
+
+scale invariance · the Gaussian pyramid · LoG & DoG · SIFT keypoints (edge culling & orientation)
+
+🧠 the big picture, first
+
+Harris finds corners but is **scale-blind**: shrink the image and its corners shift. The fix is to search for features not just over position but over scale too — a 3-D search $(x,y,\sigma)$. This is the heart of **SIFT**.
+
+## 1.  detection, description & the scale problem
+
+Both **detection** and **description** must be invariant to transformation. Translation and rotation are relatively easy; **scale is the hard one** — a blob that looks like a corner up close may vanish when the image is shrunk. The idea: represent the image at **many scales** and find features that are strong at their own best scale.
+
+## 2.  multi-scale — the Gaussian pyramid
+
+Repeatedly blur (Gaussian) and down-sample the image → a stack of ever-coarser versions, the **Gaussian pyramid**. A feature is now a **local maximum in position AND scale** (a 3-D search).
+
+**🎚️ octaves & the scale step $k$**
+The scales are grouped into **octaves** — an octave spans a doubling of $\sigma$ (scale factor $2$). If one octave holds $s{+}1$ blurred images, there are $s$ intervals, so **adjacent scales differ by**
+
+$$ k=2^{1/s} $$
+
+e.g. $10$ images per octave $\Rightarrow s=9 \Rightarrow k=2^{1/9}\approx 1.080$. (At the top of each octave the image is down-sampled by 2 and the next octave begins.)
+
+#### blur + subsample → a pyramid
+
+[diagram text: σ, full res | 2σ, ½ res | 4σ, ¼ res]
+
+Each level: convolve with a Gaussian, then subsample.
+
+## 3.  the detector kernels — LoG & DoG
+
+Start from the 2-D **Gaussian** (its width $\sigma$ = the "scale"):
+
+$$ G(x,y,\sigma)=\frac{1}{2\pi\sigma^2}\exp\!\Big(-\frac{x^2+y^2}{2\sigma^2}\Big) $$
+
+Two blob-detecting measures, searched for extrema over scale:
+
+scale-normalized Laplacian (LoG)
+
+$$ \nabla^2_{\text{norm}}=\sigma^2\big(G_{xx}+G_{yy}\big) $$
+
+Difference of Gaussians (DoG)
+
+$$ \text{DoG}=G(x,y,k\sigma)-G(x,y,\sigma) $$
+
+The $\sigma^2$ makes the Laplacian **scale-invariant**. And DoG is a cheap stand-in for LoG — because $\dfrac{\partial G}{\partial\sigma}=\sigma\nabla^2G$, so
+
+$$ G(x,y,k\sigma)-G(x,y,\sigma)\approx (k-1)\,\sigma^2\nabla^2G $$
+
+i.e. DoG $\propto$ scale-normalized Laplacian (the constant $(k-1)$ doesn't move the extrema). So you just **subtract adjacent pyramid levels** — no derivatives to compute.
+
+## 4.  SIFT keypoint detection
+
+**🔺 the two popular detectors**
+
+- **SIFT** (David Lowe): build a **DoG pyramid**, then find **extrema in the 3-D DoG scale-space** (compare each sample to its neighbours in position and the scales above/below).
+
+- **Harris–Laplacian:** Harris corner response computed across a Laplacian pyramid; take maxima over scale & space.
+
+## 5.  culling bad keypoints (edges out)
+
+The raw extrema include many weak/edge points. As in Harris, corners are robust but edges aren't. Use the **Hessian of the DoG** $H=\begin{bmatrix}D_{xx}&D_{xy}\\D_{xy}&D_{yy}\end{bmatrix}$ — its eigenvalues are the **principal curvatures**. An edge has one large, one small (very different) → reject via the trace/determinant ratio:
+
+edge-rejection test
+
+$$ \frac{(\operatorname{tr}H)^2}{\det H}<\frac{(r+1)^2}{r}\quad(r=10) $$
+
+Keep a keypoint only if its curvatures are comparable (ratio below threshold); reject if $\dfrac{(\operatorname{tr}H)^2}{\det H}$ exceeds it. (E.g. 832 keypoints → 729 after a gradient threshold → fewer after this ratio test.)
+
+## 6.  orientation → rotation invariance
+
+To be rotation-invariant, give each keypoint a **canonical orientation**: histogram the gradient directions in its neighbourhood (bins over $0$–$2\pi$), smooth it, and take the **peak**. Then describe everything relative to that direction.
+
+**so a SIFT keypoint carries:position + scale + orientation.** (If the histogram has two strong peaks, the keypoint gets two descriptors.) Next lecture builds the descriptor itself.
+
+**(a)** the image · **(b)** all detected keypoints (each arrow = position, scale & orientation) · **(c)** after the contrast/gradient threshold · **(d)** after the edge (curvature-ratio) test. Culling drops weak/edge points (e.g. 832 → 729 → fewer), keeping only robust corners. (from the course slides)
+
+### search for features over position AND scale: DoG extrema in a Gaussian pyramid = SIFT keypoints.
+
+DoG $\propto\sigma^2\nabla^2G$; cull edges by the Hessian ratio $(\operatorname{tr}H)^2/\det H$; a keypoint = position + scale + orientation.
+
+### Self-check quiz
+
+1. Why isn't the Harris detector scale-invariant, and what's the remedy?
+
+→ Answer: its window is one fixed size; search over a multi-scale (Gaussian pyramid) representation — find maxima in position and scale
+
+2. Why can SIFT use Difference-of-Gaussians instead of the Laplacian?
+
+→ Answer: DoG $\approx (k-1)\sigma^2\nabla^2G$ — it's proportional to the scale-normalized Laplacian, but only needs subtracting adjacent blurred levels
+
+3. How does SIFT throw out keypoints that lie on edges?
+
+→ Answer: via the DoG Hessian's principal curvatures: reject if $(\operatorname{tr}H)^2/\det H$ exceeds $(r+1)^2/r$ (one curvature ≫ the other = edge)
+
+4. What three things define a SIFT keypoint, and which gives rotation invariance?
+
+→ Answer: position, scale, and orientation; the orientation (peak of the gradient histogram) provides rotation invariance
+
+— end of Lecture 25 notes ✏️
+
+# LECTURE 26 — Feature Detection & Description — Part III
+
+the SIFT descriptor · SURF & integral images · fast binary methods: FAST, BRIEF, ORB
+
+🧠 the big picture, first
+
+We have keypoints (position + scale + orientation). Now give each a **signature** — a vector describing its neighbourhood — so we can match them. SIFT is the classic; then a family of **faster** descriptors (SURF, BRIEF, ORB) trade a little accuracy for real-time speed.
+
+## 1.  the SIFT descriptor (128 numbers)
+
+Around a keypoint, take a **$16\times16$ window**, first **rotated** to the keypoint's canonical orientation (that's what makes it rotation-invariant). Then:
+
+**🧵 building the 128-D vector**
+
+1. At each pixel compute the gradient; weak-magnitude ones are discarded.
+
+2. Split the $16\times16$ window into a **$4\times4$ grid of cells** (16 cells).
+
+3. Each cell → an **8-bin orientation histogram** (votes weighted by gradient magnitude) = an 8-vector.
+
+4. Concatenate all 16 cells: $16\times8=\mathbf{128}$-dimensional descriptor. 🎯
+
+**SIFT** (David Lowe, 1999) is robust to illumination and up to ~$60^\circ$ out-of-plane rotation.
+
+## 2.  SURF — speed via integral images
+
+**SURF** (2006) approximates SIFT's expensive Gaussian work with **box filters** (weights $\pm1$) evaluated using an **integral image**:
+
+integral image
+
+$$ I_\Sigma(x,y)=\sum_{i\le x}\sum_{j\le y} I(i,j) $$
+
+**why it's fast:** once $I_\Sigma$ is built in **one scan**, the sum over **any** rectangle is just $I_\Sigma$ at 4 corners (add two, subtract two) — **3 additions, 4 look-ups**, independent of box size. So box-filter convolutions are $O(1)$ per pixel.
+
+- **Detector:** local maxima of the **determinant of the Hessian**, $\det H_{\text{approx}}=D_{xx}D_{yy}-(w\,D_{xy})^2$ ($w\approx0.9$), with box-filter approximations of the 2nd derivatives across scales.
+
+- **Descriptor:** Haar-wavelet responses in a $4\times4$ grid; each cell stores $(\sum d_x,\ \sum|d_x|,\ \sum d_y,\ \sum|d_y|)$ = 4 numbers → $16\times4=\mathbf{64}$-D.
+
+## 3.  fast binary methods — FAST, BRIEF, ORB
+
+**⚡ real-time detectors & descriptors**
+
+- **FAST** (detector): look at 16 pixels on a circle around a candidate; if **12 consecutive** are all brighter (or all darker) than the centre → corner. A trained decision tree (darker/similar/brighter) speeds it further. Not rotation/scale invariant.
+
+- **BRIEF** (descriptor): pick $n$ random point-pairs in the patch; each test $\tau=\mathbb 1[\,I(\mathbf p_i)binary string (128/256/512). Compared with Hamming distance — extremely fast. Not rotation invariant.
+
+- **ORB** = **O**riented FAST + **R**otated BRIEF: adds orientation via the **intensity centroid** (intensity-weighted centre gives a direction), then "steers" BRIEF to that angle + uses a scale pyramid. → rotation & scale aware, still fast.
+
+## 4.  the descriptor zoo, compared
+| method | detector | descriptor | note |
+| **SIFT** | DoG extrema | 128-D gradient histograms | gold standard; slow |
+| **SURF** | Hessian det (box) | 64-D Haar responses | integral image → fast |
+| **FAST/BRIEF** | 12-point circle test | binary string | fastest; no rot/scale |
+| **ORB** | oriented FAST | steered/rotated BRIEF | fast + rotation/scale |
+
+### a descriptor turns a keypoint's neighbourhood into a matchable vector — SIFT (128-D) for accuracy, ORB for speed.
+
+SIFT = 4×4 cells × 8-bin gradient histograms; SURF uses integral images + box filters; BRIEF/ORB = binary strings via intensity tests.
+
+### Self-check quiz
+
+1. How does the 128-dimensional SIFT descriptor arise?
+
+→ Answer: an orientation-corrected $16\times16$ window → $4\times4$ cells × 8-bin gradient-orientation histograms = $16\times8=128$
+
+2. What makes SURF fast, and how does an integral image help?
+
+→ Answer: box filters instead of Gaussians; an integral image gives any rectangle's sum in 3 add/4 look-ups regardless of size
+
+3. What is the FAST corner test?
+
+→ Answer: on 16 pixels around a circle, ≥12 consecutive brighter-or-darker than the centre ⇒ a corner
+
+4. How does ORB make FAST+BRIEF rotation-invariant?
+
+→ Answer: it computes an orientation from the intensity centroid and steers (rotates) the BRIEF sampling pattern to it
+
+— end of Lecture 26 notes ✏️
+
+# LECTURE 27 — Feature Detection & Description — Part IV
+
+matching by distance · region descriptors: HOG · texture: LBP, co-occurrence matrix, Laws energy
+
+🧠 the big picture, first
+
+Once every keypoint is a vector, **matching** is just "find the nearest vector." Then we zoom out from points to **regions**: how to describe a whole patch or texture (HOG for shapes, LBP / co-occurrence / Laws for textures) — the descriptors behind object and material recognition.
+
+## 1.  matching by distance
+
+Two keypoints match if their descriptors are **close**. Measure closeness with a norm between feature vectors $\mathbf u,\mathbf v$:
+
+$$ L_1=\sum_i|u_i-v_i|,\quad L_2=\sqrt{\sum_i (u_i-v_i)^2},\quad L_p=\Big(\sum_i |u_i-v_i|^p\Big)^{1/p} $$
+
+($L_1$ = Manhattan, $L_2$ = Euclidean; both special cases of $L_p$.) The nearest descriptor is the candidate match. **Non-maximal suppression** then removes duplicate/overlapping detections greedily: keep the best-scoring window, suppress those too close, repeat.
+
+## 2.  region descriptor — Histogram of Oriented Gradients (HOG)
+
+**HOG** (2005) describes a whole patch by its gradient-orientation statistics — great for **shape** (famously, pedestrian detection):
+
+**📐 HOG recipe (for a 64×128 patch)**
+
+1. Compute gradients (no smoothing); for colour, use the channel with the largest gradient.
+
+2. Divide into $16\times16$ **blocks** with 50% overlap → ~**105 blocks**; each block = $2\times2$ cells of $8\times8$.
+
+3. Per cell: a **9-bin** orientation histogram, votes weighted by magnitude (interpolated, Gaussian-weighted).
+
+4. Concatenate: $105\times4\times9=\mathbf{3780}$-D descriptor → feed a classifier (SVM / random forest).
+
+## 3.  texture — first, what is it?
+
+**Texture** is a **spatial arrangement of intensities/colours** in a region — a quantitative measure of that arrangement distinctly identifies a material (sky vs road vs foliage). The professor lists **four** texture techniques: **edge density & direction**, **LBP**, **co-occurrence matrix**, and **Laws energy**.
+
+### method 1 — edge density & direction
+
+Compute the gradient at every pixel in the region, then build **two normalized histograms** — one of gradient **magnitudes**, one of gradient **directions** (normalized so each histogram's area = 1, i.e. a probability density; typically a small number of bins, ~10). The concatenated pair is the texture descriptor; compare textures with an $L_1$/$L_2$ distance.
+
+## 4.  texture descriptor — Local Binary Pattern (LBP)
+
+Compare a central pixel $c$ to its 8 neighbours; each is a bit (1 if brighter). Read the 8 bits as a number:
+
+local binary pattern
+
+$$ \text{LBP}(c)=\sum_{i=0}^{7} b(i)\,2^{i},\qquad b(i)=\begin{cases}1 & I_i\ge I_c\\ 0 & \text{else}\end{cases} $$
+
+So each pixel gets a value $0$–$255$; a **normalized histogram** over the region is the texture descriptor. It's invariant to monotonic illumination change, but **not rotation**.
+
+**🔄 rotation-invariant & uniform LBP**
+
+- Use a **circular** neighbourhood ($P$ points, radius $R$; interpolate off-grid points). For rotation invariance, take the **minimum** over all circular bit-shifts (rotating the image just rotates the string).
+
+- **Uniform** patterns have $\le 2$ bit-transitions (e.g. 11100011); for $P=8$ there are 9 uniform patterns → a compact **10-bin** histogram (9 uniform + 1 "all others"). Add local **variance** for intensity contrast.
+
+## 5.  texture descriptor — co-occurrence matrix
+
+Count how often two grey levels appear at a fixed spatial offset $\mathbf t=(a,b)$: the $(x,y)$ entry is the number of pixel pairs with values $x$ and $y$ at that relation.
+
+$$ C_{\mathbf t}(x,y)=\#\{\, \mathbf p:\ I(\mathbf p)=x\ \text{and}\ I(\mathbf p+\mathbf t)=y\,\} $$
+
+**worked example — a 2-level 4×4 image, offset "one step right"**
+Counting each ordered pair $(x,y)$ across the image gave the professor:
+
+$$ C=\begin{bmatrix}4 & 2\\ 2 & 4\end{bmatrix} $$
+
+i.e. $(0,0)$ occurred 4×, $(0,1)$ and $(1,0)$ twice each, $(1,1)$ 4×. Normalize (divide by the total) → a probability matrix; from it derive features like **correlation, contrast, energy, homogeneity**. Different offsets → different matrices → a richer texture signature.
+
+## 6.  texture descriptor — Laws energy
+
+**Laws' texture energy** builds masks from four 1-D filters — **L5** (level/average), **E5** (edge), **S5** (spot), **R5** (ripple):
+
+- Take **outer products** of pairs (e.g. $\mathbf{E5}\,\mathbf{L5}^{T}$) → $5\times5$ 2-D masks; combine symmetric pairs down to **9 masks**.
+
+- Convolve, then compute **energy** = sum of squared/absolute responses in a window (e.g. $15\times15$) → a **9-D** feature per pixel.
+
+All these region descriptors feed the same downstream task: match to a labelled library or train a classifier (segmentation, object/material recognition).
+
+### match points by nearest descriptor; describe regions by gradient/texture statistics (HOG, LBP, co-occurrence, Laws).
+
+$L_1/L_2$ distances + non-max suppression; HOG = 9-bin gradient histograms; LBP = thresholded-neighbour bit string; co-occurrence counts grey-level pairs.
+
+### Self-check quiz
+
+1. Two SIFT descriptors — how do you decide if they match, and what removes duplicate detections?
+
+→ Answer: nearest descriptor by an $L_1$/$L_2$ distance; non-maximal suppression removes overlapping duplicates
+
+2. What does HOG capture and what is a classic application?
+
+→ Answer: gradient-orientation histograms over a grid (shape); pedestrian detection
+
+3. Write the LBP value formula and state one invariance it lacks.
+
+→ Answer: $\text{LBP}=\sum_i b(i)2^i$ (bit = neighbour ≥ centre); it is not rotation-invariant (fixed by circular LBP + min-over-shifts)
+
+4. What does a grey-level co-occurrence matrix count?
+
+→ Answer: how often each pair of grey values $(x,y)$ occurs at a fixed spatial offset $\mathbf t$
+
+— end of Lecture 27 notes ✏️
+
+# LECTURE 28 — Feature Detection & Description — Part V
+
+describing a whole image · Bag of Visual Words · VLAD · content-based image retrieval
+
+🧠 the big picture, first
+
+We've described points and regions; now the **whole image** in one vector — so you can **search by picture**. The trick borrows from text search: build a dictionary of "visual words" and describe any image by which visual words it contains.
+
+## 1.  Bag of Visual Words (BoVW)
+
+Text documents are described by which dictionary words they contain. Images have no ready-made dictionary — so we **build** one from local descriptors:
+
+**📖 building & using the visual dictionary**
+
+1. Over a **library** of images, extract keypoints (SIFT/SURF/FAST) and their descriptors → a huge pile of vectors.
+
+2. **Cluster** them with **K-means** into $K$ groups; each cluster **mean** is a **visual word**. The $K$ words are the **codebook**.
+
+3. For any image: describe each keypoint, assign it to its **nearest visual word**, and **count** → a $K$-bin **histogram**.
+
+Every image becomes a fixed **$K$-dimensional** vector, regardless of how many keypoints it had. 🎯
+
+## 2.  VLAD — remember the residuals
+
+BoVW only counts words. **VLAD** (Vector of Locally Aggregated Descriptors) keeps **more**: for each visual word $C_i$, it sums the **differences** between the descriptors assigned to it and the centre:
+
+VLAD aggregation
+
+$$ \mathbf v_i=\!\!\sum_{\text{NN}(\mathbf x)=C_i}\!\!(\mathbf x-C_i) $$
+
+Concatenate all $K$ residual vectors (each of the descriptor dimension $D$, e.g. $D=128$ for SIFT) → a $K\times D$ vector, then **L2-normalize**:
+
+$$ \text{VLAD}=\frac{[\,\mathbf v_1;\mathbf v_2;\dots;\mathbf v_K\,]}{\big\lVert[\,\mathbf v_1;\dots;\mathbf v_K\,]\big\rVert} $$
+
+It's higher-dimensional than BoVW (so $K$ is kept small), but more discriminative — it records where descriptors sit relative to each word, not just how many.
+
+## 3.  application — content-based image retrieval
+
+A global descriptor lets you **search by image**: describe every library image; given a query image, compute its descriptor and return the library images whose descriptors are **closest**, ranked.
+
+**in practice:** "photograph this temple carving, find what it is." (The professor's examples: the chariot at Hampi's Vithala temple and the Bishnupur terracotta temples.) Occasional wrong matches happen because different images can land on similar feature vectors.
+
+## 4.  look-ahead — matching & robust model fitting
+
+These tools belong to the next topic (matching & model fitting) but are the natural sequel to descriptors — and show up in the assignment, so know them:
+| tool | what it does |
+| **RANSAC** | **Robust model fitting with outliers:** randomly sample a minimal set, fit a model, count inliers (points within a threshold), repeat, keep the model with the most inliers. Tolerates a large fraction of wrong matches — the standard way to fit $F$/$H$ from noisy correspondences. |
+| **Hough transform** | **Voting-based line/shape fitting:** each point votes for all lines through it in parameter space; peaks in the accumulator = detected lines. Strong when there are **many** lines / much clutter. |
+| **K-D tree** | **Fast nearest-neighbour** search for matching descriptors: a binary space-partition tree; average query $\approx O(\log n)$ (grows with dimension $d$). Speeds up "find the closest descriptor." |
+| **KL divergence** | A **statistical distance** between two probability distributions $D_{KL}(P\Vert Q)=\sum_i P_i\log\tfrac{P_i}{Q_i}$ — used to compare histograms/distributions. **Not** a geometric line-fitting criterion (a common distractor). |
+
+## 5.  the whole feature topic on one page
+
+**📌 feature detection & description cheat-sheet**
+| stage | methods |
+| **detection** | Harris corner (here $f=\det M/\operatorname{tr}M$ on the structure matrix $M$; canonical Harris–Stephens is $\det M-k(\operatorname{tr}M)^2$); scale via Laplacian/DoG extrema (SIFT); Hessian-det (SURF); FAST |
+| **keypoint = ** | position + scale + orientation (from the gradient histogram peak) |
+| **point descriptors** | SIFT (128-D), SURF (64-D, integral image), BRIEF/ORB (binary) |
+| **region descriptors** | HOG (gradient histograms, shape) |
+| **texture descriptors** | edge density, LBP (+rotation-invariant/uniform), co-occurrence matrix, Laws energy |
+| **global descriptors** | Bag of Visual Words, VLAD → image retrieval |
+| **matching** | nearest descriptor ($L_1/L_2$), non-maximal suppression, or a trained classifier |
+| **uses** | stereo correspondence → $F$/homography; object/pedestrian/character detection; image search |
+
+### describe a whole image by its "visual words" (BoVW) or their residuals (VLAD) — and you can search by picture.
+
+K-means codebook → K-bin histogram (BoVW) or K×D normalized residuals (VLAD); nearest-descriptor retrieval = CBIR.
+
+### Self-check quiz
+
+1. How is a Bag-of-Visual-Words dictionary built, and what does an image become?
+
+→ Answer: K-means-cluster all library descriptors → $K$ visual words; an image → a $K$-bin histogram of nearest-word counts
+
+2. What does VLAD store that BoVW discards, and what's its dimension?
+
+→ Answer: the residuals $\sum(\mathbf x-C_i)$ (not just counts); dimension $K\times D$, then L2-normalized
+
+3. What is content-based image retrieval?
+
+→ Answer: search-by-image: match a query image's global descriptor to a library's descriptors and rank the closest
+
+4. Name one use of keypoint descriptors that ties this topic back to earlier weeks.
+
+→ Answer: automatically finding corresponding points across views → estimating the fundamental matrix / homography (Weeks 2, 4–5)
+
+— end of Lecture 28 · end of Week 6 · end of the course 🎓✏️

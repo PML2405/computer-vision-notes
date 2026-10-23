@@ -1,0 +1,1886 @@
+# Week 10 — lecture slides
+(source: NPTEL, 98 slides; text layer, plus OCR on 9 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Clustering and classification
+(Week-10: L46-L50)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+NPTEL
+
+### Slide 2
+Classification
+Classification:
+Task of assigning a known category or class to an object.
+detection of pedestrian in an image patch.
+recognition of an alphabet given a 2-D pattern.
+assigning a pixel of an image to its  foreground or
+background.
+Non-human
+Human
+Classify
+NPTEL
+
+### Slide 3
+Clustering: the task of organizing
+objects into groups whose
+members are similar in some way.
+Clustering
+Cluster: a collection of objects
+similar
+to
+each
+other,
+but
+dissimilar to the objects belonging
+to other clusters .
+o Regions of homogeneity in an
+image.
+o Segments.
+o Grouping of similar components.
+NPTEL
+
+### Slide 4
+Class and cluster
+A class: well studied group of objects identified
+by their common properties or characteristics.
+A cluster: a group with ‘loosely’ defined
+similarity among the objects.
+o Potential to form a class.
+NPTEL
+
+### Slide 5
+o finding representatives for homogeneous
+groups
+to reduce data.
+o discovering natural groups or categories.
+to describe by their unknown properties.
+o finding relevant groups.
+major groups  in the given context.
+segments of an image.
+o detecting unusual data objects
+outliers.
+https://www2.cs.duke.edu/courses/fall03/cps260/notes/lecture18.pdf
+Clustering: Motivation
+NPTEL
+
+### Slide 6
+Processing pipeline
+Preprocessing
+Feature
+extraction
+Classification
+/ clustering
+Input
+image
+NPTEL
+
+### Slide 7
+Supervised and
+unsupervised learning
+Unsupervised learning: learns in the absence of
+almost any prior knowledge of groups.
+Sometimes the number of groups provided.
+clustering
+Supervised learning: exploits knowledge about the
+classification problem, such as example instances of
+classes.
+Training samples with class labels.
+Finds features suitable for predicting classes.
+Classification
+Clustering and  classification: learning problems.
+Learning about groups or categories in data.
+NPTEL
+
+### Slide 8
+Other variations in learning
+frame work
+Semi-supervised learning:
+learns by making use of unlabeled data for training in
+conjunction with a small amount of labeled data.
+Usually sizes of unlabeled data large, and labeled data
+small.
+falls between unsupervised learning and supervised
+learning.
+Reinforcement learning:
+learning by feedback from a teacher or a critique, in
+the form of reward / punishment, yes / no, true /
+false, etc.
+NPTEL
+
+### Slide 9
+Clustering: Three major
+components
+A. The similarity
+(distance) measure
+between two data
+samples.
+L1, L2, Lp norms.
+C. The clustering algorithms.
+K-means
+K-medoids
+Mixture of Gaussians
+B. Criterion function to
+evaluate clusters.
+Intra-cluster cohesion
+Sum of Squares
+Error (SSE)
+Inter cluster separation
+Other approaches
+o Hierarchical clustering
+o Graph based approaches, etc.
+NPTEL
+
+### Slide 10
+Homogeneity and
+Separation Principles
+Homogeneity: Elements within a cluster are close
+to each other.
+e.g. compute the average distance of these elements
+from the cluster center.
+Should be small.
+Separation: Elements in different clusters are
+further apart from each other.
+e.g. compute average distance of pairs of cluster centers.
+Should be large.
+NPTEL
+
+### Slide 11
+Several choices …
+A bad clustering
+example
+A good clustering
+example
+NPTEL
+
+### Slide 12
+n Given n data points, compute k partitions
+(clusters) in them so that it  minimizes the sum
+of square of distances between a data point and
+the center of its respective partition (cluster).
+K-means clustering
+where
+An NP-complete problem (K>1).
+Optimization problem
+Minimization of
+NPTEL
+
+### Slide 13
+The Lloyd algorithm
+n Given k initial centers, assign a point to the cluster
+represented by its center, if it is the closest among
+them.
+n Update the centers.
+n Iterate above two steps, till the centers do not
+change their positions.
+n Trying to minimize the energy function defined by the
+sum of divergences of each cluster from its center.
+n Convergence not guaranteed, but works well in
+practice.
+n May get stuck at local minima.
+NPTEL
+
+### Slide 14
+K-means: example (k=2)
+Choose initial centers.
+Compute partitions.
+NPTEL
+
+### Slide 15
+K-means: example (k=2)
+Compute partitions.
+Update centers.
+NPTEL
+
+### Slide 16
+K-means: example (k=2)
+Compute new partitions with
+updated centers.
+NPTEL
+
+### Slide 17
+K-means: example (k=2)
+Update centers.
+NPTEL
+
+### Slide 18
+K-means: example (k=2)
+NPTEL
+
+### Slide 19
+K-means: example (k=2)
+Compute new partitions with
+updated centers.
+NPTEL
+
+### Slide 20
+K-means: example (k=2)
+Update centers.
+NPTEL
+
+### Slide 21
+K-means: example (k=2)
+Stop at no change
+(or a very little
+change in cluster
+centers).
+NPTEL
+
+### Slide 22
+A more conservative
+approach
+Lloyd algorithm fast but not necessarily
+causing better convergence.
+A more conservative approach to move one
+data point at a time provided overall cost
+gets reduced.
+A greedy approach by choosing the transfer
+of a data point from a class (say, i) to
+another class (say, j), which causes the best
+(maximal) cost reduction at that step.
+NPTEL
+
+### Slide 23
+Greedy K-Means Algorithm
+Select an arbitrary partition P into k clusters.
+Repeat the steps below till convergence of cost.
+maxReduction=0;
+for every cluster C do
+for every element i not in C do
+reduction=cost(P) - cost(PiàC)
+if (reduction>0)
+if (reduction> maxReduction)
+maxReduction=reduction
+Update C and the cluster containing i.
+endif
+endif
+endfor
+endfor
+NPTEL
+
+### Slide 24
+k-Medoids clustering
+n A medoid: the representative element of a set
+of data point with minimal average
+dissimilarity with other data points in the set.
+n always restricted to be a member of the data set.
+Given a set X={xi|i=1,2,..,n}, its medoid is given by
+Cost to be minimized in k-Medoids clustering:
+Medoid of Ck.
+NPTEL
+
+### Slide 25
+k-medoids clustering
+n Given k initial centers, assign a point to the
+cluster represented by its center, if it is the
+closest among them.
+n Update the medoids.
+n Very expensive!!
+n Iterate above two steps, till the medoids do
+not change their positions.
+o Randomly choose an element of a
+different cluster, swap with the medoid
+element and update the medoids.
+o If the cost decreases, accept the swap.
+o Continue till it converges.
+Also known as Partitioning
+around medoids (PAM).
+NPTEL
+
+### Slide 26 (OCR)
+n Mixture of Gaussians
+= Each cluster center is augmented by a
+covariance matrix, whose values are re-
+estimated from corresponding samples.
+» Mahalanobis distance function:
+A(X, Mrs Uy) = (% — My) UE" (x — Uy)
+Hk 2 ar Hr | k | Lk
+Cluster center Covariance matrix
+Technique could be refined by computing
+probabilities of belongingness to a cluster.
+Parametric PDF: D(xl{itp, Ue, Let) = >, MeN Celt Be)
+1 1 K
+N (2x je, je) = CAH »
+\/ (270) "|| Mixing coefficients
+
+### Slide 27 (OCR)
+Expectation 1 Nile Be)
+= es B Zik = FT UKN XIU ak
+Maximization — ; Zi
+f (EM) Algorithm Normalizing“! =)
+factor /
+a= Start with initial set :{70;,, Uz, Zp}.
+=» E-Step (Expectation stage)
+« Compute likelihood (z,,) of x belonging to Ath
+Optional <t Gaussian cluster.
+Secicinn be Assign x to the mth cluster whose Jikelihood is
+taken at the end. Maximum.
+=» M-Step (Maximization Stage)
+« Re-estimate parameters ({7;,, Ux, 2, }) from class
+distribution
+= Iterate above two steps till it converges.
+
+### Slide 28 (OCR)
+: Parameter re-estimation
+Zik = 7, TN (X|Mx, 2x) Ne = >» Zik
+~ Normalizing factor |
+xpected number of
+1 pixels in class k.
+LE = —\ Zik Xi
+Nx ;
+1 T
+LE = —)> Zin (Xi — Ux) (% — Ux)
+Nr
+Tk = NV
+
+### Slide 29
+Classification approaches
+n Probabilistic
+n Bayesian classification
+n Distance based
+n K-Nearest neighbor
+Classification:
+Task of assigning a known category or class to
+an object.
+n Discriminant analysis
+n Linear discriminant
+analysis (LDA)
+n Artificial neural network
+(ANN)
+n Feed-forward neural
+network.
+NPTEL
+
+### Slide 30
+Classification problem
+n Given a labelled data sets:
+{(yi,xi)}, i=1,2,…,n such that  xi in Rn and yi
+is the class of xi, an element of the finite set
+of classes.
+n yi could be +1 or -1 for a two class problem.
+Design a classifier C which assigns class yi
+(output) to xi (input).
+NPTEL
+
+### Slide 31
+Risk of Classification
+n Given a labelled data sets:
+{(yi,xi)}, i=1,2,…,n such that  xi in Rn and yi
+is the class of xi, an element of the finite set
+of classes.
+n yi could be categorical or {+1 , -1} for a two
+class problem.
+Design a classifier C which assigns class yi
+(output) to xi (input).
+Bayesian classification minimizes the risk.
+NPTEL
+
+### Slide 32
+32
+Bayesian Classification
+n Based on Bayes’ Theorem.
+n Probabilistic prediction of belongingness to  a class.
+n A simple Bayesian classifier:  Naïve Bayesian
+classifier.
+n Each training example can increase/decrease the
+probability of the predicted class.
+n Prior knowledge can be combined with observed
+data
+Courtesy: hanj.cs.illinois.edu/bk3/bk3_slides/08ClassBasic.ppt
+NPTEL
+
+### Slide 33
+Bayesian Inference
+P(H|X) =
+P(H) P(X|H)
+P(X)
+2. Bayes’ Theorem
+(Thomas Bayes (1763))
+Posterior probability, the
+probability of the
+hypoth. (assigning a
+class) given the data.
+Prior probability, the probability
+of the hypothesis on previous
+knowledge
+Likelihood function,
+probability of the data
+given the hypothesis
+Unconditional probability of the
+data, a normalizing constant
+ensuring the posterior
+probabilities sum to 1.00
+P(A and B) = P(A) P(B|A) = P(B) P(A|B)
+1. Conditional probability
+NPTEL
+
+### Slide 34
+34
+Bayes’ classification rule
+hanj.cs.illinois.edu/bk3/bk3_slides/08ClassBasic.ppt
+P(H|X) =
+P(H) P(X|H)
+P(X)
+Given training data X, posteriori probability of a
+hypothesis H, P(H|X), follows the Bayes’ theorem
+Bayes’ classification rule:
+Assign Ci to X iff the
+probability P(Ci|X) is the
+highest among all the P(Ck|X)
+for all the k classes.
+Challenges:
+requires prior knowledge
+of probabilities of classes
+and their distributions in
+multidimensional feature
+spaces.
+NPTEL
+
+### Slide 35
+35
+Problem statement
+P(Ci|X) =
+P(Ci) P(X|Ci)
+P(X)
+o Input: a training set of tuples and their
+associated class labels.
+each tuple is represented by an n-D attribute
+vector X = (x1, x2, …, xn).
+Let there be m classes C1, C2, …, Cm.
+o To derive the maximum posteriori, i.e., the
+maximal P(Ci|X).
+o Since P(X) is constant for all classes, only P(Ci) P(X|Ci)
+needs to be maximized.
+NPTEL
+
+### Slide 36
+36
+Naïve Bayes Classifier
+Ci
+Ci
+Ci
+Ci
+Ci
+Works on a simplified assumption:
+attributes are conditionally independent (i.e., no dependence
+relation between attributes).
+Significant reduction of the computation cost
+requires only the class distributions.
+Convenient to estimate P(xi|Ck)
+For a categorical or discrete variable:
+o fraction of times the value occurred in a class.
+For a continuous variable:
+o may use parametric modeling of Gaussian distribution.
+NPTEL
+
+### Slide 37
+37
+Likelihood estimation in
+Naïve Bayes Classifier
+Ci
+Ci
+Ci
+Ci
+Ci
+kx
+Ci
+For categorical or discrete variable:
+o fraction of times the value occurred in a class.
+For continuous variable:
+o may use parametric modeling of Gaussian distribution.
+Likelihood:
+To estimate P(xi|Ck)
+NPTEL
+
+### Slide 38
+38
+An Example: Training Dataset
+Class:
+C1:buys_computer =
+‘yes’
+C2:buys_computer =
+‘no’
+Data to be classified:
+X = (age <=30,
+Income = medium,
+Student = yes
+Credit_rating = Fair)
+age
+income studentcredit_rating_comp
+<=30
+high
+no
+fair
+no
+<=30
+high
+no
+excellent
+no
+31…40
+high
+no
+fair
+yes
+>40
+medium
+no
+fair
+yes
+>40
+low
+yes
+fair
+yes
+>40
+low
+yes
+excellent
+no
+31…40
+low
+yes
+excellent
+yes
+<=30
+medium
+no
+fair
+no
+<=30
+low
+yes
+fair
+yes
+>40
+medium
+yes
+fair
+yes
+<=30
+medium
+yes
+excellent
+yes
+31…40
+medium
+no
+excellent
+yes
+31…40
+high
+yes
+fair
+yes
+>40
+medium
+no
+excellent
+no
+hanj.cs.illinois.edu/bk3/bk3_slides/08ClassBasic.ppt
+NPTEL
+
+### Slide 39
+39
+Computation of class prior
+n P(Ci):    P(buys_computer = “yes”)  = 9/14 = 0.643
+P(buys_computer = “no”) = 5/14= 0.357
+age
+income
+student credit_ratings_comp
+<=30
+high
+no
+fair
+no
+<=30
+high
+no
+excellent
+no
+31…40
+high
+no
+fair
+yes
+>40
+medium
+no
+fair
+yes
+>40
+low
+yes
+fair
+yes
+>40
+low
+yes
+excellent
+no
+31…40
+low
+yes
+excellent
+yes
+<=30
+medium
+no
+fair
+no
+<=30
+low
+yes
+fair
+yes
+>40
+medium
+yes
+fair
+yes
+<=30
+medium
+yes
+excellent
+yes
+31…40
+medium
+no
+excellent
+yes
+31…40
+high
+yes
+fair
+yes
+>40
+medium
+no
+excellent
+no
+hanj.cs.illinois.edu/bk3/bk3_slides/08ClassBasic.ppt
+NPTEL
+
+### Slide 40
+40
+Likelihood estimation:
+age =“<=30”
+P(age = “<=30” | buys_computer = “yes”)  = 2/9 = 0.222
+P(age = “<= 30” | buys_computer = “no”) = 3/5 = 0.6
+age
+income
+student credit_ratings_comp
+<=30
+high
+no
+fair
+no
+<=30
+high
+no
+excellent
+no
+31…40
+high
+no
+fair
+yes
+>40
+medium
+no
+fair
+yes
+>40
+low
+yes
+fair
+yes
+>40
+low
+yes
+excellent
+no
+31…40
+low
+yes
+excellent
+yes
+<=30
+medium
+no
+fair
+no
+<=30
+low
+yes
+fair
+yes
+>40
+medium
+yes
+fair
+yes
+<=30
+medium
+yes
+excellent
+yes
+31…40
+medium
+no
+excellent
+yes
+31…40
+high
+yes
+fair
+yes
+>40
+medium
+no
+excellent
+no
+hanj.cs.illinois.edu/bk3/bk3_slides/08ClassBasic.ppt
+NPTEL
+
+### Slide 41
+41
+P(income = “medium” | buys_computer = “yes”) = 4/9 = 0.444
+P(income = “medium” | buys_computer = “no”) = 2/5 = 0.4
+age
+income
+student credit_ratings_comp
+<=30
+high
+no
+fair
+no
+<=30
+high
+no
+excellent
+no
+31…40
+high
+no
+fair
+yes
+>40
+medium
+no
+fair
+yes
+>40
+low
+yes
+fair
+yes
+>40
+low
+yes
+excellent
+no
+31…40
+low
+yes
+excellent
+yes
+<=30
+medium
+no
+fair
+no
+<=30
+low
+yes
+fair
+yes
+>40
+medium
+yes
+fair
+yes
+<=30
+medium
+yes
+excellent
+yes
+31…40
+medium
+no
+excellent
+yes
+31…40
+high
+yes
+fair
+yes
+>40
+medium
+no
+excellent
+no
+Likelihood estimation:
+income =“medium”
+hanj.cs.illinois.edu/bk3/bk3_slides/08ClassBasic.ppt
+NPTEL
+
+### Slide 42
+42
+Likelihood estimation:
+student =“yes”
+n P(student = “yes” | buys_computer = “yes) = 6/9 = 0.667
+P(student = “yes” | buys_computer = “no”) = 1/5 = 0.2
+age
+income
+student credit_ratings_comp
+<=30
+high
+no
+fair
+no
+<=30
+high
+no
+excellent
+no
+31…40
+high
+no
+fair
+yes
+>40
+medium
+no
+fair
+yes
+>40
+low
+yes
+fair
+yes
+>40
+low
+yes
+excellent
+no
+31…40
+low
+yes
+excellent
+yes
+<=30
+medium
+no
+fair
+no
+<=30
+low
+yes
+fair
+yes
+>40
+medium
+yes
+fair
+yes
+<=30
+medium
+yes
+excellent
+yes
+31…40
+medium
+no
+excellent
+yes
+31…40
+high
+yes
+fair
+yes
+>40
+medium
+no
+excellent
+no
+hanj.cs.illinois.edu/bk3/bk3_slides/08ClassBasic.ppt
+NPTEL
+
+### Slide 43
+43
+P(credit_rating = “fair” | buys_computer = “yes”) = 6/9 = 0.667
+P(credit_rating = “fair” | buys_computer = “no”) = 2/5 = 0.4
+age
+income
+student credit_ratings_comp
+<=30
+high
+no
+fair
+no
+<=30
+high
+no
+excellent
+no
+31…40
+high
+no
+fair
+yes
+>40
+medium
+no
+fair
+yes
+>40
+low
+yes
+fair
+yes
+>40
+low
+yes
+excellent
+no
+31…40
+low
+yes
+excellent
+yes
+<=30
+medium
+no
+fair
+no
+<=30
+low
+yes
+fair
+yes
+>40
+medium
+yes
+fair
+yes
+<=30
+medium
+yes
+excellent
+yes
+31…40
+medium
+no
+excellent
+yes
+31…40
+high
+yes
+fair
+yes
+>40
+medium
+no
+excellent
+no
+Likelihood estimation:
+credit_rating =“fair”
+hanj.cs.illinois.edu/bk3/bk3_slides/08ClassBasic.ppt
+NPTEL
+
+### Slide 44
+44
+X = (age <= 30 , income = medium, student = yes, credit_rating = fair)
+P(X|Ci) :
+P(X|buys_computer = “yes”) = 0.222 x 0.444 x 0.667 x 0.667 = 0.044
+P(X|buys_computer = “no”) = 0.6 x 0.4 x 0.2 x 0.4 = 0.019
+age
+income studentcredit_rating_comp
+<=30
+high
+no
+fair
+no
+<=30
+high
+no
+excellent
+no
+31…40
+high
+no
+fair
+yes
+>40
+medium
+no
+fair
+yes
+>40
+low
+yes
+fair
+yes
+>40
+low
+yes
+excellent
+no
+31…40
+low
+yes
+excellent
+yes
+<=30
+medium
+no
+fair
+no
+<=30
+low
+yes
+fair
+yes
+>40
+medium
+yes
+fair
+yes
+<=30
+medium
+yes
+excellent
+yes
+31…40
+medium
+no
+excellent
+yes
+31…40
+high
+yes
+fair
+yes
+>40
+medium
+no
+excellent
+no
+Likelihood estimation: P(X|Ci)
+hanj.cs.illinois.edu/bk3/bk3_slides/08ClassBasic.ppt
+NPTEL
+
+### Slide 45
+45
+X = (age <= 30 , income = medium, student = yes, credit_rating = fair)
+P(X|Ci) : P(X|buys_computer = “yes”) = 0.222 x 0.444 x 0.667 x 0.667 = 0.044
+P(X|buys_computer = “no”) = 0.6 x 0.4 x 0.2 x 0.4 = 0.019
+age
+income studentcredit_rating_comp
+<=30
+high
+no
+fair
+no
+<=30
+high
+no
+excellent
+no
+31…40
+high
+no
+fair
+yes
+>40
+medium
+no
+fair
+yes
+>40
+low
+yes
+fair
+yes
+>40
+low
+yes
+excellent
+no
+31…40
+low
+yes
+excellent
+yes
+<=30
+medium
+no
+fair
+no
+<=30
+low
+yes
+fair
+yes
+>40
+medium
+yes
+fair
+yes
+<=30
+medium
+yes
+excellent
+yes
+31…40
+medium
+no
+excellent
+yes
+31…40
+high
+yes
+fair
+yes
+>40
+medium
+no
+excellent
+no
+Estimation of posterior: P(Ci|X)
+and class assignment
+P(Ci|X)= P(X|Ci)*P(Ci) :
+P(X|buys_computer = “yes”) * P(buys_computer = “yes”) = 0.028
+P(X|buys_computer = “no”) * P(buys_computer = “no”) = 0.007
+Therefore,  X belongs to class
+(“buys_computer = yes”)
+hanj.cs.illinois.edu/bk3/bk3_slides/08ClassBasic.ppt
+NPTEL
+
+### Slide 46
+46
+Avoiding Zero-Probability
+Ci
+Ci
+Ci
+Ci
+Ci
+All the conditional probabilities should be
+non-zero, else likelihood becomes zero.
+Suppose a dataset with 1000 tuples, income=low (0),
+income= medium (990), and income = high (10).
+Prob(income = low) = 1/1003
+Prob(income = medium) = 991/1003
+Prob(income = high) = 11/1003
+Use Laplacian correction (or Laplacian estimator)
+Adding 1 to each case
+NPTEL
+
+### Slide 47
+47
+Naïve Bayes Classifier: Pros and
+Cons.
+q Disadvantages
+n Assumption: class conditional independence
+n loss of accuracy
+n In real life, dependencies exist among variables
+n E.g.,  hospitals: patients: Profile: age, family history, etc.
+Symptoms: fever, cough etc., Disease: lung cancer,
+diabetes, etc.
+n Dependencies among these cannot be modeled by Naïve
+Bayes Classifier.
+q Advantages
+o Easy to implement
+o Good results obtained in
+most of the cases
+NPTEL
+
+### Slide 48
+Nearest neighbor classification
+n Learning Algorithm:
+n Store training examples
+n Prediction Algorithm:
+n – To classify a new example by finding the
+training example (yi,xi) that is nearest to x.
+n – Guess the class y = yi
+http://people.csail.mit.edu/dsontag/courses/ml12/slides
+lecture10.pdf
+NPTEL
+
+### Slide 49
+K-Nearest Neighbor (K-NN)
+Method
+n To classify a new input vector x,
+n Examine the K closest training data points
+to x.
+n Assign the object to the most frequently
+occurring class.
+http://people.csail.mit.edu/dsontag/courses/ml12/slides
+lecture10.pdf
+NPTEL
+
+### Slide 50
+K-NN: example (K=3)
+Query pattern for
+classification.
+NPTEL
+
+### Slide 51
+K-NN: example (K=3)
+Compute distances with all
+the training samples.
+NPTEL
+
+### Slide 52
+K-NN: example (K=3)
+Find K=3 nearest
+neighbors
+NPTEL
+
+### Slide 53
+K-NN: example (K=3)
+Assign the class
+which has
+maximum
+number of NNs.
+NPTEL
+
+### Slide 54
+K-NN: Probabilistic
+interpretation
+n Non-parametric estimation of probability
+density at x given K neighbors.
+n Number of training samples: N
+n Assume the volume (hyper-volume) containing
+K neighbors: V
+n Let prob. of a data point in the volume be P.
+Estimates of the Prob. that the volume V
+around x contains a data point, P= K/N
+Following binomial distribution:
+E(no. of data points in the volume)=N.P=K
+NPTEL
+
+### Slide 55
+K-NN: Probabilistic
+interpretation
+Estimates of the Prob. that the volume V
+around x contains a data point, P= K/N
+Probability density at x, p(x) = P/V
+Consider a class w1 contains n1 number of
+neighbors out of K neighbors.
+p(x, w1) = (n1/N)/V
+p(w1|x)=p(x,w1)/p(x)=n1/K
+Posterior prob. of the class w1 given x.
+Assign the class
+which has maximum
+posterior prob.
+NPTEL
+
+### Slide 56
+K-NN: Probabilistic
+interpretation
+Estimates of the Prob. that the volume V
+around x contains a data point, P= K/N
+Probability density at x, p(x) = P/V
+Consider a class w1 contains n1 number of
+neighbors our of K neighbors.
+p(x, w1) = (n1/N)/V
+p(w1|x)=p(x,w1)/p(x)=n1/K
+Posterior prob. of the class w1 given x.
+Assign the class
+which has maximum
+posterior prob.
+Bayesian
+inferencing
+NPTEL
+
+### Slide 57
+Nearest neighbor
+n When to consider
+n Instance map to points in Rn
+n Less than 20 attributes per  instance.
+n Lots of training data.
+n Advantages
+n Fast training.
+n Learn complex target functions.
+n Do not lose information
+n Disadvantages
+n Slow at query time.
+n Easily fooled by irrelevant attributes.
+http://people.csail.mit.edu/dsontag/courses/ml12/slides
+lecture10.pdf
+NPTEL
+
+### Slide 58
+Issues
+n Distance measure
+n Most common Euclidean
+n Choosing K
+n Increasing k reduces variance, increases bias
+(class prior dominates!).
+n For high dimensional space, the nearest neighbor
+may not be close at all!
+n Memory based technique.
+n Must make a pass through data points for each
+classification.
+n prohibitive for a large data set.
+NPTEL
+
+### Slide 59
+Classification by discriminant
+function
+n Consider two class problems.
+n Input: Labelled data sets: {(yi,xi)}, i=1,2,…,n
+n xi in Rn and yi= +1 or -1.
+n Design a discriminant function g(x) for class
+assignment as yi=sign(g(xi)).
+n Decision boundary: g(x)=0
+n Linear Discriminat Analysis (LDA): g in linear form.
+n Polynomial of x of  degree 1.
+Quadratic Disciminant Analysis (QDA): g being
+quadratic.
+n Polynomial of x of degree 2.
+NPTEL
+
+### Slide 60
+Linear discriminant analysis
+(LDA) from Bayes’ classifier
+n Bayes’ classification steps:
+n Given an input x
+n Estimate P(yi|x), for all i.
+n Assign yk to x if it is maximum.
+n Difficult to estimate P(yi|x) directly.
+n Compute the class likelihood (P(x|yi)) and
+class prior P(yi) from the data.
+n P(yi|X)=(P(x|yi).P(yi) / P(x))
+n Not required to compute P(x), as it is the same
+for all classes.
+NPTEL
+
+### Slide 61
+Linear discriminant analysis
+(LDA) from Bayes’ classifier
+n Assume likelihood distributions are
+normal.
+n N(x; mk, Sk), k=1,2
+n Assume covariance matrices are the same
+n Sk=S, for all k.
+n log(Prob. of class k):
+C (a constant):
+Independent of class.
+Ignore while
+comparing.
+Assign class k having
+maximum value of log(.).
+NPTEL
+
+### Slide 62 (OCR)
+| Linear form of function
+aximize —_log(p,) — : (x — m,)!'S~1(x — mx)
+C> log(p,) — ; (xtS x —x!S-tm, — m{S~tx + miS~tm,)
+Independent of class.
+=> log(p,) — : (—xTS-1m,, — m{S~1x + m{/S~tm,)
+As S is symmetric. | +
+4 oY log(px) — (m{S-1tm,)+ mS"
+Linear discriminant g(x)
+function: G(x)=91(X)-G2(x)
+
+### Slide 63
+LDA as Bayesian
+Classification
+n Estimate class priors pk.
+n Given training data estimate the
+means (mk’s) of classes and the
+covariance matrix (S) of the data.
+Mean of data.
+Obtain the discriminant function g(x) and use
+it for classification.
+NPTEL
+
+### Slide 64
+Perceptron classifier
+n A linear classifier with a different perspective.
+x1
+x2
+xn
+w1
+w2
+wn
+w0
+f (z)
+y=f (z)=sign(z)
+NPTEL
+
+### Slide 65
+Augmented input and linear
+form
+x1
+x2
+xn
+w1
+w2
+wn
+w0
+f (z)
+o=f (z)=sign(z)
+z=WTX
+Given {yi,Xi}, compute optimum W minimizing
+classification error.
+NPTEL
+
+### Slide 66
+Interpretation of WTX
+Consider the hyperplane WTX=0 separating two
+samples X and X’ of classes 1 and 2.
+WTX=0
+X.w
+d=WTX/||W||
+Distance of X from the hyperplane.
+w= unit vector
+along W.
+WTX>0
+WTX<0
+NPTEL
+
+### Slide 67
+Linearly separable classes
+WTX=0
+d=WTX/||W||
+Distance of X from the hyperplane.
+WTX>0
+WTX<0
+To find  a hyperplane separating
+data points of two classes.
+If a solution
+exists, the classes
+are called linearly
+separable.
+NPTEL
+
+### Slide 68
+An error function
+WTY=0
+d=WTY/||W||
+Data Normalization:
+Y=X, if X in class 1 (o=1).
+=-X, if X in class 2 (o=-1)
+For correct
+classification,
+WTY > 0, for all Y.
+Error function
+(Perceptron Criterion):
+Always +ve
+Obtain W which minimizes J(W).
+NPTEL
+
+### Slide 69
+Gradient descent method for
+iterative optimization
+n To obtain W which minimizes J(W).
+n Start with an initial vector W(0).
+n Compute the gradient vector
+n Move closer to minimum by updating
+Positive scale factor
+(learning rate)
+NPTEL
+
+### Slide 70
+Iterative gradient descent
+Optimization
+Data Normalization:
+Y=X, if X in class 1 (o=1).
+=-X, if X in class 2 (o=-1)
+Iterative Optimization
+using gradient descent
+1. Start with W(0).
+2. Update W
+3. Continue step 2 till converges.
+May be taken as a
+constant.
+NPTEL
+
+### Slide 71
+Other forms of  the error
+function
+n There could be other
+forms of the criterion
+function.
+n Jp(W): not continuous
+n Jq(W): continuous.
+n Very smooth in boundary.
+n May get stuck there.
+n Value  dominated by long  Y’s.
+Another error function
+(Relaxation criterion)
+Stronger linear separability
+Y(W
+Gradient computation:
+NPTEL
+
+### Slide 72
+More stringent criteria of
+linear separability
+WTX=b
+Linear support vector machines
+(SVM) maximize b between two
+linearly separable data points of
+classes.
+NPTEL
+
+### Slide 73
+The algorithm (Batch
+relaxation with margin)
+n Initialize W to W(0).
+n Iterate till convergence
+n Compute the set M of misclassified
+samples (with margin b), so that
+n M={Y|WTY<=b}
+n Compute gradient.
+n Update W.
+Y(W
+NPTEL
+
+### Slide 74
+Single sample relaxation
+with margin
+n Initialize W to W(0).
+n Perform the update of W by considering
+samples one by one in every iteration.
+n Consider an i th sample Yi at k th iteration.
+n If (WTYi <=b)
+n Update W.
+n Stop when very little change in updates at
+the end of an iteration.
+NPTEL
+
+### Slide 75
+Perceptron modelling a
+neuron
+x1
+x2
+xn
+w1
+w2
+wn
+f (z)
+https://pixabay.com/vectors/brain-neuron-nerves-cell-science-2022398/
+Logistic / Sigmoid
+Signum
+A network of perceptrons
+provides a powerful
+model describing input /
+output relations.
+bias
+NPTEL
+
+### Slide 76
+Artificial Neural Network
+n A network of perceptrons.
+n Input: A vector
+n Output: A vector / A scalar
+NPTEL
+
+### Slide 77
+Feed-forward Network
+n No feed back or loop in the network.
+NPTEL
+
+### Slide 78
+Multilayered feed-forward
+Network
+Input Layer
+• Accepts input
+Hidden Layer
+Output Layer
+• Generates output.
+n Layer-wise
+processing
+n i th layer takes
+input from (i-1)th
+layer  and forwards
+its output to the
+input of next layer.
+Fully connected
+(FC) feed-
+forward network.
+NPTEL
+
+### Slide 79
+Mathematical description
+of the model
+n Let j th neuron of i th layer be nej
+n Its corresponding weights
+n Wj
+(i)= (wj1
+(i), wj2
+(i), …., wjn_(i-1)
+n Bias: wj0
+n n_(i-1): Dimension of input to the neuron
+n n_i: Dimension of output at i th layer
+n Output of the neuron:
+NPTEL
+
+### Slide 80
+Mathematical description
+of the model
+n Output of j th neuron in i th layer:
+n Input output relation in i th layer
+W(i)
+b(i)
+NPTEL
+
+### Slide 81
+Input output relation
+n Output of j th neuron in i th layer:
+n Input output relation in i th layer
+W(i)
+b(i)
+Input
+Output
+W(1),b(1)
+W(2),b(2)
+W(m),b(m)
+NPTEL
+
+### Slide 82
+Input output relation
+Input
+Output
+W(1),b(1)
+W(2),b(2)
+W(m),b(m)
+Input
+Output
+Parameters
+NPTEL
+
+### Slide 83
+Optimization problem
+F(X;W)
+Input
+Output
+Given {(Xi , Oi)}, i=1,2,…,N, find W such that it
+produces Oi given input Xi for all i.
+Minimize:
+Apply the same gradient descent procedure to obtain the solution.
+NPTEL
+
+### Slide 84 (OCR)
+Optimization problem
+Training samples:
+Input [—» => Output {(X; , O;)}, i=1,2,...,N
+ae _i y “> 4r Apply the same
+Minimize Jn(W) DH XW)? Talent descent
+1. Start with an initial W. proce optain
+2. Update W iteratively.
+W; = Wi-1 + n(i) > (O — F(X; Wi_1)) VF(Xx; Wi-1 )
+Stochastic gradient descent:
+W; = Wi_-1 + nG)(O,-F(X,; W.7)) VF Xx; Wi-1 )
+
+### Slide 85 (OCR)
+Chain rule of computing
+4 gradient of a single neuron
+“Tay Target response: t
+x, Ws > Error:
+v dE dE  E |
+ag ab d0 a2 VW) = (Sau Gm) ‘gt
+emi 400 f? ow ~ =-2(t-o)f'ax, a= (1+e-4)2
+2(r0) f'@  *i — Analytical method! Lt
+Computed given the 1 (1 _ 1
+QE dE 0002 4, functional values. 1+e-7 1+e7
+im Do dzdm se = AE OY OMS aif)
+
+### Slide 86
+Computing gradient: Back
+propagation method
+n For multi-layered feed forward network.
+n Apply chain rule.
+n From output to toward input.
+n From output layer to toward input layer.
+n Compute partial derivatives of weights at (i-1)th
+layer from the i th layer.
+NPTEL
+
+### Slide 87 (OCR)
+4 Back propagation: Concept
+G 0 ay Error:
+WS ay AMO OY, yi °
+L V1 \N) 2 LO
+wl? Ns La er 4
+2 “a ” DT ONC
+Layer 1 Layer2 Layer 3 ciel (z)”) 94
+jy 2) = GF _ dE (_d0 ay — ao ayS\ ay
+W3, = aw® ~ Fo ay ay + ayo ay aw®)
+
+### Slide 88 (OCR)
+4 Back propagation: Concept
+(3) Error:
+1 G Q 3 oy 4 2
+A Q) ay 00 E=(t-o)
+LS Oy KN / IO
+Ws aw?) Mes OE
+"N5 ay,” © (3)
+S| woe po = f' (z; ive
+(3) (3) (2) (2)
+Aw) — 2E -F( do dy, ado ay, 2 a 0 rw a
+"Gu 30 Lay May" BPM y Jame yer aK CA)
+
+### Slide 89 (OCR)
+Back propagation: Delta
+4 rule
+n> ¢ Error:
+FSB og
+E=(t-o)2
+ate OA RO AN 5 (0)
+ws a ar (Fo? ayy”
+oR v a oT ayo! (2; )wi
+V3) [Li y 1
+we y I py
+y (2)
+Aws? = 6) f(z, v3” Oy
+jw = 28 = (i tO
+OE _OE/ 00 17 (3)\_ (3) 0 (,)\, (3) )\ 9%
+on =~ Hogg OP net Pe io
+Delta rule: = I
+5) = 5 Ww + 6 we? O14 O19
+
+### Slide 90
+Back propagation: Delta
+rule
+i-1 th layer
+δ1(i)
+δj(i)
+i th layer
+n_i
+δk1(i)=f’(z1(i)) δ1(i)
+wk1
+δn_i(i)
+wk,n_1
+δkj(i)=f’(zj(i)) δj(i)
+wkj
+kj
+kj
+δmk(i-1)=f’(zk(i-1)) δk(i-1)
+mk
+mk
+ym(i-2)
+Accumulated
+gradient value
+from output to
+this point.
+ky
+mk
+δk,n_j
+(i)=f’(zj
+(i)) δn_j
+NPTEL
+
+### Slide 91
+ANN training
+n Initialize W(0) .
+n For each training sample (xi, oi) do
+n Compute functional values of each neuron
+in the forward pass.
+n Update weights of each link starting from
+the output layer using back propagation.
+n Continue till it converges.
+NPTEL
+
+### Slide 92
+Classification or
+regression?
+n Primarily a regressor.
+n Build a model to predict functional value F(x)
+given input x.
+n Can be converted to a classifier by
+appropriate encoding of classes (output
+vector o).
+n Two class problem
+n Binary encoding: 0 / 1
+n One hot encoding: (1 0) / (0 1)
+NPTEL
+
+### Slide 93
+Evaluation of a classifier
+n Two class problems.
+n Positive class and Negative class
+n TP: Set of +ve samples predicted +ve.
+n FP: Set of –ve samples  predicted +ve.
+n TN: Set of –ve samples predicted –ve.
+n FN: Set of –ve samples predicted +ve.
+AP
+AN
+PP
+TP
+FP
+PN
+FN
+TN
+Precision: TP/PP
+Recall:      TP/AP
+Sensitivity / Recall:
+TPR= TP/AP
+Specificity:
+TNR= TN/AN
+Accuracy:
+(TP+TN)/Total
+F-Score:
+Harmonic mean of
+precision and recall
+Recall
+Prec
+Recall
+Prec
+Recall
+Prec
+NPTEL
+
+### Slide 94
+Evaluation of a classifier
+n Multi class problems.
+n Confusion matrix
+True classes
+Predicted
+classes
+Accuracy: (Sum of diagonal) / Total
+NPTEL
+
+### Slide 95
+Cross validation
+n For supervised classification.
+n Separate training and test data.
+n Train network using training data.
+n Evaluate using test data.
+NPTEL
+
+### Slide 96
+k-fold cross validation
+n Divide the data in k sets of equal size.
+n Train using (k-1) sets and test with the
+remaining.
+n Do it for every set as a test set.
+n Report the average performance.
+NPTEL
+
+### Slide 97
+Summary
+n Classification
+n Task of assigning a known category or class to an object.
+n Clustering
+n the task of organizing objects into groups whose members
+are similar in some way.
+n Clustering techniques
+n K-Means
+n K-Medoids.
+n GMM
+NPTEL
+
+### Slide 98
+Summary
+n Classification techniques
+n Naïve Bayesian
+n K-NN
+n Linear discriminant analysis
+n ANN
+NPTEL

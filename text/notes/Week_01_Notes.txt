@@ -1,0 +1,692 @@
+# Week 1 — Fundamentals of Image Processing and Transforms — study notes
+(Fundamentals of Image Processing  +  Image Transforms; Prof. Jayanta Mukhopadhyay · Lectures 1–4. Re-taught-from-scratch notes written from the slides + transcript; math is LaTeX between $...$ / $$...$$. Pretty version: https://pml2405.github.io/computer-vision-notes/notes/week1_notes.html)
+
+COMPUTER VISION · NPTEL · IIT KHARAGPUR
+
+Week 1
+
+**Fundamentals of Image Processing**  +  **Image Transforms**
+
+Prof. Jayanta Mukhopadhyay · Lectures 1–4
+
+### 📒 what's inside this week
+
+1. Lecture 1 — Fundamentals of Image Processing · Part I
+what an image is, how it's formed, histograms, thresholding, Otsu, contrast enhancement
+
+2. Lecture 2 — Fundamentals of Image Processing · Part II
+segmentation, connected components, gradients, Prewitt/Sobel, convolution & filtering
+
+3. Lecture 3 — Image Transform · Part I
+basis functions, orthogonal expansion, Fourier transform, the DFT as a matrix
+
+4. Lecture 4 — Image Transform · Part II
+DCT & DST, convolution–multiplication, circular convolution, 2-D transforms
+
+Read top-to-bottom — every idea is re-taught from scratch, so you never need the video. 🎧→📝
+
+# LECTURE 01 — Fundamentals of Image Processing — Part I
+
+from “what is a pixel?” all the way to automatic thresholding & contrast enhancement
+
+🧠 the big picture, first
+
+Before we can do any vision, we need to agree on what an **image** even is to a computer. The answer is delightfully boring: an image is just a grid of numbers.
+
+Once it's numbers, everything else — brightening, finding edges, separating text from background — becomes arithmetic on a 2-D array. This whole lecture builds that toolbox. 🧰
+
+## 1.  how an image is represented
+
+A grayscale image is stored as a 2-D array of integers. Each cell of the array is one **pixel** (“picture element”), and the integer in it is that pixel's **brightness** — how light or dark that spot is.
+
+A real grayscale image. Zoom in far enough and it's… just a table of numbers.
+
+#### zoom in → it's a number grid
+
+[diagram text: 88 | 73 | 74 | 92 | 70 | 64 | 88 | 71 | 76]
+
+each pixel = one integer, usually 0 (black) … 255 (white)
+
+To fully describe the array you also need its **size**: the **width** (columns) and **height** (rows). The lighthouse image above, for example, is width = 256, height = 384 — so 256×384 ≈ 98,000 pixels.
+
+### colour images = three arrays stacked
+
+A colour image is **three** 2-D arrays — one each for the primary colours **Red**, **Green**, **Blue**. At any pixel location, the three values at that same index combine (superimpose) into the final colour. These three arrays are called the **channels**.
+
+Red channel
+Green channel
+Blue channel
+
+Add R+G+B back together on screen → the full-colour photo. So a colour pixel is a triple $(R,G,B)$, each 0–255.
+
+## 2.  storing an image as a file
+
+On disk everything is a **file = a stream of bytes**. The pixel values are stored as one long stream of bytes, but the raw stream alone is meaningless — you also need to know how to read it. So a small **header** is written ahead of the pixel stream.
+
+**📦 what a header carries**
+
+- **width** & **height** — so we can fold the 1-D byte stream back into a 2-D array
+
+- **number of components** — 1 for grayscale, 3 for a colour image
+
+- **bytes per pixel** — commonly 1 byte ⇒ values **0…255** (an unsigned 8-bit integer)
+
+- plus an end-of-file marker
+
+Different standardised formats package this differently — e.g. TIFF, BMP, GIF. If you know the format, you can parse its header and recover the image.
+
+## 3.  how an image is formed
+
+Where do those numbers come from? From **light**. In an optical camera, light reflects off a 3-D scene point, passes through the **lens**, and lands on the **image plane** (the focal plane), where sensors measure it and digitise it.
+
+#### the rule of perspective projection
+
+[diagram text: P | (3-D scene pt) | image plane | O = centre of projection (lens) | p (image pt)]
+
+Draw the ray from scene point **P** through the lens centre **O**; where it pierces the image plane is the image point **p**.
+
+Two things get encoded at **p**: (1) its **position** (given by that ray rule), and (2) its **brightness** — proportional to the amount of light energy reflected from P and focused onto that point. A well-focused lens gathers that energy into a sharp point → a sharp picture.
+
+**📐 perspective projection — the rule**
+The image point is the intersection of **(the ray from P through the centre of projection O)** with the image plane. This is the projection used by ordinary cameras and by our own eyes.
+
+### …but perspective isn't the only way to form an image
+
+#### parallel projection
+
+[diagram text: image plane | parallel rays (no single centre)]
+
+Rays are **parallel**, not converging. Example: **X-ray imaging** — parallel X-ray beams pass through the body onto a plate.
+
+X-ray = parallel projection. Beams pass straight through tissue & bone onto the image plate.
+
+A third family is **range / time-of-flight imaging**: a transmitter sends a wave (acoustic or EM), and the time until the reflection returns — combined with the wave's velocity — gives the distance to each surface point. Scan radially and you build up a surface. Example: ultrasound / echocardiograms.
+
+**💡 so, what is an image?**
+An image is a **spatial distribution of a measurable quantity, encoding the geometry and material properties of objects.**
+
+“Measurable quantity” = brightness for a camera, X-ray absorption for radiography, distance for ultrasound. Same idea, different physics.
+
+## 4.  the histogram — an image's first statistic
+
+The simplest thing we can measure about an image is **how often each brightness value occurs**. That frequency count is the **histogram**: for every brightness level 0…255, how many pixels have it.
+
+**read it as:** “the histogram is the **frequency distribution** of brightness.” Divide every count by the total number of pixels and it becomes a **probability distribution** $p(x)$ — the chance a random pixel has brightness $x$.
+
+$$ p(x)=\frac{\text{number of pixels with brightness }x}{\text{total number of pixels}},\qquad \sum_{x=0}^{255}p(x)=1 $$
+
+#### a document image has a bimodal histogram
+
+[diagram text: brightness 0 → 255 | text (dark) | background | (bright)]
+
+Two peaks (“modes”): dark text pixels vs. bright background pixels.
+
+## 5.  binarization by thresholding
+
+A classic task on document images: separate **foreground** (text) from **background**. Turning the image into just two values is called **binarization**, and the simplest method is a single **threshold** $T$:
+
+$$ \text{out}(x,y)=\begin{cases}255 & \text{if } f(x,y) > T\\[2pt] 0 & \text{otherwise}\end{cases} $$
+
+(Here 255 = white/background, 0 = black/text — you can flip the convention.)
+
+a real document image (dark text on bright paper)
+its brightness histogram — the vertical line is the threshold $T$. Text pixels sit left of it, paper pixels to the right.
+
+But **which** $T$? The professor shows $T=156$ vs $T=192$ on the same document: a higher $T$ makes text sharper but lets in more spurious noise. Picking it by hand doesn't scale across many documents — so we want to choose $T$ automatically. Two ways follow. 👇
+
+## 6.  automatic threshold #1 — Bayesian classification
+
+Model the two peaks as two **classes** of pixels: $w_1$ (foreground) and $w_2$ (background). For a pixel with brightness $x$, we want the **posterior probability** of each class and pick the bigger one:
+
+$$ \text{assign }x\to w_1 \ \text{ if } \ P(w_1\mid x) > P(w_2\mid x), \ \text{ else } w_2. $$
+
+We can't measure $P(w_i\mid x)$ directly, so we flip it with **Bayes' theorem**:
+
+Bayes' theorem
+
+$$ P(w_i\mid x)=\frac{P(w_i)\,p(x\mid w_i)}{p(x)} $$
+
+**🧩 what each piece means**
+
+- $p(x\mid w_i)$ = **likelihood** — how brightness is distributed within class $i$. We model each as a **Gaussian** $\;\mathcal N(\mu_i,\sigma_i)$. Easy to compute.
+
+- $P(w_i)$ = **prior** — the fraction of pixels in class $i$ (the area under that hump). Given a threshold, it's just proportional area.
+
+- $p(x)$ = evidence — the same for both classes, so it **cancels** in the comparison. We never actually need it. 🎉
+
+**so the decision becomes:** compare $P(w_1)\,p(x\mid w_1)$ vs $P(w_2)\,p(x\mid w_2)$ — priors × Gaussian likelihoods. Whichever is larger wins the pixel.
+
+## 7.  finding the threshold — the EM algorithm
+
+Chicken-and-egg: to compute the Gaussians we need to split the pixels, but to split them we need a threshold. The **Expectation–Maximization (EM)** algorithm breaks the loop by **iterating**:
+
+**🔁 EM loop for the threshold**
+
+1. Guess a threshold $T$. It splits brightness into a left half (class 1) and right half (class 2).
+
+2. **Priors** from proportional areas: $P(w_1)=\sum_{x=0}^{T}p(x)$, and $P(w_2)=1-P(w_1)$.
+
+3. **Parameters** of each Gaussian — weighted mean & weighted variance of each side:
+
+$$ \mu_1=\frac{1}{P(w_1)}\sum_{x=0}^{T} x\,p(x),\qquad \sigma_1^{2}=\frac{1}{P(w_1)}\sum_{x=0}^{T}(x-\mu_1)^2\,p(x) $$ $$ \mu_2=\frac{1}{P(w_2)}\sum_{x=T+1}^{255} x\,p(x),\qquad \sigma_2^{2}=\frac{1}{P(w_2)}\sum_{x=T+1}^{255}(x-\mu_2)^2\,p(x) $$
+
+1. Recompute the best threshold from these updated Gaussians (the $x$ where $P(w_1\mid x)$ stops beating $P(w_2\mid x)$).
+
+2. **Repeat** steps 2–4 until $T$ stops changing → **converged**. 🎯
+
+These are exactly the weighted mean and weighted variance formulas from statistics — nothing exotic, just weighted by the histogram probabilities.
+
+## 8.  automatic threshold #2 — Otsu's method
+
+A different, very popular idea: instead of iterating, just **try every possible $T$** and keep the one that makes the two classes most separated. The separation measure is the **between-class variance**:
+
+between-class variance
+
+$$ \sigma_b^{2}(T)=P(w_1)\,P(w_2)\,\big(\mu_2-\mu_1\big)^2 $$
+
+**read it as:** “how far apart are the two class means, weighted by how big each class is.” Bigger $\sigma_b^2$ = cleaner split.
+
+**worked example — scanning for Otsu's T (illustrative numbers, to show the method)**
+Say at candidate $T$ we read off from the histogram: $P(w_1)=0.4,\ P(w_2)=0.6,\ \mu_1=60,\ \mu_2=170$.
+
+1. $(\mu_2-\mu_1)^2=(170-60)^2=110^2=12100$
+
+2. $\sigma_b^2 = 0.4\times0.6\times12100 = 0.24\times12100 = \mathbf{2904}$
+
+3. Compute this for **every** $T\in[0,255]$; the $T$ giving the largest $\sigma_b^2$ is Otsu's threshold.
+
+On the professor's document image this landed at **$T=157$**, giving a clean binarization very close to the Bayesian one.
+
+## 9.  contrast enhancement (histogram equalization)
+
+Sometimes the pixels are bunched into a narrow brightness range → the image looks flat/low-contrast. **Contrast enhancement** stretches that range back out to the full 0–255 by **mapping** each input pixel to a new output pixel.
+
+**⚠️ the mapping must be monotonic**
+If $x_1 > x_2$ then the outputs must satisfy $s_1 > s_2$ (a brighter pixel stays brighter). Otherwise you'd scramble which pixels are light vs dark.
+
+The popular choice uses the pixel's own **cumulative distribution function (CDF)** as the mapping — this is **histogram equalization**:
+
+$$ s = 255\cdot \text{CDF}(x) = 255\sum_{k=0}^{x} p(k) $$
+
+#### the CDF is a monotone “S” curve → it becomes the mapping
+
+[diagram text: input brightness x → | s | s = 255·CDF(x)]
+
+Flat parts of the histogram → gentle slope; crowded parts → steep slope, which spreads those pixels apart (more contrast).
+
+**worked example — equalizing a tiny image (illustrative)**
+4 brightness levels with probabilities $p(0)=0.1,\ p(1)=0.2,\ p(2)=0.3,\ p(3)=0.4$ (so max level = 3). Map with $s=3\cdot\text{CDF}$:
+
+1. CDF: $0.1,\ 0.3,\ 0.6,\ 1.0$
+
+2. $s(0)=3(0.1)=0.3\to0,\quad s(1)=3(0.3)=0.9\to1$
+
+3. $s(2)=3(0.6)=1.8\to2,\quad s(3)=3(1.0)=3.0\to3$
+
+The crowded high levels get pushed apart, using the full available range — exactly the pre-processing step used before Bayesian binarization to sharpen the histogram's modes.
+
+### an image is a grid of numbers — so “seeing” starts as arithmetic on a 2-D array.
+
+histogram → threshold (Bayesian / EM / Otsu) → binarize; CDF mapping → enhance contrast.
+
+### Self-check quiz
+
+1. A colour image of size 256×384 uses how many 2-D arrays, and what's the range of each value (1 byte/pixel)?
+
+→ Answer: 3 arrays (R, G, B); each value 0–255
+
+2. In Bayes' rule for thresholding, why can we ignore the evidence term $p(x)$?
+
+→ Answer: it's identical for both classes, so it cancels when we compare $P(w_1|x)$ vs $P(w_2|x)$
+
+3. Otsu picks the threshold that maximizes which quantity?
+
+→ Answer: the between-class variance $\sigma_b^2 = P(w_1)P(w_2)(\mu_2-\mu_1)^2$
+
+4. Why must a contrast-enhancement mapping be monotonically increasing?
+
+→ Answer: to preserve ordering — a brighter input pixel must stay brighter than a darker one
+
+— end of Lecture 1 notes ✏️
+
+# LECTURE 02 — Fundamentals of Image Processing — Part II
+
+segmentation · connected components · gradients & the Prewitt/Sobel masks · convolution = filtering
+
+🧠 the big picture, first
+
+Lecture 1 turned an image into numbers and split it into two classes (text vs background). Now we go further: split it into **many regions**, find **connected blobs**, and detect **edges**.
+
+The star of this lecture is one idea that quietly runs all of image processing: slide a small grid of weights over the image and take a weighted sum — that's convolution, and it does blurring, sharpening and edge-finding.
+
+## 1.  segmentation
+
+**Segmentation** = partitioning the image pixels into **meaningful, non-overlapping sets**. Binarization from Lecture 1 was the special case of just two sets (foreground / background). In general we can have many.
+
+### multilevel thresholding
+
+Instead of one threshold, use several to cut the brightness range into intervals, and paint each interval a colour. Example — three intervals:
+
+$$ [0,60]\ \Rightarrow\ \color{#2471a3}\text{blue},\qquad [61,119]\ \Rightarrow\ \color{#1e8449}\text{green},\qquad [120,255]\ \Rightarrow\ \color{#b7950b}\text{yellow} $$
+
+an aerial image — the dark branching shape is a **river channel**
+
+#### multilevel thresholds cut the histogram
+
+[diagram text: T₁=60 | T₂=119 | brightness 0 → 255]
+
+Dark water → blue segment; mid tones → green; bright ground → yellow.
+
+The thresholds can be found automatically (extend the Bayesian idea from Lecture 1) or chosen by eye from the histogram's modes.
+
+## 2.  connected-component labelling
+
+Grouping pixels by brightness isn't the whole story — two blue patches on opposite sides of the image shouldn't be “the same thing”. We also want to group pixels that are **physically connected in the plane**. First we must define what “connected” means, via a **neighbourhood**.
+
+#### 4-neighbourhood
+
+[diagram text: x,y | x,y+1 | x,y−1 | x−1,y | x+1,y]
+
+the 4 edge-sharing neighbours
+
+#### 8-neighbourhood
+
+[diagram text: x,y]
+
+4 edges + 4 diagonals (pink)
+
+**🔗 how to find the components**
+
+1. Think of every pixel as a **node**. Put an **edge** between neighbouring pixels that have the same label (same segment).
+
+2. Run any graph traversal — **BFS** or **DFS** — each connected piece it discovers is one **connected component** (one blob).
+
+3. Practical note: you don't actually need to build a graph. The image array + the neighbourhood rule already is the graph, so you can traverse the array directly.
+
+On the river image, the largest component recovers the whole river channel as one region. (Puzzle the professor leaves you: part of the river channel goes missing from that component — why? Hint: a bridge or a brightness change breaks the connectivity along the channel.)
+
+## 3.  gradients — where the edges are
+
+An **edge** is where brightness changes sharply. “Rate of change” of a 2-D function $f(x,y)$ is its **gradient**: the vector of partial derivatives along the two axes.
+
+gradient vector
+
+$$ \nabla f=\left(\dfrac{\partial f}{\partial x},\ \dfrac{\partial f}{\partial y}\right) $$
+
+On a discrete grid we approximate derivatives with **finite differences** — just subtract a neighbour:
+
+$$ \frac{\partial f}{\partial x}\approx f(x{+}1,y)-f(x,y),\qquad \frac{\partial f}{\partial y}\approx f(x,y{+}1)-f(x,y) $$
+
+**read it as:** “how much brighter is my right neighbour than me?” (that's the x-gradient) and “…my top neighbour?” (the y-gradient). Big difference ⇒ an edge runs through here.
+
+The two components combine into an edge strength via the vector **magnitude** — this catches edges in every direction:
+
+$$ |\nabla f|=\sqrt{\left(\tfrac{\partial f}{\partial x}\right)^2+\left(\tfrac{\partial f}{\partial y}\right)^2} $$
+
+original image
+gradient (one direction)
+magnitude → all edges pop
+
+## 4.  masks & convolution — the one big idea
+
+A finite difference is really a tiny **mask** (a.k.a. kernel): a small grid of **weights**. To use it, place it on a pixel, multiply each weight by the pixel under it, add them up, and that weighted sum replaces the centre pixel. The $x$-difference above is just the $1\times2$ mask $\begin{bmatrix}-1&1\end{bmatrix}$.
+
+Generalise to a $3\times3$ mask with arbitrary weights $w_1\ldots w_9$:
+
+$$ g(x,y)=\sum_{i}\sum_{j} w(i,j)\, f(x+i,\,y+j) $$
+
+**💡 this weighted-sum-with-a-sliding-mask IS convolution**
+Sliding one fixed mask across every pixel is the **convolution** operation. The mask **is** the **impulse response** $h(x,y)$ of a **Linear Shift-Invariant (LSI)** system, and the whole operation is also called **filtering** — so “mask”, “kernel”, “impulse response” and “filter” all mean the same grid of weights.
+
+$$ g(x,y) = (h * f)(x,y) $$
+
+## 5.  robust gradients — Prewitt & Sobel
+
+A single-pixel difference is noisy. To make gradients **robust**, average the finite difference over a little neighbourhood. Because everything is linear, that averaging folds into one cleverly-weighted mask.
+
+Prewitt (averages 6 differences)
+
+$$ G_x=\begin{bmatrix}-1&0&1\\-1&0&1\\-1&0&1\end{bmatrix},\quad G_y=\begin{bmatrix}-1&-1&-1\\0&0&0\\1&1&1\end{bmatrix} $$
+
+Sobel (centre weighted ×2 → 8 differences)
+
+$$ G_x=\begin{bmatrix}-1&0&1\\-2&0&2\\-1&0&1\end{bmatrix},\quad G_y=\begin{bmatrix}-1&-2&-1\\0&0&0\\1&2&1\end{bmatrix} $$
+
+Prewitt gives every row equal say; **Sobel** doubles the weight of the central row/column, so the closest neighbours matter most. Convolve with $G_x$ and $G_y$, then take the magnitude → clean edge map.
+
+## 6.  smoothing filters (killing noise)
+
+Swap the sign pattern for **all-positive weights that sum to 1** and the same convolution machine now averages instead of differencing → a **low-pass / averaging filter** that smooths noise.
+
+3×3 averaging (box) filter
+
+$$ \tfrac{1}{9}\begin{bmatrix}1&1&1\\1&1&1\\1&1&1\end{bmatrix} $$
+
+### Gaussian smoothing
+
+The most-used smoother sets the mask weights from a 2-D **Gaussian** centred on the pixel — nearby pixels count more, far ones less:
+
+$$ G(x,y)=\frac{1}{2\pi\sigma^{2}}\exp\!\left(-\frac{x^{2}+y^{2}}{2\sigma^{2}}\right) $$
+
+$\sigma$ (the width) controls how much blur; the mask must be big enough to hold the bump — e.g. a $9\times9$ mask with $\sigma=2$. Then $\;g = G * f$.
+
+noisy input (grainy)
+after low-pass / Gaussian → smoother
+
+### median filtering
+
+**⚠️ median ≠ convolution**
+Median filtering is **non-linear**: replace each pixel by the **median** of its neighbours (sort them, take the middle). It's the go-to for salt-and-pepper noise (random black/white dots), which an averaging filter would just smear.
+
+### one sliding mask + a weighted sum = blur, sharpen, or find edges — it's all convolution.
+
+difference weights → gradients (Prewitt/Sobel); positive weights → smoothing (box/Gaussian); median → non-linear denoise.
+
+### Self-check quiz
+
+1. What's the difference between the 4- and 8-neighbourhood?
+
+→ Answer: 4-nbhd = up/down/left/right only; 8-nbhd also includes the 4 diagonals
+
+2. Why is the Sobel mask considered more robust than a single $[-1,1]$ difference?
+
+→ Answer: it averages several finite differences (and weights the central ones ×2), reducing the effect of noise
+
+3. You have an image with random white/black speckles (salt & pepper). Averaging or median filter?
+
+→ Answer: median — it discards outlier speckles; averaging would just blur them in
+
+4. A mask whose weights are all positive and sum to 1 performs what kind of filtering?
+
+→ Answer: low-pass / smoothing (averaging) — it blurs / reduces noise
+
+— end of Lecture 2 notes ✏️
+
+# LECTURE 03 — Image Transform — Part I
+
+basis functions · orthogonal expansion · the Fourier transform · the DFT as a matrix
+
+🧠 the big picture, first
+
+So far an image lived in the **spatial domain** — a grid of brightness values. A **transform** rewrites that same image as a recipe: “how much of each building-block pattern do I contain?”
+
+Those building blocks are **basis functions** (waves, in the Fourier case). The recipe amounts — the **coefficients** — are the transform. Same image, different language, and some things (compression, filtering) are far easier in this new language. 🎚️
+
+## 1.  an image as a sum of building blocks
+
+Pick a set of **basis functions** $\{b_i(x,y)\}$. The idea: **any** image $f$ can be written as a weighted sum (a linear combination) of them:
+
+$$ f(x,y)=\sum_i c_i\, b_i(x,y) $$
+
+The list of weights $\{c_i\}$ is the **transform** of $f$ with respect to that basis. Instead of storing brightness at every pixel, you store these coefficients — an **alternative description** of the very same image.
+
+#### image = c₁·(block 1) + c₂·(block 2) + …
+
+[diagram text: f | = | c₁·b₁ | + | c₂·b₂ | + | c₃·b₃ | + | ⋯]
+
+The coefficients cᵢ tell you the mix. (We'll do 1-D first — 2-D follows easily next lecture.)
+
+## 2.  the trick that makes coefficients easy: orthogonality
+
+How do you find each $c_i$? If the basis is **orthogonal**, it's a one-liner. First define the **inner product** of two functions — multiply and integrate (using the **complex conjugate** $g^{*}$ of the second):
+
+inner product
+
+$$ \langle f,g\rangle=\int f(x)\,g^{*}(x)\,dx $$
+
+**📐 orthogonal & orthonormal**
+A basis is **orthogonal** if every different pair has zero inner product, and same-pair is some positive $c_i$:
+
+$$ \langle b_i,b_j\rangle=\begin{cases}0 & i\neq j\\ c_i>0 & i=j\end{cases} $$
+
+If additionally $c_i=1$ for all $i$, it's **orthonormal**.
+
+Now the forward transform is just an inner product against each basis function (divide by $c_i$; the division vanishes for an orthonormal basis):
+
+$$ c_i=\frac{\langle f,b_i\rangle}{c_i}\quad\text{(orthogonal)}\qquad\Longrightarrow\qquad c_i=\langle f,b_i\rangle\quad\text{(orthonormal)} $$
+
+**read it as:** “to find how much of block $b_i$ is in $f$, just project $f$ onto $b_i$.” The **forward transform** = compute all the projections; the **inverse transform** = add the blocks back: $f=\sum_i c_i b_i$.
+
+## 3.  the Fourier transform (a special basis)
+
+Choose the basis to be **complex sinusoids** $e^{j\omega x}$ (one for every frequency $\omega$). That choice gives the **Fourier transform**:
+
+continuous Fourier transform
+
+$$ F(\omega)=\int f(x)\,e^{-j\omega x}\,dx $$
+
+$$ f(x)=\frac{1}{2\pi}\int F(\omega)\,e^{\,j\omega x}\,d\omega $$
+
+The forward transform is exactly $\langle f, e^{j\omega x}\rangle$ — note the conjugate turns $e^{j\omega x}$ into $e^{-j\omega x}$. This basis is a **complete base**: its combinations can rebuild **any** function exactly.
+
+**🔑 completeness — why it matters**
+A subset of an orthogonal set is still orthogonal, but you may **lose** the ability to reconstruct $f$ fully. Only a **complete** base guarantees perfect reconstruction. The full Fourier set is complete.
+
+### cosines, sines, and even/odd functions
+
+Euler splits the sinusoid into real + imaginary parts:
+
+$$ e^{j\omega x}=\cos(\omega x)+j\sin(\omega x) $$
+
+The cosine set $\{\cos\omega x\}$ and sine set $\{\sin\omega x\}$ are each orthogonal, but **neither alone is complete** — cosines alone can't rebuild a general function. Except for special symmetries:
+
+#### even function → cosines only
+
+[diagram text: f(x)=f(−x)]
+
+symmetric about 0 ⇒ only cosine terms survive
+
+#### odd function → sines only
+
+[diagram text: f(x)=−f(−x)]
+
+anti-symmetric, f(0)=0 ⇒ only sine terms survive
+
+**Even:** $f(x)=f(-x)$ — the sine integrals vanish, so cosines suffice. **Odd:** $f(x)=-f(-x)$ (and $f(0)=0$) — cosines vanish, sines suffice. This single fact is what makes the DCT & DST possible next lecture. 👀
+
+## 4.  going discrete — transforms become matrices
+
+Images are sampled and finite, so sample $f$ at spacing $X_0$ to get a length-$N$ sequence, written as a column vector:
+
+$$ \mathbf{f}=\big[f(0)\ \ f(1)\ \cdots\ f(N-1)\big]^{T} $$
+
+A **discrete linear transform** is then simply a matrix–vector multiply:
+
+$$ \mathbf{Y}=B\,\mathbf{f} $$
+
+**🧱 the rows of $B$ are the basis vectors**
+Row $i$ of the transform matrix $B$ is the $i$-th basis vector $\mathbf b_i$. Multiplying that row by $\mathbf f$ is exactly the vector inner product (dot product) $\langle \mathbf f,\mathbf b_i\rangle$, which gives the $i$-th coefficient. Orthogonality now reads $\langle \mathbf b_i,\mathbf b_j\rangle = 0$ (for $i\neq j$). $B$ is invertible when it's square & its rows are independent — so an inverse transform exists.
+
+## 5.  the Discrete Fourier Transform (DFT)
+
+Sample the complex sinusoids to get the DFT basis vectors and the transform pair:
+
+DFT (forward & inverse)
+
+$$ F(k)=\sum_{n=0}^{N-1} f(n)\,e^{-j\frac{2\pi nk}{N}} $$
+
+$$ f(n)=\frac{1}{N}\sum_{k=0}^{N-1} F(k)\,e^{\,j\frac{2\pi nk}{N}} $$
+
+The $\tfrac1N$ normalization is parked on the inverse (the professor's convention — the forward result is proportional, reconstruction fixes the scale). Conceptually the DFT is the **Fourier series of the period-$N$ periodic extension** of your finite sequence.
+
+**📻 what the index $k$ actually means (frequency)**
+If the samples are spaced $X_0$ apart, the period is $N X_0$, so the **fundamental frequency** is $\tfrac{1}{N X_0}$. The $k$-th DFT coefficient is the **$k$-th harmonic**, whose physical frequency is $\tfrac{k}{N X_0}$. Dropping $X_0$, we call $\tfrac{k}{N}$ the **normalized frequency**. So low $k$ = slow variation (smooth), high $k$ = fast variation (fine detail/edges).
+
+In matrix form, with $F_N$ the $N\times N$ matrix whose $(k,n)$ entry is $e^{-j2\pi nk/N}$:
+
+$$ \mathbf{F}=F_N\,\mathbf{f},\qquad F_N^{-1}=\tfrac{1}{N}F_N^{H} $$
+
+i.e. the inverse is just the **Hermitian transpose** (transpose + complex-conjugate), scaled by $1/N$ — a consequence of the basis being orthogonal/orthonormal.
+
+**worked example — 4-point DFT of a constant (illustrative)**
+Let $\mathbf f=[1,1,1,1]$, so $N=4$. Compute $F(k)=\sum_{n=0}^{3} 1\cdot e^{-j\frac{2\pi nk}{4}}$:
+
+1. $F(0)=1+1+1+1=\mathbf{4}$
+
+2. $F(1)=1+e^{-j\pi/2}+e^{-j\pi}+e^{-j3\pi/2}=1-j-1+j=\mathbf{0}$
+
+3. By the same cancellation, $F(2)=F(3)=\mathbf{0}$.
+
+Result $[4,0,0,0]$: a constant signal is “all DC, no oscillation” — exactly what we'd expect. 🎯
+
+### generalized DFT
+
+Insert small **phase shifts** into the sampled sinusoids (shift in time and/or frequency) and you get a whole family of orthogonal bases — the **generalized DFT**. Two special cases are the **Odd-Time DFT (OTDFT)** and **Odd-Frequency DFT (OFDFT)**. These are the seeds from which the DCT and DST grow next lecture.
+
+### a transform re-expresses an image as coefficients on an orthogonal basis — and finding them is just projection.
+
+Fourier basis = complex sinusoids; discrete version = a matrix multiply $\mathbf F = F_N\mathbf f$, invert with the Hermitian transpose.
+
+### Self-check quiz
+
+1. Given an orthonormal basis, how do you get the $i$-th transform coefficient of $f$?
+
+→ Answer: project: $c_i=\langle f, b_i\rangle$ (inner product of $f$ with the basis function)
+
+2. Why can cosines alone reconstruct an even function but not a general one?
+
+→ Answer: for an even function the sine (odd) components integrate to 0, so only cosines are needed; a general function has both, and cosines alone aren't a complete base
+
+3. In matrix form, what are the rows of the transform matrix $B$?
+
+→ Answer: the basis vectors — row $i$ dotted with $\mathbf f$ gives coefficient $i$
+
+4. What is the DFT of the constant sequence $[1,1,1,1]$?
+
+→ Answer: $[4,0,0,0]$ — all energy at the DC (zero-frequency) term
+
+— end of Lecture 3 notes ✏️
+
+# LECTURE 04 — Image Transform — Part II
+
+DCT & DST · convolution–multiplication · circular / skew convolution · 2-D transforms
+
+🧠 the big picture, first
+
+Last lecture ended on a cliff-hanger: even functions need only cosines, odd functions only sines. This lecture **cashes that in** — by cleverly extending a finite sequence into an even (or odd) one, we get the DCT and DST — the transforms behind **JPEG and video compression**.
+
+Then two payoffs: convolution becomes plain multiplication in the transform domain, and 2-D transforms reduce to “do the 1-D transform on rows, then columns.” 🧮
+
+## 1.  symmetric & antisymmetric extensions
+
+A finite sequence isn't even or odd by itself — but we're free to define the samples outside its range however we like. Extend it to be **symmetric** (mirror) and it becomes an even function; extend it **antisymmetric** (mirror + negate) and it becomes odd. There are two flavours of each, depending on where the mirror sits:
+
+#### whole symmetry (WS)
+
+[diagram text: mirror at the END sample]
+
+centre of symmetry sits **on** the last sample
+
+#### half symmetry (HS)
+
+[diagram text: mirror HALF a sample past the end]
+
+centre sits **between** the last sample and its mirror
+
+**Antisymmetry** is the same but the mirrored samples are negated (whole-antisymmetry inserts an explicit 0 at the centre; half-antisymmetry doesn't). 2 ends × {symmetric, antisymmetric} choices ⇒ up to 16 different DCT/DST types.
+
+## 2.  so DCT & DST just fall out
+
+**💡 the whole reason DCT/DST exist**
+
+- **Symmetric** extension → even sequence → its DFT needs only **cosines** ⇒ **Discrete Cosine Transform (DCT)**.
+
+- **Antisymmetric** extension → odd sequence → only **sines** ⇒ **Discrete Sine Transform (DST)**.
+
+And unlike the continuous case, in the discrete world **every** finite sequence can be given cosine/sine transforms this way. That's why your textbook has them.
+
+The famous one is the **Type-II even DCT** — the “default” DCT used in JPEG image & video compression:
+
+Type-II DCT ( the JPEG one )
+
+$$ C(k)=\alpha(k)\sum_{n=0}^{N-1} x(n)\,\cos\!\left[\frac{\pi(2n+1)k}{2N}\right] $$
+
+$\alpha(0)=\sqrt{\tfrac{1}{N}},\quad \alpha(k)=\sqrt{\tfrac{2}{N}}\ (k\ge1)$
+
+its sine twin — Type-II DST
+
+$$ S(k)=\alpha(k)\sum_{n=0}^{N-1} x(n)\,\sin\!\left[\frac{\pi(2n+1)k}{2N}\right] $$
+
+same shape, cosine → sine (from an antisymmetric extension), $1\le k\le N$
+
+As a matrix it's the $N$-point DCT matrix $C_N$. Because it's **orthonormal**, the inverse is just the transpose:
+
+$$ \mathbf{X}=C_N\,\mathbf{x},\qquad C_N^{-1}=C_N^{T} $$
+
+Neat property used by fast algorithms: each row of $C_N$ is either **symmetric** (even $k$) or **antisymmetric** (odd $k$). Type-I even DCT is the other common one (period $2N$, defined over $N{+}1$ samples).
+
+## 3.  convolution becomes multiplication
+
+Remember convolution (filtering) from Lecture 2? In the Fourier domain it turns into simple **point-wise multiplication** — the **convolution–multiplication property**:
+
+convolution ↔ multiplication
+
+$$ \mathcal{F}\{f * h\}=F(\omega)\cdot H(\omega) $$
+
+**read it as:** “to filter, don't slide a mask — just transform both signals, multiply them, and transform back.” For big filters that's dramatically faster.
+
+**🔄 but finite sequences → circular convolution**
+Linear convolution assumes infinitely long signals. Finite sequences are handled by **periodic extension**, giving **circular convolution** (compute over one period $0..N{-}1$). The convolution–multiplication property holds for the DFT with **circular** convolution.
+
+Use an **antiperiodic** extension instead ($f(x{+}N)=-f(x)$, which is actually periodic with period $2N$) and you get **skew-circular convolution** — the version that pairs with the DCT/DST types. Each DCT/DST type has its own analogous convolution–multiplication property.
+
+## 4.  2-D transforms via separability
+
+Images are 2-D, but we only built 1-D machinery. The rescue is **separability**: pick a 2-D basis that factors into a product of 1-D bases,
+
+$$ b_{ij}(x,y)=g_i(x)\,g_j(y) $$
+
+Then a 2-D transform is just: **transform every column, then transform every row** (each a 1-D transform). In matrix form, for an image block $X$ of size $m\times n$:
+
+2-D separable transform
+
+$$ Y=B_m\,X\,B_n^{T} $$
+
+**🧩 when is a filter mask separable? ⇔ rank 1**
+The same idea decides whether a $2$-D convolution **mask** $M$ can be applied as two cheap 1-D convolutions. $M$ is **separable** $\iff$ it factors as an **outer product** of a column and a row vector, $M=\mathbf u\,\mathbf v^{T}$ $\iff$ $\operatorname{rank}(M)=1$.
+
+Quick test: compute the mask's **rank** (= number of linearly independent rows). If every row is a scalar multiple of one row → rank $1$ → **separable** (e.g. the averaging box, the 2-D Gaussian, and Sobel's $\begin{smallmatrix}-1&0&1\\-2&0&2\\-1&0&1\end{smallmatrix}=\begin{smallmatrix}1\\2\\1\end{smallmatrix}[-1\ 0\ 1]$). Rank $>1$ → **not** separable.
+
+#### transform columns → then rows
+
+[diagram text: image X | cols done | rows done | Y (transform)]
+
+$B_m$ multiplies on the left (columns), $B_n^{T}$ on the right (rows). Same idea gives the **2-D DFT** and **2-D DCT**.
+
+## 5.  why bother with transforms at all?
+| property | DFT | DCT (Type-II) |
+| coefficients | complex (magnitude + phase) | real |
+| basis | complex sinusoids $e^{-j2\pi nk/N}$ | real cosines |
+| main use | frequency analysis, filtering | energy compaction → **JPEG / video compression** |
+
+**🎯 the payoffs**
+
+- **Compact representation:** a few transform coefficients approximate the image well (low vs high frequency) → **compression**.
+
+- **Perceptual quantization:** throw away coefficients the eye barely notices (the heart of JPEG).
+
+- **Easier processing:** filtering, enhancement and restoration are often simpler in the transform domain (convolution → multiplication).
+
+### extend a sequence to be even/odd → cosines/sines only → the DCT/DST that power JPEG & video.
+
+convolution = multiplication in the transform domain; 2-D = 1-D on columns then rows ($Y=B_mXB_n^{T}$).
+
+### Self-check quiz
+
+1. Why does a symmetric extension of a sequence lead to a cosine transform?
+
+→ Answer: it makes the sequence even, and an even function's Fourier expansion needs only cosine terms → DCT
+
+2. Which transform does JPEG use, and why is it good for compression?
+
+→ Answer: the Type-II DCT — it's real and packs most of the signal's energy into a few low-frequency coefficients
+
+3. How does convolution (filtering) look in the Fourier domain?
+
+→ Answer: as point-wise multiplication: $\mathcal F\{f*h\}=F\cdot H$ (for circular convolution with the DFT)
+
+4. How do you compute a 2-D separable transform of an image block $X$?
+
+→ Answer: transform columns then rows: $Y=B_m\,X\,B_n^{T}$
+
+— end of Lecture 4 · end of Week 1 ✏️🎉

@@ -1,3 +1,20 @@
+# Computer Vision (NPTEL) — course site
+
+`index.html` is the hub: slides, transcripts and assignment solutions for weeks 1–12, plus the study notes in
+`notes/`. Every PDF has a plain-text twin under `text/`, and `text/weeks/week-NN.txt` holds everything for a
+week in one file, so a link can be pasted into ChatGPT / Claude with no uploads. Also generated: `llms.txt`,
+`manifest.json`, `sitemap.xml`. The old notes-only page is now `notes/index.html`.
+
+Rebuild after adding or changing notes or source PDFs (needs `pip install pymupdf` and the `tesseract` CLI):
+
+```bash
+python3 tools/build_site.py "/path/to/folder/with/Lecture Slides, Transcripts, Assignment Solutions"
+```
+
+The sections below describe the notes-generation kit this repo started as.
+
+---
+
 # 📓 Handwritten Study Notes — Reusable Generation Kit
 
 > **📦 Copying this to another subject? Use [`notes-kit/`](notes-kit/).** It's the packaged,

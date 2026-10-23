@@ -1,0 +1,264 @@
+# Week 10 — Clustering and Classification — assignment solution
+(source: NPTEL, 10 PDF pages; fractions/matrices from the PDF may be flattened in this text)
+
+Nptel Online Certification Course
+Indian Institute of Technology Kharagpur
+Computer Vision
+Assignment - Week 10
+Number of questions: 10
+Total marks: 10x2=20
+QUESTION 1:
+Type: MSQ
+Which of the following statements are true for an Artificial Neural Network?
+a) A single neuron with two inputs and the signum activation function can implement an
+AND gate.
+b) A single neuron with two inputs and the signum activation function can implement an
+XOR gate.
+c) A single neuron with multiple inputs and the signum activation function acts as a linear
+discriminator in a multidimensional feature space for two linearly separable classes.
+d) A single neuron with multiple inputs and the sigmoid activation function computes
+posterior of a class for a two-class classification problem in a multidimensional feature
+space.
+Correct Answer: a, c, d
+Detailed Solution:
+a) True. Because an AND gate is a linearly separable function, a single neuron
+(perceptron) can easily find a decision boundary line that separates the output 1 from
+the output −1 (or 0).
+b) False. Because an XOR gate is not linearly separable, meaning a single straight line
+cannot separate the true outputs from the false outputs in a 2D plane; it requires a
+multi-layer network.
+c) True. Because the decision boundary of a single neuron with a signum activation
+function is defined by a linear combination of its inputs (𝑤𝑇𝑥+ 𝑏= 0), which forms a
+hyperplane that splits the multidimensional space into two classes.
+d) True. Because the sigmoid function mathematically models the posterior probability
+𝑃(Class 1 | 𝑥) under the assumption that the class-conditional distributions are normal
+with equal covariance matrices.
+QUESTION 2:
+Type: MCQ
+Consider the following table. The table shows the points on x-axis and its corresponding
+class.
+Point
+Class
+0.8
+1
+1.2
+1
+1.9
+1
+2.5
+2
+3.0
+1
+3.5
+1
+4.0
+2
+4.8
+2
+5.5
+3
+6.2
+3
+We introduce two new points on x-axis, 2.7 and 4.2. Compute KNN (K=3) to determine their
+class.
+a) 2.7 : Class 2 and 4.2: Class 1
+b) 2.7 : Class 1 and 4.2: Class 2
+c) 2.7 : Class 1 and 4.2: Class 3
+d) 2.7 : Class 2 and 4.2: Class 2
+Correct Answer: b)
+Detailed Solution:
+The point 2.7 is close to 2.5, 3.0 and 3.5. The maximum occurring class is 1 considering these
+points. Hence, the class assigned to 2.7 is 1. Similarly, for 4.2, the points are 3.5, 4.0 and 4.8.
+QUESTION 3:
+Type: MCQ
+Assume, you have 4 types of objects with 2 attributes each, as shown in the table, and you
+would like to form two clusters of the objects. Consider object A and object B as the initial
+centroids.
+Table 1:
+Object
+Attribute 1
+Attribute 2
+A
+1
+1
+B
+2
+1
+C
+4
+3
+D
+5
+4
+What will be the elements in each clusters after the first iteration?
+a) Cluster 1: A, Cluster 2: B, C, D
+b) Cluster 1: A, D, Cluster 2: B, C
+c) Cluster 1: A, B, Cluster 2: C, D
+d) Cluster 1: A, C, Cluster 2: B, D
+Correct Answer: a)
+Detailed Solution:
+Calculate the distance between each object with the cluster centroids.
+Distance between Cluster 1 centroid (A) and B = 1
+Distance between Cluster 1 centroid (A) and C = 3.61
+Distance between Cluster 1 centroid (A) and D = 5
+Distance between Cluster 2 centroid (B) and A = 1
+Distance between Cluster 2 centroid (B) and C = 2.83
+Distance between Cluster 2 centroid (B) and D = 4.24
+Thus, the two clusters will be (A) and (B, C, D).
+QUESTION 4:
+Type: MCQ
+In the Naive Bayes algorithm, suppose that prior for class 1 is greater than class 2. How does
+the decision boundary shift from equally probable priors with respect to the region R1 (region
+for deciding class 1) or towards region R2 (region for deciding class 2)?
+a) towards region R1.
+b) towards region R2.
+c) No shift in decision boundary.
+d) It depends on the exact value of priors.
+Correct Answer: b)
+Detailed Solution:
+As prior for class 1 is greater than class 2, we shift the decision boundary towards region R2
+to preserve the prior probabilities proportion.
+QUESTION 5:
+Type: MCQ
+Assume, you want to cluster 7 observations into 3 clusters using K-Means clustering
+algorithm. After first iteration clusters, C1, C2, C3 has following observations:
+C1: (2,2), (4,4), (6,6)
+C2: (0,4), (4,0)
+C3: (5,5), (9,9)
+What will be the cluster centroids if you want to proceed for second iteration?
+a) C1: (4,4), C2: (2,2), C3: (7,7)
+b) C1: (6,6), C2: (4,4), C3: (9,9)
+c) C1: (2,2), C2: (0,0), C3: (5,5)
+d) C1: (2,2), C2: (0,4), C3: (5,5)
+Correct Answer: a)
+Detailed Solution:
+Finding centroid for data points in cluster C1 = ((2+4+6)/3, (2+4+6)/3) = (4, 4)
+Finding centroid for data points in cluster C2 = ((0+4)/2, (4+0)/2) = (2, 2)
+Finding centroid for data points in cluster C3 = ((5+9)/2, (5+9)/2) = (7, 7)
+Hence, C1: (4,4), C2: (2,2), C3: (7,7)
+FOR QUESTIONS 6 AND 7:
+Consider the following neural network. i1, i2 : Inputs; o1, o2 : Outputs. W1 = 0.15, W2 =
+0.20, W3 = 0.25, W4 = 0.31, W5 = 0.40, W6 = 0.45, W7 = 0.50, W8 = 0.55.
+If all the Activation Functions are ReLU, then answer the following question 6 and 7:.
+Figure 1: Feedforward neural network.
+QUESTION 6:
+Type: Comprehensive
+What will be the output for Input [1, 1]?
+a) o1 : 0.21, o2 : 0.68
+b) o1 : 0, o2 : 0
+c) o1 : 0.37, o2 : 0.53
+d) o1 : 0.42, o2 : 0.46
+Correct Answer: d)
+Detailed Solution:
+i1 = 1, i2 = 1
+h1 = ReLU(1*0.15 + 1*0.25) = ReLU(0.4) = 0.4
+h2 = ReLU(1*0.20 + 1*0.31) = ReLU(0.51) = 0.51
+o1 = ReLU(0.40*0.40 + 0.51*0.50) = ReLU(0.415) = 0.42
+o2 = ReLU(0.40*0.45 + 0.51*0.55) = ReLU(0.46) = 0.46
+QUESTION 7:
+Type: Comprehensive
+What is the total error if o1 and o2 are 0 and 1, respectively? The error is given by
+𝐸= 1
+2 (𝑡𝑎𝑟𝑔𝑒𝑡−𝑜𝑢𝑡𝑝𝑢𝑡)2.
+a) 0.234
+b) 0.468
+c) 0.274
+d) 0.548
+Correct Answer: a)
+Detailed Solution:
+Error will be calculated as:
+𝐸= 1
+2 (0 −0.42)2 + 1
+2 (1 −0.46)2 = 0.234.
+QUESTION 8:
+Type: MCQ
+An optimization algorithm is updating a 197-dimensional parametric space to train a
+single-hidden-layer feedforward neural network. If the input layer accepts a 10-dimensional
+feature vector and the output layer yields a 2-dimensional vector, determine the number of
+neurons present in the hidden layer.
+a) 12
+b) 15
+c) 20
+d) 25
+Correct Answer: b) 15
+Detailed Solution:
+Let ℎbe the number of neurons in the hidden layer. The total number of parameters (weights
+and biases) in a network with a single hidden layer can be mathematically expressed by the
+formula: Total Parameters = (𝑑𝑖𝑛+ 1) · ℎ+ (ℎ+ 1) · 𝑑𝑜𝑢𝑡
+197 = (10 + 1) · ℎ+ (ℎ+ 1) · 2
+197 = 11ℎ+ 2ℎ+ 2
+197 = 13ℎ+ 2
+195 = 13ℎ
+ℎ= 195
+13 = 15
+Thus, the hidden layer contains exactly 15 neurons.
+QUESTION 9:
+Type: MSQ
+We want to classify whether a special wire is good or not. Consider the following table
+consisting of four samples.
+Table 2:
+Durability
+Strength
+Label
+7
+7
+bad
+7
+4
+bad
+3
+4
+good
+1
+4
+good
+3
+10
+good
+0
+7
+good
+8
+8
+bad
+6
+3
+bad
+We introduce a new wire with durability 3 and strength 7. Which of the following statements
+are true after computing KNN (K=3)?
+a) (3, 7) is a bad wire.
+b) The nearest sample to (3, 7) is at a distance of 4.
+c) (3, 7) is a good wire.
+d) The nearest sample to (3, 7) is at a distance of 3.
+Correct Answer: c), d)
+Detailed Solution:
+Calculate the distance between each sample and the new sample (3, 7).
+Distance between (7, 7) and (3, 7) = 4
+Distance between (7, 4) and (3, 7) = 5
+Distance between (3, 4) and (3, 7) = 3
+Distance between (1, 4) and (3, 7) = 3.6
+Distance between (3, 10) and (3, 7) = 3
+Distance between (0, 7) and (3, 7) = 3
+Distance between (8, 8) and (3, 7) = 5.1
+Distance between (6, 3) and (3, 7) = 5
+It is closest to (3, 4), (3, 10) and (0, 7). Thus, the minimum distance is 3, and the sample gets
+classified as good.
+QUESTION 10:
+Type:MCQ
+In a computer vision classification task, a prototype-based model defines the representation of
+three classes (Cat, Dog, and Fish) using the following 5-dimensional feature vectors:
+vCat = [4, 1, 3, 0, 2]
+vDog = [5, 2, 4, 1, 1]
+vFish = [1, 0, 1, 5, 4]
+Given an unknown input query feature vector x = [2, 1, 2, 4, 3], determine which class the
+input vector x belongs to based on the highest cosine similarity, and find its exact similarity
+value.
+a) Fish, with a cosine similarity of 0.8412
+b) Dog, with a cosine similarity of 0.7106
+c) Fish, with a cosine similarity of 0.9231
+d) Cat, with a cosine similarity of 0.7854
+Correct Answer: c)
+Detailed Solution:
+Cosine similarity between vectors 𝑎and 𝑏is
+𝑎.𝑏
+||𝑎||×||𝑏||.

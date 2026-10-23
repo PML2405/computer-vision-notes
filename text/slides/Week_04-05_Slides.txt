@@ -1,0 +1,897 @@
+# Weeks 4 & 5 — lecture slides
+(source: NPTEL, 73 slides; text layer, plus OCR on 27 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Stereo Geometry
+(Week 04-05 Lectures: 16-23)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+
+### Slide 2 (OCR)
+r Stereo Set-up
+Epipolar plane Le
+: Sa ee 1,1’: Epipolar
+: JL, XI — r _ lines
+oe <_F C’
+*—~—— Camera centers Se, e’: epipoles
+
+### Slide 3 (OCR)
+t Epipolar geometry
+Corresponding point </
+of x in the right aN
+image lies on I’. Ne ‘, y
+xX oS Y ‘ é
+\ e of as
+XX °. | | a °
+\ y ‘ epipolar line
+\ / for x
+From Hartley and Zisserman, “Multiple view geometry in
+computer vision”, Cambridge Univ. Press (2000)
+
+### Slide 4
+Epipolar geometry
+All points on p project on l and l’
+From Hartley and Zisserman, “Multiple view geometry in computer
+vision”, Cambridge Univ. Press (2000)
+
+### Slide 5
+Epipolar geometry
+Epipoles e,e’
+= intersection of baseline with image plane
+= projection of projection center in other image
+= vanishing point of camera motion direction
+An epipolar plane: plane containing baseline (1-D
+family)
+An epipolar line: intersection of epipolar plane with
+image (always come in corresponding pairs)
+
+### Slide 6
+Epipolar geometry
+Family of planes p and lines l and l’
+Intersection in e and e’
+From Hartley and Zisserman, “Multiple view geometry in computer
+vision”, Cambridge Univ. Press (2000)
+
+### Slide 7
+Example: converging
+cameras
+From Hartley and Zisserman, “Multiple view geometry in computer
+vision”, Cambridge Univ. Press (2000)
+
+### Slide 8
+Example: motion parallel with
+image plane
+From Hartley and Zisserman, “Multiple view geometry in computer
+vision”, Cambridge Univ. Press (2000)
+
+### Slide 9 (OCR)
+. 0 -e, ey
+Epipolar le'l=|e, 0 ey
+r Geometry “ey ex 0
+-1 x' = P'X
+H, = [K'R|Kt] Mn — p'’ptx
+= K'RK7} -1
+ae Epipolar plane ee] /
+l’=e'xXx! | eee 2 | ee | For scene
+— [,! » | ar pe a x” points lying on
+= le |x wha, | 3 a plane at infinity.
+P=K[I1 | 0] P=KYR | t]
+F=[e’],K’RK! Coplanar: X,x,x°C,C, eel Ll’
+
+### Slide 10 (OCR)
+Fundamental
+Matrix: F
+t Epipolar Geometry "= Fx
+e = PC’
+e' =P'C
+e = —KR'™t=KR't
+0 c Try =0
+- _|0 P=K[1| 0] P=KTR\t] Fn ght a ,
+1 1
+
+### Slide 11
+Fundamental and
+Essential  Matrices
+P= K[I | 0]
+P’= K’ [R | t]
+Say, P=[I | 0], i.e. K=I
+P’=K’ [R | t]=[K’ R | K’ t]=[M | m]
+Essential Matrix (E)
+
+### Slide 12
+Ex. 1
+n Consider the following stereo imaging
+matrices given by P =[I|0] (ref. camera)
+and P’ as follows.
+Compute the fundamental matrix of the system.
+
+### Slide 13 (OCR)
+3 4 6 4
+P= 7 2 j
+pp hs. 1 1521
+3 4 6 4. 0 -1 8
+n= [a 7 | mafa rab] 0 -4
+15 2 1 -8 4 0
+F =[m],M
+0 33 14
+[1 —16 -2|
+8 —-4 —40
+
+### Slide 14
+Ex. 2
+n Consider the following stereo imaging
+matrices given by P (ref. camera) and P’.
+(a) Compute the fundamental matrix of the system.
+(b) Given an image point (15,20) of the reference
+camera (P), compute the epipolar line and its two
+end image points of P’.
+
+### Slide 15 (OCR)
+324 -2 3 8 5 2
+p=|s 6 0 | r=[2 7 6 “3
+95 7 3 64 9 8
+4s: 2 (a) a) OP, —7—
+4 M
+eg ,[42 6 -24
+C=—M'Pps Wt sale —15 2 |
+42
+132 14 3 2
+é 1 | 148 26.23 2
+C= S| “3 46 | é"= PC = 2194|-1300 7
+1 13.09 1
+9.33 2.07 —4.62
+Ha = M'M-1 > t= [93 1.78 ~439
+2.33 —0.07 —0.05
+P= lela He 5.41 —1.91 0
+—5.41 —-1. 4.4
+167 2 0 2.99 0.09 1.19
+
+### Slide 16 (OCR)
+(b) Given an image point (15,20) of the reference camera (P),
+compute the epipolar line and its two end image points of P’.
+[a7 —1.91 4.40 |
+F =| 4.67 2.21 —4.52
+Ans. 2(b) 2% 2.99 0.09 -—1.19
+aan 0]
+15] f-—114.92 —2.53
+[= F|20|=| 109.76 | =| 2.42
+TaN 1] 1 45.44 1
+15
+poe OY H.. ee X" o = Hy 20
+TN . ue x “! 1
+: Lo __ a ‘Hx =|9.33 1.78 —4.48
+os an —_ L=> C’ 176.81 5.27
+C - “ =|. Xn = 171.24] = {5.11
+1 33.52 1
+
+### Slide 17 (OCR)
+Fundamental Matrix: Lal
+| Properties LX LS,
+xT Fx = x'FTx’ = 0,V(x',x) p p
+Transpose:
+If F is fundamental matrix of (PP’), F’ for (P’,P).
+Epipolar lines: For x, €pipolar line /’=Fx. "S42 |
+For.x”, epipolar line =F’ correlation.
+Epipoles: e’’ (Fx) = e7(F'x') = (Fe)’x'=0 45 cencient
+e™F=0 » eis left NULL vector of F. does not
+Fe=0 » eis the right NULL vector of F. exit.
+Rank deficient:
+det(F)=0 and F isa projective element > 7 d.o.f.
+
+### Slide 18
+Ex. 3
+n Consider the following fundamental matrix.
+a) Given two  points (5,8) and (7,-5) in the left
+image compute the corresponding epipolar lines
+in the right image.
+b) Compute the right epipole.
+c) Compute the left epipole.
+
+### Slide 19
+Ans.3
+n l1=F.[ 5 6 1]T= [172    57     1]T
+n l2=F.[ 7 -5 1]T=[80   150  -370]T
+n eR=l1 x l2 =[-21240  63720 21240]T
+=[-1  3 1]T
+q eL= Right zero of F
+
+### Slide 20 (OCR)
+20 12 #420
+F=| 8 —-7 9 |
+rn Ans.3 (contd.) nd
+a e, = Right zero of F
+20 12 +0
+F=| 8 -7 0
+-4 33,4 -177
+I's 7 sol e. -°
+lewl=-[g “F) [soll
+
+### Slide 21 (OCR)
+20 12 «20
+F=| 8 -7 59 |
+rn Ans.3 (contd.) nd
+0 @p= Right zero of F*
+20 8 4
+FT = | 12 -7 \33 |
+0 69 -177
+— 44 f&R1
+2-7 33 er] =0
+e ~lr_4] fH
+lena! = Ly “1 [33/1 3
+
+### Slide 22
+Essential Matrix
+Stereo geometry for calibrated cameras.
+E=[t]xR
+P=K[I | 0]
+P’=K’ [R | t]
+xc= K-1x
+x ’c=K’-1x’
+Coordinates in calibrated
+image planes.
+x’TFx=0
+à(K’xc’)TF(Kxc)=0
+àx’c
+TK’TFKxc=0
+àx’c
+T(K’TFK)xc=0
+x’c
+TExc=0
+E=K’TFK
+F=K’-TEK-1
+=K’-T [t]xR K-1
+Eec=e’cE=0
+Rank: 2
+det(E)=0
+6 parameters
+d.o.f.=5
+
+### Slide 23
+Pure translation
+P=K[I | 0]
+P’=K’ [I | t]
+For K=K’,  F=[e’ ]x
+F=[e’]xK’IK-1
+=[e’]xK’K-1
+camera translation ||l
+to x-axis, e’=[1 0 0]T
+è x’TFx=0
+è y’=y
+
+### Slide 24 (OCR)
+Pure Translation:
+Computing Depth
+(0,0,0) WON LS C’ (-4,0,0)
+For K=K’ P=K{I| 0] ty P=K’{I | ¢
+ZK-*(x' —x) =(X+t)-X=t += [0]
+,_ Kt __ Ke
+C»> x =xt+ 7 — Z= y _X
+
+### Slide 25
+Pure Translation:
+Computing Depth
+P=K[I | 0]
+P’=K’ [I | t]
+(0,0,0)
+(-tx,0,0)
+(X,Y,Z)
+
+### Slide 26
+General Motion
+of Camera
+From Hartley and Zisserman, “Multiple view geometry in computer
+vision”, Cambridge Univ. Press (2000)
+e(2)
+Rotational
+Homography
+H=K’RK-1
+P=K[I | 0]
+P’=K’ [R | t]
+x(2) =K’[R|0]X
+=K’R[I|0]X
+=K’RK-1K[I|0]X
+=K’RK-1x
+||l stereo
+P(2)=K’[R|0]
+
+### Slide 27
+General Motion
+of Camera
+From Hartley and Zisserman, “Multiple view geometry in computer
+vision”, Cambridge Univ. Press (2000)
+e(2)
+Rotational
+Homography
+H=KRK-1
+P=K[I | 0]
+P’=K’ [R | t]
+x(2) =K[R|0]X
+=KR[I|0]X
+=KRK-1K[I|0]X
+=KRK-1x
+||l stereo
+
+### Slide 28
+Ex. 4
+n Consider a stereo set-up with P and P’
+(camera matrices for left and right camera)
+as given below.
+If the image coordinates of a 3-D point are
+(6,8) and (9.33,8) in left and right cameras,
+compute its depth (z-coordinate) in the 3D.
+
+### Slide 29
+Ans. 4
+n P=K[I|0] and P’=K[I|t]
+n x’=x+(Kt)/Z
+n Z=(6x10/6)/(x’-x)
+=10/(9.33-6)=3
+
+### Slide 30 (OCR)
+Estimation of fir fia fis
+d tal Matri F= (fo. feo fos
+ina amMmental Matrix far feo fag
+x Fx =0
+X'Xf,, +X' Vig tx fly + V Xf, +V Vo FY fos + 15, + Ugo + 3 = 0
+xx yx vx yyy VU ots br ho he hr fo fal =0
+xX xy x VX Vi yy HY I
+; ; - oo: tiff =0
+XX Xa Vn En Vn Xn Vin Vn Vn Xn Vn I
+o Solution up to scale. At — ¢
+o Minimum 8 point correspondences.
+o Use of DLT (for 7 point correspondences from linear
+combination of smallest and second smallest eigen vectors.
+
+### Slide 31 (OCR)
+Estimation of
+gpfundamenta Matrix
+Si
+Siz
+XX) YX) X} XV] Vwi yy yy 1 f
+XyXy°  VaXQ XQ XYVQ” M2V2 V2 XQ Vs I - _
+: : : p : : : : : Sr2 |= 9
+, — , , So3
+XnXn  VnXn Xn Vn Vn Yn Vn Xn Vn 1
+S31
+~10000 ~10000 ~100 ~10000 ~10000 ~100 ~100 ~100 1 | 32
+Orders of magnitude difference fas
+aN. Between column of data matrix
+—> least-squares yield poor results
+
+### Slide 32
+Transform image to
+~[-1,1] x [-1,1]
+(0,0)
+(700,500)
+(700,0)
+(0,500)
+(1,-1)
+(0,0)
+(1,1)
+(-1,1)
+(-1,-1)
+500
+700
+Least squares yields good results
+(Hartley, PAMI´97)
+The normalized 8-
+point algorithm
+
+### Slide 33 (OCR)
+The singularity
+| constraint
+detF =0 rank F=2
+SVD from linearly computed F matrix (rank 3)
+roy 5, ie =U,0,V; +U,6,V, +U,6,V;
+Compute closest rank-2 approximation
+ray 5, y =U,o,V; +U,0,V,
+
+### Slide 34
+From Hartley and Zisserman, “Multiple view geometry in computer
+vision”, Cambridge Univ. Press (2000)
+The singularity
+constraint
+Non-singular F causes epipolar lines not converging.
+Nonsingular
+Singular
+
+### Slide 35 (OCR)
+The singularity constraint
+rn for Essential Matrix
+det(£)=0
+Estimate £ by any of the:techniques used for F.
+Perform SVD of £.
+E=UDV" Where D=diag(a,b,c)a=>b2>c
+For essential matrix, two singular values are the same.
+—»f=uBpy?  whereD= aa)
+
+### Slide 36
+The minimum case – 7
+point correspondences
+9x9
+7x7
+0,0,
+diag
+But F1+lF2 not automatically rank 2.
+F1,F2à Eigen vectors corresponding
+to two zero’s. The solution is F1+lF2.
+Solve for l from det( F1+lF2) =0.
+As it is a cubic polynomial, there are 1 or 3 solutions.
+Last two
+column
+vectors of V
+also provide
+F1 and F2.
+
+### Slide 37 (OCR)
+Parametric LAS
+: pepresentation OFF we,
+P P’
+Over parameterization: F=[¢],0=> {4M} > 12 params.
+Epipolar parameterization:
+= c ; ve +B Left epipole e=[a 2 —1]!
+Both epipoles as parameters  {a,b,c,d,a,f,a’', B’}
+a b aa+ Bb
+F= C d ac+fd
+a'at+B'c a'b+f'd aa'at+ap'c+a'Bb+ BB'd
+Epipoles e=la B —1]! e’'=[a’ p -1]'
+
+### Slide 38
+Retrieving the camera
+matrices from F
+o F only depends on projective properties of P and
+o Independent of choice of world frame.
+o (P,P’) à F (unique)
+o Fà (P,P’) (?)
+o Given a homography H (4x4 non-singular matrix)
+in P3, if (P,P’) à F, then (PH,P’H)à F.
+Proof: PX  ßà P’X
+è (PH)(H-1X)  ßà (P’H) (H-1X)
+o F does not uniquely map to (P,P’).
+
+### Slide 39
+Retrieving the camera
+matrices from F
+P =[I | 0]
+P’=[M | m]
+o P=[I | 0] & P’=[M | m] à F=[m]xM.
+o If F derived from both (P1,P1’ ) and (P2,P2’ ),
+there exists 4x4 H s.t. P2=P1H & P2’=P1’H.
+o d.o.f. of P + d.o.f. of P’=22
+o d.o.f. of H = 15
+o d.o.f. of F=22-15=7
+
+### Slide 40
+Retrieving the camera
+matrices from F
+F corresponds to (P,P’), iff P’TFP  is skew
+symmetric.
+Proof: For a skew symmetric matrix S, XTSX=0, for all X.
+Now, XTP’ TFPX=(P’X)TF(PX)=x’TFx=0 (for any X in
+P3, as F is the fundamental matrix). …
+o F corresponds to P=[I | 0] & P’=[SF | e’ ], where e’
+is the right epipole of F s.t. e’TF=0.
+o A good choice of S =[e’]x.
+o F à ([I | 0], [[e’]x F | e’ ])
+ßà ([I | 0], [[e’]x F + e’ vT| ke’ ])
+
+### Slide 41
+The camera matrices
+from E (Essential matrix)
+P=[I | 0]
+P’=[R | t ]
+o E is an essential matrix iff two of its singular
+values are equal and the third one is zero.
+o E=[t]xR
+o [t]x and R can be computed through
+decomposition of E s.t. E=SR, where S is a
+skew symmetric matrix and R is orthogonal.
+
+### Slide 42
+Decomposition of E
+(Essential matrix)
+P=[I | 0]
+P’=[R | t ]
+o SVD of E=U diag(1,1,0) VT
+o Two possible decomposition of E=SR
+o S=UZUT
+and R=UWVT or UWTVT
+o Any skew symmetric matrix S can be decomposed as
+S=kUZUT
+o W is orthogonal and Z=diag(1,1,0)W.
+
+### Slide 43
+Camera matrices from E
+P=[I | 0]
+P’=[R | t ]
+o SVD of E=U diag(1,1,0) VT
+o Two possible decomposition of E=SR
+o S=UZUT
+and R=UWVT or UWTVT
+P’=[UWVT | +u3] or [UWVT | -u3]
+[UWTVT |+u3] or [UWT VT | -u3]
+Out of the four only one is valid for viewing a point
+from both the cameras. It is sufficient to test a single
+point for the above.
+Last column of U.
+
+### Slide 44 (OCR)
+‘ Ex. 5
+» Check whether the following fundamental
+matrix and the camera matrices P and P’ (for
+left and right cameras)vare compatible.
+20 12 0
+F -| 8 —7 59 |
+—4 33 -177
+7 4 -6 3 6 4 -6 10
+=a —-1 2 5 |i —5 2 “|
+9 -10 4 1 9 —10 6 2
+
+### Slide 45 (OCR)
+in Ans. 5
+| P’TFP=
+—6549 11489” “4746 —2242
+11859-14183. 4926 2950
+—8496 8816 -—2784 —1888
+—4071 7979  -3414 —1534
+=» Not a skew symmetric matrix.
+= Not compatible.
+
+### Slide 46
+Computing scene
+points (structure)
+Given xi ßàxi’, compute X.
+1. Compute F.
+2. Compute P and P’.
+3. For each (xi,xi’) compute X by triangulation.
+Compute intersection of  Cxi and C’xi’.
+ii.
+Compute segment perpendicular to both.
+iii. Get the mid-point.
+xi
+xi’
+Perp. segm.
+Not projective invariant, i.e. (PH,P’H) does not give H-1X.
+
+### Slide 47 (OCR)
+Minimizing LAS a
+: Reprojection Error LX LS,
+PP’
+Given x, <x, compute X.
+1. Estimate X s.t. PX = Zand P’K =x’.
+2. Minimize the reprojection error (£,,,).
+Eyy= d(x, 2)2+d(2,x")”
+subject to x" Fx = 0
+Projective invariant.
+
+### Slide 48
+Linear triangulation
+methods
+Given xi ßàxi’, compute X.
+Not projective invariant.
+4 equations,
+3 unknowns.
+Minimize ||AX||
+subject to ||X||=1.
+Generalize to multiview correspondences.
+x1 ßàx2 ßàx3
+P1
+P2
+P3
+6 equations
+3 unknowns.
+Use DLT.
+[A]4x4X=0
+
+### Slide 49
+Ex. 4
+n Suppose P and P’ (for left and right cameras).
+Images of a scene point are formed at
+(0,3.5), and (2/3, -1/3), respectively. Find the
+3D coordinate of the scene point.
+
+### Slide 50
+Computation of structure
+dx
+dx’
+P=[M|m]
+P’=[M’|m’]
+-M-1m
+-M’-1m’
+-M-1x
+-M’-1x’
+n=dx X dx’
+C+s dx
+C’+t dx’
+(C+s dx)- (C’+t dx’)
+Perpendicular
+to dx and dx’
+Solve for s and t.
+
+### Slide 51
+4 Ans.
+n P=[M|m] P’=[M’|m’]
+n C=-M-1m= [0.35 1 1.62]T
+n C’=-M’-1m’=[13 35  38]T
+n x=[0 3.5 1]T     x’=[2/3 -1/3 1]T
+n dx= M-1 x=[0.32    0.47    0.69]
+n dx’= M’-1 x’=[1.36   3.67   3.91]
+n dx X dx’= [0.7    0.33   -0.55]
+
+### Slide 52
+n (C+s dx)- (C’+t dx’)=[-12.85  -33.93  -36.58]+s[0.32
+0.47    0.69]-t[1.36   3.67   3.91]
+n 0.32(-12.85+0.3s-1.36t)+0.47(-33.93+0.47s-
+3.67t)+0.69(-36.58+0.69s-3.91t)=0 –(1)
+n 1.36(-12.85+0.3s-1.36t)+3.67(-33.93+0.47s-
+3.67t)+3.91(-36.58+0.69s-3.91t)=0 – (2)
+n Solve (1) and (2) to get s and t, and the point.
+
+### Slide 53 (OCR)
+4" reconstruction
+Intersection of z and zr’.
+na = P'|l GW nr = P'Tl'
+P=[1 | 0] Cee " : PARTE]
+1 A convenient way of
+L= | representing 3D line.
+
+### Slide 54 (OCR)
+4 Plane Induced Homography
+Proof:
+x’ = P'X = [AlalX
+Now, x = PX = [I |0|X
+So any point in CX is X = A 7 /N
+When it intersects 7, 1? A = 9 in Mon
+= p=-v'x | ey ce x! :
+=Ax-av'x Lh, 3 : \e
+=(A-av’)x ae : : a ,
+c Cp=[7|0] ~~ P'=[A| ©
+H = =[4 | 4]
+
+### Slide 55
+Plane induced
+homography
+C P=[I | 0]
+P’=[A | a]
+A transformation H between
+two stereo images is plane
+induced homography if F is
+decomposed into [e’]xH.
+Given P=[I|0], P’=[A|a], & a plane induced
+homography H, the plane can be recovered by solving
+kH=A-avT, (linear equations for unknowns k and v).
+Hence, P=[I|0] & P’=[H|e’].
+
+### Slide 56
+Plane induced
+homography
+C P=[I | 0]
+P’=[A | a]
+A transformation H between
+two stereo images is plane
+induced homography if F is
+decomposed into [e’]xH.
+Hence, P=[I|0] & P’=[H|e’].
+H is the transformation w.r.t. plane [0 0 0 1]T
+in the camera coordinate.
+Plane at infinity
+Given P=[I|0], P’=[A|a], & a plane induced
+homography H, the plane can be recovered by solving
+kH=A-avT, (linear equations for unknowns k and v).
+
+### Slide 57 (OCR)
+Homography compatible
+stereo geometry
+H is compatible iff HF is
+skew symmetric, i.e. Plsxa]
+T ae Hp,
+—, x? HT Fx — 0 C p=[/ | 0] P’=[A | a]
+As this is true for all x,
+H'F is skew symmetric.
+
+### Slide 58
+Plane induced H and epipolar
+constraints
+Epipoles mapped by
+H, as e'=He, since
+they are images of
+the point on the plane
+where
+the
+baseline
+intersects it.
+Epipolar lines are mapped by
+the homography as H-Tl’e = le.
+Hx lies on epipolar line le'
+so l'e = Fx = x' x (Hx).
+From Hartley and Zisserman, “Multiple view geometry
+in computer vision”, Cambridge Univ. Press (2000)
+
+### Slide 59 (OCR)
+Computing F from 6 points out
+a which 4 are coplanar
+Yy 1. Use 4 coplanar points
+° to compute //,,
+2.1,= H,(x5) X x5"
+3. = H AX) X X65.
+4. e=hX1L
+; 5. Fle Hy.
+
+### Slide 60
+Given F and 3 point
+correspondences, compute H.
+1. Obtain (P=[I|0],P’=[A|a]) from F and
+construct 3 scene points, X1, X2, & X3.
+2. Obtain plane (vT,1)T.
+3. Compute H=A-avT
+1.Obtain (e,e’) from F.
+2.Use 3 correspondences + (e,e’), to obtain H.
+First Method
+Second Method
+Any 3 points can bipartition the image
+space, w.r.t. the plane formed by them.
+
+### Slide 61 (OCR)
+INI H =(A-av’)
+Infinite For P=[/|0], P’=[A | a]
+Homog ra phy and plane=[v7 1]?
+Homography induced by the plane at a.
+[Pe] Az = (K'R _— e'v' )K"!
+Hox © Where v = 7 and e' = K’'t
+Be | He = K'(R-) x
+CP=K[I|0] P’'=KR FA = K'RK~1 —K' = K-1
+x’ = K'RK~1x + = As d > 0, Hy= K'RK7}
+_ K't AsZ> OO,
+ill = AyXx + TT x' is the image of point on 71,5.
+
+### Slide 62
+H⍺and Vanishing points
+o H⍺maps vanishing points between two images.
+o H⍺can be computed by identifying three non-
+collinear vanishing points given F  or from 4
+vanishing points.
+o Let P=[M |m], P’=[M’ | m’], X=[x⍺
+T 0]T (a point at
+infinity).
+x=PX=M x⍺
+x’=P’X=M’ x⍺
+x’=M’M-1x è H⍺=M’M-1
+
+### Slide 63
+Affine epipolar geometry
+||l projection
+rays
+Epipolar line
+Epipolar
+plane
+o Projection rays are
+parallel.
+o Epipolar lines and planes
+are parallel.
+Form of F:
+a,b,c,d,e all
+non-zero.
+As epipolar lines are parallel, epipoles are in
+the form [e1 e2 0]T
+
+### Slide 64 (OCR)
+. l’ — 'xH
+Affine 00 a) Liye
+0 0 b er
+4 stereo eg ef Fa = le'lxHa
+Epipole:
+0 0 e" Point of
+’ ; intersection
+le = 0 0) —e 1 ae a
+_[A t mn Ee SE
+Ma = lor 4
+F,: d.0.f.: 4
+F,= | 0 b |= 5 5 t epipole:[-d e 0]’
+A —b'’A —b't ° y 1 right epipole:[-b a 0)"
+
+### Slide 65 (OCR)
+f 0 j
+Estimating F’, doe
+Epipolar lines: =Fx=la b extdytc]!
+I= Fy’ x=fe»d ax'+by' +c]?
+Point correspondence: Reduced to a single linear equation.
+x Fix =0> axr'+by'’+ext+tdy+c=0
+[Alvxsfsx1 =0 Solve using DLT.
+Minimum 4 point correspondences required to get F’,.
+Singularity constraint is satisfied by the structure of F;.
+
+### Slide 66
+Estimating FA
+(another approach)
+1. Compute HA using 3 point-correspondences.
+2. l’= HAx4’ x x4’  (say, [l1 l2 l3]T)
+3. Get e’ from l’ as [l2 –l1 0]
+4. FA= [e’]xHA
+
+### Slide 67
+Summary
+o Epipolar geometry in a stereo imaging system.
+epipoles, scene point, corresponding image points, and
+camera centers lie on the same plane.
+o Fundamental matrix (F) characteristics and unique
+to the stereo set-up.
+Transformation invariant.
+3x3 singular matrix with d.o.f. 7 and rank 2.
+Given an image point x, its epipolar line l=Fx.
+For any pair of correspondence point (x,x’), x’TFx=0.
+Given epipoles (e,e’), Fe=e’TF=0
+Given camera matrices (P,P’), F is unique.
+P=[I|0], P’=[M|m] è F=[m]xM.
+P=[M|m], P’=[M’|m’] è F=[m’-M’M-1m]xM’M-1
+
+### Slide 68
+Summary
+o Given a homography H (4x4 non-singular matrix) in
+P3, if (P,P’) à F, then (PH,P’H)à F.
+o Given a fundamental matrix F, there exist a family
+of stereo setups (pairs of camera matrices).
+([I | 0], [[e’]x F + e’ vT| ke’ ]), v: any arbitrary 3 vector, k : a
+scalar constant.
+o Given camera matrices (P,P’) and a corresponding
+pair of image points (x,x’), it is possible to
+reconstruct the respective 3-D scene point X.
+
+### Slide 69
+Summary
+o Fundamental matrix of calibrated cameras is
+called Essential Matrix E.
+o E=[t]xR, given ([I|0], [R|t]).
+oE is an essential matrix iff two of its singular
+values are equal and the third one is zero.
+o[t]x and R can be computed through
+decomposition of E s.t. E=SR, where S is a skew
+symmetric matrix and R is orthogonal.
+
+### Slide 70
+Summary
+P’=[UWVT | +u3] or [UWVT | -u3]
+[UWTVT |+u3] or [UWT VT | -u3]
+o SVD of E=U diag(1,1,0) VT
+o Two possible decomposition of E=SR
+o S=UZUT
+and R=UWVT or UWTVT
+One of the above is valid in viewing a point from both
+the cameras.
+
+### Slide 71 (OCR)
+n Summary
+o Given a set of pairs of corresponding points, it is
+possible to estimate F.
+o Minimum 7 pairs required.
+o Parametric representation of F.
+a b aa+ Bb
+F= C d ac+ pd |
+a'at+B'c a'b+f'd aa'at+ap'’c+a'Bb+ BB'd
+Epipoles: e-=fta—$——1+}"e= [a’_f_ > 1f-
+e=|la B —1]" e’ = [a’ p’ —1]"
+
+### Slide 72
+Summary
+o Given a set of pairs of corresponding points, it is
+possible to estimate camera matrices and scene
+points up to projective (4x4 homography matrix)
+ambiguity.
+o (PH)(H-1X)  ßà (P’H) (H-1X)
+o Given a pair of corresponding lines l and l’, and
+camera matrices (P,P’) possible to reconstruct
+respective 3D line L.
+Intersection of planes PTl and P’Tl’
+
+### Slide 73
+Summary
+o A plane induces homography between
+corresponding image points in a stereo set-up.
+Given a plane (vT,1), and camera matrices ([I|0],[A|a]),
+H=(A-avT)
+Homography at infinity: Plane at infinity (0T,1)  induces
+H=A.
+o Affine epipolar geometry simplifies the structure of
+fundamental matrix.
+FA=
+o Right epipole: [-d e 0]T
+o Left epipole: [-b a 0]T

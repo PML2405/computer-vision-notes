@@ -1,0 +1,498 @@
+# Week 2 — Projective Geometry — assignment solution
+(source: NPTEL, 10 PDF pages; fractions/matrices from the PDF may be flattened in this text)
+
+Nptel Online Certification Course
+Indian Institute of Technology Kharagpur
+Computer Vision
+Assignment - Week 2
+Number of questions: 10
+Total marks: 10x2=20
+QUESTION 1:
+Type: MCQ
+A possible equivalent representation of a 2D point ( 1
+2, 3
+4) in 𝑅2 after projecting onto 𝑃2 is
+a) (2, 3, 1)
+b) (3, 2, 4)
+c) (4, 6, 8)
+d) (6, 4, 3)
+Correct Answer: c)
+Detailed Solution:
+It is natural to consider the set of vectors (𝑘𝑥, 𝑘𝑦, 𝑘)𝑇for varying values of 𝑘to be a
+representation of the point (𝑥, 𝑦)𝑇in 𝑅2 after projecting onto 𝑃2.
+FOR QUESTIONS 2 AND 3:
+Given a homography 𝐻=
+
+2
+1
+0
+1
+0
+1
+1
+2
+−1
+
+. Based on the given data solve the following questions
+2 and 3:
+QUESTION 2:
+Type: Comprehensive
+Find the transformation of the point (5, 3).
+a) (6, −13, −10)
+b) (13, −6, 10)
+c) (13, 6, 10)
+d) (13, −6, 11)
+Correct Answer: c)
+Detailed Solution:
+Transformation of a point 𝑥is given by 𝑥′ = 𝐻𝑥.
+QUESTION 3:
+Type: Comprehensive
+Find the transformation of the line passing through the points 𝑝1 = (2, 0) and 𝑝2 = (1, −3).
+a) 11.5𝑥+ 10𝑦−5.5 = 0
+b) 10𝑥−11.5𝑦+ 5.5 = 0
+c) 10𝑥−𝑦+ 5.5 = 0
+d) 10𝑥−11.5𝑦−5.5 = 0
+Correct Answer: d)
+Detailed Solution:
+Line passing through the points is given by 𝑙= 𝑝1 × 𝑝2.
+Transformation of the line 𝑙is given by 𝑙′ = 𝐻−𝑇𝑙.
+QUESTION 4:
+Type: MSQ
+Which of the following properties are true for a homography?
+a) it transforms point in real 𝑅2 space to projective 𝑃2 space.
+b) three points lie on the same line if and only if their homographic transforms lie on the
+same line.
+c) minimum 4 point correspondences needed to compute homography.
+d) only in the form of singular 3 × 3 matrix.
+Correct Answer: b), c)
+Detailed Solution:
+a) Homography is a projective transformation, i.e. 𝑃2 →𝑃2. It preserves collinearity, and is
+always in a linear form. d) A homography matrix must be non-singular (invertible).
+QUESTION 5:
+Type: MCQ
+Given a homography 𝐻=
+
+1
+1
+0
+1
+0
+1
+0
+1
+1
+
+Compute the transformation of dual conic 𝐶∗
+∞
+(𝐼.𝐽𝑇+ 𝐽.𝐼𝑇) under 𝐻, where 𝐼=
+
+1
+𝑖
+0
+
+and 𝐽=
+
+1
+−𝑖
+0
+
+.
+a)
+
+1
+1
+1
+1
+1
+0
+1
+0
+1
+
+b)
+
+2
+1
+1
+1
+0
+0
+1
+0
+1
+
+c)
+
+2
+1
+1
+1
+1
+0
+1
+0
+1
+
+d)
+
+2
+1
+1
+1
+2
+0
+1
+1
+1
+
+Correct Answer: c)
+Detailed Solution:
+Dual Conic transformed under 𝐻can be written as 𝐻𝐶∗
+∞𝐻𝑇, where 𝐶∗
+∞=
+
+1
+0
+0
+0
+1
+0
+0
+0
+0
+
+.
+QUESTION 6:
+Type: MCQ
+Given a homography 𝐻=
+
+1
+1
+−2
+2
+0
+1
+0
+2
+−1
+
+. Find the vanishing line.
+a) (−0.5, 1, 0.25)
+b) (−0.5, 1.25, 0.25).
+c) (−0.5, 0.25, 0.25).
+d) (0, 0, 1).
+Correct Answer: c)
+Detailed Solution:
+The vanishing line is given by
+
+1
+1
+−2
+2
+0
+1
+0
+2
+−1
+
+−𝑇
+0
+0
+1
+
+.
+QUESTION 7:
+Type: MSQ
+Which of the following statements are true?
+a) The degree of freedom for similarity group is 4 (1 scale, 2 rotation, 1 translation).
+b) The circular points are fixed points under the projective transformation 𝐻if and only if 𝐻
+is a similarity.
+c) A conic remains a conic under homography.
+d) Any square matrix can be decomposed as a product of an orthogonal matrix and an upper
+triangular matrix.
+Correct Answer: b), c), d)
+Detailed Solution:
+The degree of freedom for similarity group is 4 (1 scale, 1 rotation, 2 translation).
+QUESTION 8:
+Type: Numeric
+Given two lines 𝑙= 2𝑥+ 𝑦−3 = 0 and 𝑚= 3𝑥−2𝑦+ 1 = 0 meet at a point 𝑝. Find the
+Euclidean angle between these two lines. Answer should be in nearest degrees. Discard the
+decimal values.
+Correct Answer: 60
+Detailed Solution:
+The Euclidean angle is given by 𝑐𝑜𝑠𝜃=
+𝑙𝑇𝐶∗
+∞𝑚
+√
+(𝑙𝑇𝐶∗∞𝑙)(𝑚𝑇𝐶∗∞𝑚), where 𝐶∗
+∞=
+
+1
+0
+0
+0
+1
+0
+0
+0
+0
+
+.
+QUESTION 9:
+Type: MCQ
+Recollect Direct Linear Transform (DLT) algorithm for non-homogeneous equation 𝐴ℎ= 0.
+Choose the equation from which the matrix A is formed relating a point 𝑋𝑖and its
+transformed point 𝑋
+′
+𝑖in 2D projective spaces, where 𝑋′
+𝑖= (𝑥′
+𝑖, 𝑦′
+𝑖, 𝑤′
+𝑖)𝑇and 𝑋𝑖= (𝑥𝑖, 𝑦𝑖, 𝑤𝑖)𝑇,
+𝑖= 1, 2, · · · 𝑛.
+a)
+
+0𝑇
+−𝑤′
+𝑖𝑋𝑇
+𝑖
+𝑦′
+𝑖𝑋𝑇
+𝑖
+𝑤′
+𝑖𝑋𝑇
+𝑖
+0𝑇
+−𝑥′
+𝑖𝑋𝑇
+𝑖
+−𝑦′
+𝑖𝑋𝑇
+𝑖
+𝑥′
+𝑖𝑋𝑇
+𝑖
+0𝑇
+
+©
+«
+ℎ1
+ℎ2
+ℎ3
+ª®
+¬
+= 0
+b)
+
+𝑦′
+𝑖𝑋𝑇
+𝑖
+0𝑇
+−𝑤′
+𝑖𝑋𝑇
+𝑖
+𝑤′
+𝑖𝑋𝑇
+𝑖
+0𝑇
+−𝑥′
+𝑖𝑋𝑇
+𝑖
+−𝑦′
+𝑖𝑋𝑇
+𝑖
+0𝑇
+𝑥′
+𝑖𝑋𝑇
+𝑖
+
+©
+«
+ℎ1
+ℎ2
+ℎ3
+ª®
+¬
+= 0
+c)
+
+0𝑇
+−𝑤′
+𝑖𝑋𝑇
+𝑖
+𝑤′
+𝑖𝑋𝑇
+𝑖
+𝑥′
+𝑖𝑋𝑇
+𝑖
+0𝑇
+−𝑥′
+𝑖𝑋𝑇
+𝑖
+−𝑦′
+𝑖𝑋𝑇
+𝑖
+𝑦′
+𝑖𝑋𝑇
+𝑖
+0𝑇
+
+©
+«
+ℎ1
+ℎ2
+ℎ3
+ª®
+¬
+= 0
+d)
+
+0𝑇
+0𝑇
+𝑤′
+𝑖𝑋𝑇
+𝑖
+𝑥′
+𝑖𝑋𝑇
+𝑖
+0𝑇
+−𝑥′
+𝑖𝑋𝑇
+𝑖
+−𝑦′
+𝑖𝑋𝑇
+𝑖
+𝑦′
+𝑖𝑋𝑇
+𝑖
+0𝑇
+
+©
+«
+ℎ1
+ℎ2
+ℎ3
+ª®
+¬
+= 0
+Correct Answer: a)
+Detailed Solution:
+The matrix A is formed from the following equation
+
+0𝑇
+−𝑤′
+𝑖𝑋𝑇
+𝑖
+𝑦′
+𝑖𝑋𝑇
+𝑖
+𝑤′
+𝑖𝑋𝑇
+𝑖
+0𝑇
+−𝑥′
+𝑖𝑋𝑇
+𝑖
+−𝑦′
+𝑖𝑋𝑇
+𝑖
+𝑥′
+𝑖𝑋𝑇
+𝑖
+0𝑇
+
+©
+«
+ℎ1
+ℎ2
+ℎ3
+ª®
+¬
+= 0.
+QUESTION 10:
+Type:MCQ
+Given the circle of radius 4 with centre at (−3, 2) in 𝑅2 and homography 𝐻=
+
+1
+1
+0
+1
+0
+1
+0
+1
+1
+
+.
+Which of the following represents the circle by a conic C?
+a) 𝐶=
+
+1
+0
+3
+0
+1
+−2
+3
+−2
+−3
+
+b) 𝐶=
+
+1
+0
+3
+0
+1
+−2
+3
+−2
+3
+
+c) 𝐶=
+
+−1
+0
+−3
+0
+1
+2
+3
+2
+3
+
+d) 𝐶=
+
+1
+0
+3
+0
+−1
+−2
+−3
+−2
+−3
+
+Correct Answer: a)
+Detailed Solution:
+Equation of a circle is given by 𝑎𝑥2 + 𝑏𝑥𝑦+ 𝑐𝑦2 + 𝑑𝑥+ 𝑒𝑦+ 𝑓= 0. From this equation conic
+C is given by 𝐶=
+
+𝑎
+𝑏
+2
+𝑑
+2
+𝑏
+2
+𝑐
+𝑒
+2
+𝑑
+2
+𝑒
+2
+𝑓
+
+.

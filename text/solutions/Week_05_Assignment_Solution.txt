@@ -1,0 +1,731 @@
+# Week 5 — Stereo Geometry — assignment solution
+(source: NPTEL, 8 PDF pages; fractions/matrices from the PDF may be flattened in this text)
+
+Nptel Online Certification Course: Computer Vision
+Assignment 5: Stereo geometry
+Number of questions: 10
+Total marks: 10 X 2 = 20
+QUESTION 1:
+Type:MCQ
+Compute the essential matrix E, provided valid upper-triangular calibration matrices of two
+cameras in a stereo setup as:
+K =
+
+2
+1
+1
+0
+3
+2
+0
+0
+1
+
+and
+K′ =
+
+1
+1
+2
+0
+2
+1
+0
+0
+1
+
+along with a valid rank-2 fundamental matrix F:
+F =
+
+0
+1
+2
+1
+0
+3
+−2
+−3
+0
+
+a)
+
+0
+3
+4
+4
+5
+12
+−2
+−4
+4
+
+b)
+
+2
+8
+11
+1
+5
+8
+0
+1
+3
+
+c)
+
+2
+8
+11
+1
+5
+8
+−2
+−5
+−3
+
+d) None of the above
+Correct Answer: a)
+Detailed Solution:
+Essential matrix E = K′TFK.
+QUESTION 2:
+Type: MCQ
+Compute the homography induced by the plane at infinity, H∞, for camera matrices
+P =
+
+1
+1
+0
+2
+0
+1
+0
+1
+0
+0
+1
+3
+
+and
+P′ =
+
+2
+1
+1
+1
+1
+2
+0
+2
+0
+0
+1
+1
+.
+(a)
+
+2
+−1
+1
+1
+1
+0
+0
+0
+1
+
+(b)
+
+2
+1
+1
+1
+−1
+0
+0
+0
+1
+
+(c)
+
+1
+−1
+1
+1
+1
+0
+0
+0
+1
+
+(d)
+
+2
+−1
+0
+1
+1
+1
+0
+0
+1
+
+Correct Answer: a)
+Detailed Solution:
+The homography induced by the plane at infinity is
+H∞= M′M−1,
+where M and M′ are the left 3 × 3 sub-matrices of P and P′ respectively:
+M =
+
+1
+1
+0
+0
+1
+0
+0
+0
+1
+,
+M′ =
+
+2
+1
+1
+1
+2
+0
+0
+0
+1
+.
+Since M is upper-triangular with ones on the diagonal,
+M−1 =
+
+1
+−1
+0
+0
+1
+0
+0
+0
+1
+.
+Therefore,
+H∞= M′M−1 =
+
+2
+1
+1
+1
+2
+0
+0
+0
+1
+
+
+1
+−1
+0
+0
+1
+0
+0
+0
+1
+=
+
+2
+−1
+1
+1
+1
+0
+0
+0
+1
+.
+QUESTION 3:
+Type: MCQ
+Consider a stereo set-up with P =
+
+8
+0
+0
+0
+0
+8
+0
+0
+0
+0
+1
+0
+and P′ =
+
+8
+0
+0
+16
+0
+8
+0
+0
+0
+0
+1
+0
+. If the image
+coordinates of a 3D point are (2, 4) and (6, 4) in left and right cameras respectively, compute
+its depth.
+a) 2
+b) 4
+c) 6
+d) 8
+Correct Answer: b) Detailed Solution:
+P = K[I|0] and P′ = K[I|t],
+K =
+
+8
+0
+0
+0
+8
+0
+0
+0
+1
+
+and
+t =
+
+16/8
+0
+0
+=
+
+2
+0
+0
+
+Using disparity relation, x′ = x + Kt
+Z
+QUESTION 4:
+Type: MCQ
+Suppose the motion of the cameras is pure translation with no rotation and no change in
+internal camera parameters. Let the epipole in the right image plane be e′ = (0, 0, 1)T.
+Compute the corresponding fundamental matrix.
+(a)
+
+0
+−1
+0
+1
+0
+0
+0
+0
+0
+
+(b)
+
+0
+0
+1
+0
+0
+0
+−1
+0
+0
+
+(c)
+
+0
+−1
+1
+1
+0
+0
+0
+0
+1
+
+(d)
+
+1
+0
+0
+0
+1
+0
+0
+0
+1
+
+Correct Answer: (a)
+Detailed Solution:
+For pure translation without rotation,
+F = [e′]×
+Given
+e′ =
+
+0
+0
+1
+
+the skew-symmetric matrix is
+[e′]× =
+
+0
+−1
+0
+1
+0
+0
+0
+0
+0
+
+QUESTION 5:
+Type: MCQ
+Given camera matrix P =
+
+1
+0
+0
+2
+0
+1
+0
+3
+0
+0
+1
+4
+, compute the camera center C.
+(a)
+
+2
+3
+4
+1
+
+(b)
+
+−2
+−3
+−4
+1
+
+(c)
+
+0
+0
+0
+1
+
+(d)
+
+1
+1
+1
+1
+
+Correct Answer: (b)
+Detailed Solution:
+Camera center satisfies
+PC = 0
+For camera matrix P = [M|p4], camera center is
+C =
+"−M−1p4
+1
+#
+Here, M =
+
+1
+0
+0
+0
+1
+0
+0
+0
+1
+and p4 =
+
+2
+3
+4
+.
+Since M−1 = I,
+−M−1p4 =
+
+−2
+−3
+−4
+
+Thus,
+C =
+
+−2
+−3
+−4
+1
+
+QUESTION 6:
+Type: MCQ
+Given P =
+
+2
+1
+3
+1
+1
+4
+2
+2
+3
+1
+1
+1
+, pseudo inverse P+ =
+
+0.2
+0.1
+0
+0.1
+0.2
+0.1
+0.3
+0
+0.2
+0.1
+0.1
+0.1
+
+, and camera center C =
+
+−1
+2
+1
+1
+
+,
+Identify two points on the ray corresponding to image point x = (2, 1, 1)T.
+(a) Only P+x
+(b) C at λ = 0,
+P+x at λ = ∞
+(c) P+x at λ = 0,
+C at λ = ∞
+(d) None of the above
+Correct Answer: c)
+Detailed Solution:
+The back-projected ray is
+X(λ) = P+x + λC.
+Thus the two points on the ray are P+x at λ = 0 and camera center C at λ →∞. Note that x
+must be expressed in homogeneous coordinates, i.e. x = (2, 1, 1)T, so that P+x is a valid
+4 × 1 world point.
+QUESTION 7:
+Type:MCQ
+Suppose camera motion is pure translation parallel to y-axis with no rotation and no change
+in internal parameters. If epipole is e′ = (0, 1, 0)T, compute fundamental matrix.
+(a)
+
+0
+−1
+0
+1
+0
+0
+0
+0
+0
+
+(b)
+
+0
+0
+1
+0
+0
+0
+−1
+0
+0
+
+(c)
+
+0
+0
+0
+0
+0
+−1
+0
+1
+0
+
+(d)
+
+−1
+0
+0
+0
+0
+−1
+0
+−1
+0
+
+Correct Answer: b)
+Detailed Solution:
+Fundamental matrix is F = [e′]× and e′ = (0, 1, 0)T,
+F =
+
+0
+0
+1
+0
+0
+0
+−1
+0
+0
+
+QUESTION 8:
+Type:MCQ
+Consider stereo setup with P =
+
+6
+0
+0
+0
+0
+6
+0
+0
+0
+0
+1
+0
+and P′ =
+
+6
+0
+0
+12
+0
+6
+0
+0
+0
+0
+1
+0
+. If image coordinates
+are (3, 5) and (7, 5), compute depth.
+(a) 2
+(b) 3
+(c) 4
+(d) 5
+Correct Answer: (b)
+Detailed Solution:
+P = K[I|0],
+P′ = K[I|t]
+K =
+
+6
+0
+0
+0
+6
+0
+0
+0
+1
+and t =
+
+12/6
+0
+0
+=
+
+2
+0
+0
+
+Using disparity relation, 7 = 3 + 6×2
+Z
+QUESTION 9:
+Type:MCQ
+Check whether fundamental matrix F =
+
+2
+1
+0
+3
+−1
+2
+1
+2
+−3
+and camera matrices
+P =
+
+1
+2
+3
+1
+2
+1
+1
+2
+3
+2
+1
+1
+, P′ =
+
+2
+1
+3
+2
+1
+2
+2
+1
+3
+1
+1
+2
+are compatible.
+(a) Yes
+(b) No
+Correct Answer: (b)
+Detailed Solution:
+Compatibility condition requires
+P′TFP
+to be skew symmetric.
+Since computed matrix is not skew symmetric, matrices are not compatible.
+QUESTION 10:
+Type: MSQ
+Consider a stereo setup with camera matrices P = K[I|0] and P′ = K[I|t], where translation is
+only along the x-axis and there is no rotation between the cameras. Which of the following
+statements are correct?
+(a) The fundamental matrix must always be a full rank matrix.
+(b) The epipolar lines in the two images are parallel.
+(c) The essential matrix has rank 3.
+(d) The disparity between corresponding image points can be used to estimate depth.
+Correct Answer: (b), (d)
+Detailed Solution:
+For pure translation along x-axis with no rotation, the epipolar lines become parallel
+horizontal lines. Hence statement (b) is correct.
+Fundamental matrix always has rank 2, not full rank. Hence statement (a) is incorrect.
+Essential matrix also has rank 2 with one singular value equal to zero. Hence statement (c) is
+incorrect.
+Depth can be estimated using disparity relation
+Z = f B
+d
+where f is focal length, B is baseline, and d is disparity. Hence statement (d) is correct.

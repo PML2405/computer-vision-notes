@@ -1,0 +1,1587 @@
+# Week 8 — lecture slides
+(source: NPTEL, 110 slides; text layer, plus OCR on 26 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Color fundamentals and processing
+(Week-08: Lectures  34-40)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+NPTEL
+
+### Slide 2
+What is color?
+n A psychological property of our visual
+experiences when we look at objects and
+lights.
+Not a physical property of those objects
+or lights.
+n Color is the result of interaction between
+physical light in the environment and our
+visual system.
+S. Palmer, Vision Science: Photons to Phenomenology, The MIT Press, 1999.
+NPTEL
+
+### Slide 3 (OCR)
+ctromagnetc spectrum
+= Increasing Frequency (v)
+104 10 10” —0"® 0 to! 0st? 10° 10° 10° 10° 10° v(Hz)
+1 1 1 1 1 I 1 t 1 i 1 I
+‘y rays X rays UV wave ad ew Long radio waves
+Radio waves
+! I ' i) ' rol I ' ! | 1 i] 1
+wo io jo? 0108 | OS ot 10 10° 10° 10° 10° 108 (m)
+a Ne ee Increasing Wavelength (i) >
+4 ane Vicihle t@gtmm Toe see,
+zB os :
+2 o6
+QD 2
+2 04 ‘
+@ o2 | fi
+fo : :
+400 500 600 700
+Wavelength (nm)
+Human Luminance Sensitivity Function
+
+### Slide 4
+The Physics of Light
+Any source of light can be completely described
+physically by its spectrum: the amount of energy emitted
+(per time unit) at each wavelength 400 - 700 nm.
+© Stephen E. Palmer, 2002
+400   500    600    700
+Wavelength (nm.)
+# Photons
+(per ms.)
+Relative
+spectral
+power
+NPTEL
+
+### Slide 5
+The Physics of Light
+# Photons
+D.  Normal Daylight
+Wavelength (nm.)
+B. Gallium Phosphide Crystal
+400   500    600    700
+# Photons
+Wavelength (nm.)
+A.  Ruby Laser
+400   500    600    700
+400   500    600    700
+# Photons
+C.  Tungsten Lightbulb
+400   500    600    700
+# Photons
+Some examples of the spectra of light sources
+© Stephen E. Palmer, 2002
+Rel. power
+Rel. power
+Rel. power
+Rel. power
+NPTEL
+
+### Slide 6
+Courtesy: Computer Vision - A Modern Approach:  Color Slides by  D.A. Forsyth
+Black body radiators
+n Construct a hot body with near-zero albedo (black
+body).
+n Easiest way to do this is to build a hollow metal
+object with a tiny hole in it, and look at the hole.
+n The spectral power distribution of light leaving this
+object is a simple function of temperature.
+n This leads to the notion of color temperature
+n the temperature of a black body that would look the same.
+E l
+l5
+exp hc klT
+NPTEL
+
+### Slide 7
+Reflection of Light
+Some examples of the reflectance spectra of surfaces
+Wavelength (nm)
+% Light Reflected
+Red
+400          700
+Yellow
+400          700
+Blue
+400          700
+Purple
+400          700
+© Stephen E. Palmer, 2002
+NPTEL
+
+### Slide 8 (OCR)
+ep craction of light and surfaces
+; a Observed color is the result
+: of interaction of light source
+eye .
+Seo Cae spectrum with surface
+Pea reflectance.
+Bart init
+Iumination Reflectance Color signal
+: cipea : “ies : Pea
+s 10 inca * S oe = 5 20
+
+### Slide 9 (OCR)
+he Eye: A Camera!
+Iris - colored
+annulus with
+radial muscles
+Conjunctita Virreous-humor
+Pupil - the hole comea in Fovea \\ Retina -photoreceptor cells
+(aperture), size {6 ~ sjiMial axis Macula (rods and cones) acting like
+controlled b 5 a hues he fil f
+ry the 5 i the film or array of sensors
+iris. Aqueous \ io) Optic axis / Disk /( oo of a camera.
+tS ptic nerve
+Ne Retina J ys
+iliary ow FE Choroid
+Sclera
+Lens - changes shape by
+using ciliary muscles for
+focusing on objects of
+interest.
+Adapted from slides by Steve Seitz.
+
+### Slide 10
+Density of rods and cones
+Rods and cones are non-uniformly distributed on the retina
+Rods responsible for intensity, cones responsible for color
+Fovea - Small region (1 or 2°) at the center of the visual field
+containing the highest density of cones (and no rods).
+Less visual acuity in the periphery—many rods wired to the same
+neuron
+Slide by Steve Seitz
+NPTEL
+
+### Slide 11 (OCR)
+The candela is 0 Dazzling light; bright sun on snow i 1 lambert (L) =
+the luminous 1 Outdoors in full sunlight ie, 1 candela per
+intensity, Ina 3 oy Outdoors under a‘treeon asunny day - square centimetre
+. : . £2 Pew | (0.3183 cd/cm?) or
+given direction, 33 10? Comfortableindoor illumination; “he 104 cd m-2
+of asource that | £5 night sports events yj}
+emits =
+monochromatic | 2% 10-5 ‘reshu!diiar
+radiation of 58 ee
+25 red
+frequency < 3
+540x 1012 hertz =
+and that has a 10-2 Threshold when dark-adapted
+rad ia nt © 1998 Sinauer Associates, Inc.
+intensity in th sat . . .
+Mere meet As cone vision is not activated in low
+1/5, watt per __ illumination, we are unable to read.
+steradian. Adapted from slides by A. Efros
+
+### Slide 12 (OCR)
+Physiology of Color Vision
+Three kinds of cones:
+440 530 560 nm. pinttentinaten meine
+Ww eae Batak sa ES Aa Tt ey
+1S} Saale: St ay og 4 MES Tigh
+Zz . ay * ee * ry
+7 Ri Oe ERS iy OME ack atte
+faa} . ee ° t i * * cs
+a te ih Seal eed oe et te me
+[e) ee ay at aaa
+% 50 Hees Gace MRE, oe ag
+E Sat ee A Tet Ba he
+AT es ree eerie aig attra
+400 450 500 550 600 650 FU
+WAVELENGTH (nm.)
+e Ratio of L to M to S cones: approx. 10:5:1
+e Almost no S cones in the center of the fovea
+© Stephen E. Palmer, 2002
+
+### Slide 13
+Color perception
+Wavelength
+Power
+•Entire spectrum (of reflected energy from an
+object or energy of an illuminant) represented by
+3 numbers.
+• Even  different spectra may have same
+representation and thus indistinguishable.
+•such spectra called metamers.
+Adapted from slides by Steve Seitz.
+NPTEL
+
+### Slide 14 (OCR)
+Spectra of some real-world
+urfaces
+09 ee
+os Lf
+metamers %
+07 yellow flowef y/
+\ ‘4 ordnge flower
+oo \ ia | violet flowery
+o4 | } blue flower
+400 a 550 600 650 700
+wavelength in nm
+Adapted from slides by Steve Seitz.
+
+### Slide 15 (OCR)
+! | etamers
+7.0
+6.0
+5.0
+4.0
+~ 400 500 600 700
+wavelength
+Adapted from slides by Steve Seitz.
+
+### Slide 16 (OCR)
+E ndardizing color experience
+= 1O Understand which spectra produce the
+same color sensation under similar viewing
+conditions.
+= Color matching experiments.
+(A) Primary (B)
+lights S wW Surround field
+LB Primary
+LL P lights
+Bipartite
+white
+screen mw @
+Test light 40 Surround Test light
+field
+Foundations of Vision, by Brian Wandell, Sinauer Assoc., 1995
+
+### Slide 17
+Color matching experiment 1
+Source: W. Freeman
+NPTEL
+
+### Slide 18
+Color matching experiment 1
+p1    p2     p3
+Source: W. Freeman
+NPTEL
+
+### Slide 19
+Color matching experiment 1
+p1    p2     p3
+Source: W. Freeman
+NPTEL
+
+### Slide 20
+Color matching experiment 1
+p1    p2     p3
+The primary color
+amounts needed
+for a match
+Source: W. Freeman
+NPTEL
+
+### Slide 21
+Color matching experiment 2
+Source: W. Freeman
+NPTEL
+
+### Slide 22
+Color matching experiment 2
+p1    p2     p3
+Source: W. Freeman
+NPTEL
+
+### Slide 23
+Color matching experiment 2
+p1    p2     p3
+Source: W. Freeman
+NPTEL
+
+### Slide 24
+Color matching experiment 2
+p1    p2     p3
+p1    p2     p3
+We say a
+“negative”
+amount of p2
+was needed to
+make the
+match, because
+we added it to
+the test color’s
+side.
+The primary color
+amounts needed
+for a match:
+p1    p2     p3
+Source: W. Freeman
+NPTEL
+
+### Slide 25
+Trichromacy
+n In color matching experiments, most people can
+match any given light with three primaries.
+n Primaries must be independent.
+n For the same light and same primaries, most
+people select the same weights.
+n Exception: color blindness
+n Trichromatic color theory
+n Three numbers seem to be sufficient for encoding
+color.
+n Dates back to 18th century (Thomas Young).
+Adapted from W. Freeman
+NPTEL
+
+### Slide 26
+Grassman’s Laws
+n Color matching appears to be linear.
+n If two test lights can be matched with the same set
+of weights, then they match each other:
+n If  A = u1P1 + u2P2 + u3P3 and B = u1P1 + u2P2 + u3P3. Then A = B.
+n If we mix two test lights, then mixing the matches
+will match the result:
+n If A = u1P1 + u2P2 + u3P3 and B = v1P1 + v2P2 + v3P3.
+Then A+B = (u1+v1) P1 + (u2+v2) P2 + (u3+v3) P3.
+n If we scale the test light, then the matches get
+scaled by the same amount:
+n If A = u1P1 + u2P2 + u3P3, then kA = (ku1) P1 + (ku2) P2 + (ku3) P3.
+Adapted from W. Freeman
+NPTEL
+
+### Slide 27
+Linear color
+spaces
+n Defined by a choice of three primaries
+n The coordinates of a color are given by
+the weights of the primaries used to
+match it.
+n Matching functions: weights required to
+match single-wavelength light sources.
+mixing two lights
+produces
+colors that lie
+along a straight
+line in color
+space.
+mixing three lights produces
+colors that lie within the triangle
+they define in color space.
+Adapted from W. Freeman
+NPTEL
+
+### Slide 28
+How to compute the color match
+for any color signal for any set of
+primary colors
+n Pick a set of primaries,
+n Measure the amount of each primary,
+needed to match a monochromatic light,               at
+each spectral wavelength      (pick some spectral step
+size).  These are the color matching functions.
+p1    p2     p3
+Source: W. Freeman
+NPTEL
+
+### Slide 29
+Using color matching functions to
+predict the matches for a new
+spectral signal
+A monochromatic light of
+wavelength   will be matched by the
+amounts
+of each primary.
+il
+And any spectral signal can be thought of as a linear
+combination of very many monochromatic lights, with the
+linear coefficient given by the spectral power at each
+wavelength.
+Source: W. Freeman
+NPTEL
+
+### Slide 30
+Using color matching functions
+to predict the primary match to
+a new spectral signal
+Store the color matching functions in the
+rows of the matrix, C
+Let the new spectral
+signal be described by
+the vector t.
+Then the amounts of each
+primary needed to match t are:
+The components e1, e2, e3 describe the color of t.  If you have
+some other spectral signal, s, and s matches t perceptually,
+then e1, e2, e3, will also match s (by Grassman’s Laws)
+Source: W. Freeman
+NPTEL
+
+### Slide 31 (OCR)
+MIXTURES OF LIGHT
+(Additive primaries)
+GREEN
+YELLOW CYAN
+WHITE
+BLUE
+MAGENTA
+MIXTURES OF PIGMENTS
+(Subtractive primaries)
+YELLOW
+, GREEN
+BLACK
+MAGENTA CYAN
+BLUE
+PRIMARY AND SECONDARY COLORS
+OF LIGHT AND PIGMENT
+FIGURE 6.4 Primary and secondary colors of light and pigments. (Courtesy of the Gen- Adapted from Gonzales and Woods
+eral Electric Co., Lamp Business Division.)
+
+### Slide 32
+Linear color
+spaces: RGB
+n Primaries are
+monochromatic lights (for
+monitors, they correspond
+to the three types of
+phosphors).
+n Subtractive matching
+required for some
+wavelengths.
+RGB matching functions
+NPTEL
+
+### Slide 33
+RGB model
+n Additive model.
+n An image consists of 3
+bands, one for each
+primary color.
+n Appropriate for image
+displays.
+Adapted from Gonzales and Woods
+NPTEL
+
+### Slide 34
+CMY model
+n Cyan-Magenta-Yellow
+is a subtractive model
+which is good to
+model absorption of
+colors.
+n Appropriate for paper
+printing.
+Adapted from Octavia Camps, Penn State
+Inks:  Cyan=White-Red,
+Magenta=White-Green,
+Yellow=White-Blue.
+NPTEL
+
+### Slide 35
+CIE chromaticity model
+n The Commission Internationale de l’Eclairage
+(estd. 1931) defined 3 standard primaries: X,
+Y, Z that can be added to form all visible
+colors.
+n Y was chosen so that its color matching
+function matches the sum of the 3 human
+cone responses.
+8986
+1185
+0583
+0283
+9984
+9843
+2883
+5326
+9107
+1149
+0661
+0000
+1143
+5868
+2988
+2001
+1736
+6067
+Adapted from Octavia Camps, Penn State
+NPTEL
+
+### Slide 36
+CIE XYZ: Linear
+color space
+n Primaries are imaginary, but
+matching functions are
+everywhere positive
+n 2D visualization: draw (x,y),
+where
+x = X/(X+Y+Z)
+y = Y/(X+Y+Z)
+Matching functions
+http://en.wikipedia.org/wiki/CIE_1931_color_space
+NPTEL
+
+### Slide 37
+CIE chromaticity model
+n x, y, z normalize X, Y, Z
+such that
+x + y + z = 1.
+n Actually only x and y are
+needed because
+z = 1 - x - y.
+n Pure colors are at the
+curved boundary.
+n White is (1/3, 1/3, 1/3).
+Adapted from Octavia Camps, Penn State
+NPTEL
+
+### Slide 38 (OCR)
+Spectral locus of monochromatic
+lights and the heated black-
+“520
+08
+o7 NY
+. . Sunlight at sunrise
+\ | cance \ NOOK
+y 05 ighting x
+Daylight “es Ne
+04+ | 7000K and ET. 600
+IluminantC.. a Sunlight a
+0.3 : noon 4870K > 2780
+02 Northwest
+sky light 25000K Equal energy
+ot spectrum
+380 d h
+% of o2 0S 04 05 O68 oF 08 089 1 come “Slides by DA Forsyth Approac
+
+### Slide 39
+CIE Chromaticity Chart
+• Shows all the visible colors
+• Achromatic Colors are at
+(0.33,0.33).
+– Called white point.
+• The saturated colors at the
+boundary.
+– Spectral Colors
+Adapted from Octavia Camps, Penn State
+NPTEL
+
+### Slide 40
+Chromaticity Chart: Hue
+• All colors on straight line
+from white point to a
+boundary has the same
+spectral hue.
+– Dominant wavelength
+NPTEL
+
+### Slide 41
+Chromaticity Chart: Saturation
+• Purity (Saturation)
+– How far shifted towards
+the spectral color?
+– Ratio of a/b
+– Purity =1 implies spectral
+color with maximum
+saturation.
+Adapted from Octavia Camps, Penn State
+NPTEL
+
+### Slide 42
+Color Reproducibility
+• Only a subset of the 3D
+CIE XYZ space called 3D
+color gamut.
+• Projection of the 3D
+color gamut.
+–Triangle
+–2D color gamut
+Large if using more
+saturated  primaries.
+Cannot describe brightness
+range reproducibility.
+Adapted from Octavia Camps, Penn State
+NPTEL
+
+### Slide 43 (OCR)
+as
+of //
+a7 F/ ;
+\ > o a NTSC Traditional Single Source
+ash IFS DLP projectors
+\ y -----) HDTV Multiple LED Source
+\ Fy DLP projectors
+as \ “4 —__-«s_ LEO paneisy Multiple Laser Source
+\ oy Traditional Single DLP peoteciore
+\ Ss Source LCD projectors
+ad \ oy, ON
+as \ ' FETS
+\ ’ ee:
+a2 a ea
+\ i eee
+9 ge
+at \ ee
+ao .
+an nt ne nm na as an nz
+Adapted from Octavia Camps, Penn State
+
+### Slide 44
+Saturation and De-saturation
+Operation
+n Move radially to the
+gamut edge à
+Maximum Saturation
+given a hue.
+n Move inward using
+center of gravity law
+of color mixing.
+Luca Lucchese, SK Mitra, J Mukherjee, A new algorithm based on
+saturation and desaturation in the xy chromaticity diagram for
+enhancement and re-rendition of color images, ICIP 2001.
+NPTEL
+
+### Slide 45
+Desaturation using Center of
+Gravity Law
+Hunt, R.: Measuring Colour, 2nd Ed. Ellis Horwood Ltd. Publ., Chichester, UK (1987)
+W=(xw,yw,Yw)
+S=(xs,ys,Ys)
+D=(xd,yd,Yd)
+Weighted average of
+chroma components.
+NPTEL
+
+### Slide 46 (OCR)
+f\ a a
+og , , , .
+ie = 1 Git .- NOY. ..-.---- 2b bebe eee
+dad >. Aes a : : <Z, : : :
+f? Fo 4 ow . =e ge OS ; :
+j Tee, S S 2a ae IS,
+oe oo ie 0.4 se EF ond oi ete DS :
+gO IE = 03 2 Sets : ree
+az = ne Se ae os : is i Lew t
+= O41 ns Senne peepee, oeeeneny Srreteeess: or
+6 a : :
+° 0.1 02 03 0.4 0.5 0.6 7 08
+
+### Slide 47 (OCR)
+0.8L fe Boece ec neebecteecseebececsesesbeceeesedbeceeees
+Pie gti Ngee o4 Pea i ha ON i
+a é ‘Aes i Z “ a me :
+AAO: eS = o3 = : : :
+as al ie ee BES Tp 02 : Benes peer 3
+t &, wee ae Ot a a ee a
+Bx 5 ae : : : :
+) O.1 o2 03 0.4 os 0.6 oF 08
+
+### Slide 48 (OCR)
+os
+Desir Wes eS o6t- > : oS : Eee bere a
+Se Fee a we a ost. ho. ae : ™
+o1-.-- Xe i. : -. cel seoeebens Soe
+% O11 S o3 o4 os O06 oF 08
+
+### Slide 49
+Saturated – De-saturated
+NPTEL
+
+### Slide 50
+Desturated image with –ve k
+NPTEL
+
+### Slide 51
+Desaturation by shifting white
+to (0.5,0.2)
+NPTEL
+
+### Slide 52
+Shifting white to (0.5,0.4)
+NPTEL
+
+### Slide 53
+Shifting white to (0.2,0.5)
+NPTEL
+
+### Slide 54
+Ex 1
+Consider the following transformation matrix of
+color spaces (from RGB to XYZ).
+(a) Given a color value in RGB space as (100, 80, 200)
+compute its corresponding point in the normalized x-y
+chromaticity space.
+NPTEL
+
+### Slide 55 (OCR)
+xX 49 31 #.2717R
+y = fe O1 oy q
+Ans. 1 (a) Z 0 01 .99JLB
+(X, XY, Z
+113.8 AI .431~=—.2.: 17100
+84.8 | = se Ol oy | 80 |
+198.8 0 01 .994L200
+X= X / (X+Y+Z)=113.8/397.4=0.2864
+y= Y / (X+Y+Z)=84.8/397.4=0.2134
+
+### Slide 56
+Ex. 1 (b)
+Given the coordinates in the normalized  x-y
+chromaticity space of three primary colors as
+( 2/3, 1/ 3 ), (1/5, 3/4 ), and ( 1/6, 1/10 ),
+compute the corresponding maximally
+saturated color in the RGB space preserving
+the same hue and intensity for the above
+point.
+NPTEL
+
+### Slide 57
+Ans. 1(b)
+n Move radially to the gamut
+edge à Maximum
+Saturation given a hue.
+(2/3,1/3)
+(1/5,3/4)
+(1/6,1/10)
+(1/3,1/3)
+q (.2864,.2134)
+Maximally saturated
+Intersection of
+point between the
+line formed by an
+edge of the
+triangle and  wq.
+NPTEL
+
+### Slide 58
+Ans. 1(b)
+Use projective space concepts.
+BG=(1/6 1/10 1) x (1/5 3/4 1)
+= (-0.6500    0.0333    0.1050)
+wq = (1/3 1/3 1) x (.2864 .2134 1)
+=(0.1199   -0.0469   -0.0243)
+Intersection point
+= BG x wq
+=(-0.0041    0.0032   -0.0265)
+In non-homogeneous coordinates: (.1553, -.1216)
+First check for BG and wq
+Not a point
+within the x-y
+space.
+NPTEL
+
+### Slide 59
+Ans. 1(b)
+Use projective space concepts.
+BR=(1/6 1/10 1) x (2/3 1/3 1)
+= (-0.2333    0.5000   -0.0111)
+Intersection point = BR x wq
+=(0.0127    0.0070    0.0490)
+In non-homogeneous coordinates: (.2592, .1429)
+Next check for BR and wq (= (.1100  -.0469 -.0243))
+Maximally
+saturated
+point in x-y.
+NPTEL
+
+### Slide 60
+Ans. 1(b)
+(.2592, .1429)
+Maximally saturated point in x-y.
+Convert x-y to XYZ (keeping the intensity same)
+X=(397.4) x .2529=103.0061
+Y=(397.4) x .1429 = 56.7885
+Z=397.4 – (103.0061+56.7885)=237.6054
+Convert from XYZ to RGB: (81.42   49.06  239.51)
+(81, 49, 240)
+XYZ to RGB transformation matrix:
+NPTEL
+
+### Slide 61 (OCR)
+= Differences in x,y (u,v) = ( 4X OY
+coordinates do not , X¥4+15Y4+3Z’'X+15Y + 3Z
+reflect perceptual 8) a :
+color differences. “| “ eta
+07 i L 00am SO 84 O 7000
+= ClEuV'isa ‘ sy FS 7
+. . a sO 0 580 Vos 0 9 @) O /
+projective transform », . 0) yy en |\° \ 0
+of x,y tomake the = »\_ 5 "oe \' /
+ellipses more -_ . 7
+uniform. a i rs
+McAdam ellipses:
+Just noticeable
+differences in color
+Adapted from Linda Shapiro, U of Washington
+
+### Slide 62
+CIE Lab (L*a*b)
+model
+n One luminance channel (L*) and
+two color channels (a* and b*).
+n In this model, the color
+differences which we perceive
+correspond to Euclidean
+distances in CIE Lab.
+n The a axis extends from green
+(-a) to red (+a) and the b axis
+from blue (-b) to yellow (+b).
+The brightness (L) increases
+from the bottom to the top of
+the 3D model.
+http://en.wikipedia.org/wiki/Lab_color_space
+Adapted from Linda Shapiro, U of Washington
+Xn, Yn and Zn are the
+reference white in XYZ space.
+NPTEL
+
+### Slide 63
+63
+YIQ model
+n Have better compression properties.
+n Luminance Y is encoded using more bits than
+chrominance values I and Q (humans are
+more sensitive to Y than I and Q).
+n Luminance used by black/white TVs.
+n All 3 values used by color TVs.
+311
+532
+212
+321
+275
+596
+114
+587
+299
+Adapted from Octavia Camps, Penn State
+NPTEL
+
+### Slide 64
+64
+YCbCr space
+n Have better compression properties. Used in
+image and video compression schemes.
+n Y represents the luminance, and Cb and Cr are
+chrominance parts.
+n Not a linear transformation, affine.
+n Cb and Cr translated to bring them within the
+range of 0 to 240 assuming ranges of R, G and B
+are 0 to 255.
+Adapted from Octavia Camps, Penn State
+NPTEL
+
+### Slide 65 (OCR)
+ee color spaces: HSV
+Cyan wi loser) Red Value
+: : | eS = Green (120°)
+te agenta A Si ne Red (0°)
+Green Yellow aa W Saturation
+{ Sa Value VW
+Sw , ; 0 Saturation
+= Perceptually meaningful dimensions:
+Hue, Saturation, Value (Intensity)
+Adapted from Linda Shapiro, U of Washington
+
+### Slide 66
+66
+HSV model
+n HSV: Hue, saturation, value are non-
+linear functions of RGB.
+n Hue relations are naturally expressed in
+a circle.
+if
+cos
+360
+if
+cos
+min(
+Adapted from Octavia Camps, Penn State
+NPTEL
+
+### Slide 67
+HSV model
+n Uniform: equal (small)
+steps give the same
+perceived color changes.
+n Hue is encoded as an angle
+(0 to 2p).
+n Saturation is the distance to
+the vertical axis (0 to 1).
+n Intensity is the height along
+the vertical axis (0 to 1).
+Adapted from Gonzales and Woods
+NPTEL
+
+### Slide 68
+Opponent Color Processing
+n The color opponent process: A theory proposed
+on perception of color by processing signals from
+cones and rods in an antagonistic manner.
+n Overlapping spectral zone of  three types of cones
+(L for long, M for medium and S for short).
+The visual system considered to  record differences
+between the responses of cones, rather than each
+type of cone's individual response.
+n People don’t perceive reddish-greens, or bluish-yellows.
+NPTEL
+
+### Slide 69 (OCR)
+a Opponent Color Processing
+=» The opponent process theory accounts for
+mechanisms that receive.and process
+information from cones.
+{Fovea ~~ wey f Color Perception,
+<| {( Leone Jui | (* Absolute Quantity: |
+% i \ 7 mae> 1. Brightness (Strength of A) |}
+@ Li: ; i i] 2. Hue (Ratio of C, toC2-Cs) |}
+8 ri Lo ZN ; (Strength of C, and C,-Cs) |}
+Pane ~ \G,-C, (YB) (axoe> + Relative Quantity:
+3} (Rod | és i\. Lightness/Chroma/Saturation }
+(a) ———— wv () wad ( c) nn ee
+Retina Neurons Nerve Fiber Visual Cortex
+By Googolplexbyte - Own work, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=25539422
+
+### Slide 70
+Opponent Color Processing
+n Three opponent channels:
+Red vs.  Green, (G-R)
+Blue vs. Yellow, (B-Y) or (B-(R+G)) and
+Black vs. White, (Luminance: e.g. (R+G+B)/3).
+Y-Cb’-Cr’ follows opponent color space representation.
+NPTEL
+
+### Slide 71
+Lighting conditions
+Image taken lit by a
+flash.
+Image taken lit by a
+tungsten lamp.
+n The lighting conditions of the scene
+have a large effect on the colours
+recorded.
+Adapted from Gonzales and Woods
+NPTEL
+
+### Slide 72
+Example images of the same scene
+acquired under different lighting
+conditions
+Adapted from Gonzales and Woods
+NPTEL
+
+### Slide 73
+Dealing with Lighting Changes
+n Knowing just the RGB values is not enough to
+know everything about the image.
+n The R, G and B primaries used by different devices are
+usually different.
+n For scientific work, the camera and light
+source should be calibrated.
+n For multimedia applications, this is more
+difficult to organise:
+n Algorithms exist for estimating the illumination colour.
+NPTEL
+
+### Slide 74
+Two types of reflection
+n Two components of reflected light
+n Diffuse: product of spectral power density and the
+reflectance curve.
+n Specular: The same color as source.
+n A weighted sum of these two.
+Specular
+Diffused
+NPTEL
+
+### Slide 75
+Computer Vision - A Modern Approach Set:  Color  Slides by D.A.
+Forsyth (adapted)
+Viewing colored objects
+n Assume
+diffuse+specular
+model
+n Specular
+n Colour of the light
+on dielectric
+objects.
+n on metals.
+n Diffuse
+n depends on both illuminant
+and surface.
+n Human vision capable of
+disentangling effects of
+varying illumination (colour
+constancy).
+NPTEL
+
+### Slide 76
+Finding Specularities
+n a characteristic dog  leg in the histogram of receptor
+responses
+n in a patch of diffuse surface: a color multiplied by different
+scaling constants (surface orientation)
+n in the specular patch: a new color à a “dog-leg” results.
+Computer Vision - A Modern Approach Set:  Color Slides by D.A. Forsyth (adapted)
+NPTEL
+
+### Slide 77
+77
+Color Constancy
+n Three factors of image formation:
+Objects present in the scene.
+Spectral Energy of Light Sources.
+Spectral Sensitivity of sensors.
+Spectral Power Distribution
+Surface Reflectance Spectrum
+Spectral Response of  a Sensor
+NPTEL
+
+### Slide 78
+78
+Same Scene Captured under
+Different Illumination
+Can we transfer colors from one illumination to another one?
+NPTEL
+
+### Slide 79 (OCR)
+Computation of Color
+4 Constancy
+= Deriving an illumination independent
+representation.
+» Estimation of SPD‘of Light Source.
+E(A) ——~ <R, G, B>
+= Color Correction
+- Diagonal Correction.
+_ Ra _ Gq _Ba .  R+GH+B
+Kr = R; tg = Gs Kp = Bs SRT K,G + kpB
+R=fk,R G=fkjG B=fkpB 19
+
+### Slide 80
+80
+Different Approaches
+n Gray World Assumption (Buchsbaum
+(1980), Gershon et al. (1988))
+<R, G, B> ≡ <Ravg, Gavg, Bavg>
+White World Assumption (Land (1977))
+<R, G, B> ≡ <Rmax, Gmax, Bmax>
+NPTEL
+
+### Slide 81
+81
+Edge based color constancy
+computation
+n Extending pixel-based methods to
+incorporate derivative information
+Color image component (channel c)
+Minkowski’s norm
+Order of derivative
+Type of norm
+Scale
+NPTEL
+
+### Slide 82
+82
+Select from a set of  Canonical
+Illuminants
+Observe distribution of points in 2-D  Chromatic
+Space.
+Assign SPD of the nearest illuminant.
+n Gamut Mapping Approach (Forsyth (1990), Finlayson (1996))
+- Existence of chromatic points.
+n Color by Correlation (Finlayson et. al. (2001))
+- Relative strength over the distribution.
+n Nearest Neighbor Approach
+- Mean and Covariance Matrix.
+- Use of Mahalanobis Distance.
+NPTEL
+
+### Slide 83 (OCR)
+Target Image
+Examples: at ee
+Color corrected b \
+Max-World Grey-World Gamut-Mapping
+Color corrected Color corrected
+
+### Slide 84
+Ex. 2
+n Consider that the color of a source
+illuminant is represented by an RGB
+vector (200, 240, 180), whereas the
+target color is given by (240,240,240).
+Given a color vector (100, 150, 200) in
+the source image, compute the color
+corrected vector using diagonal
+correction rule.
+NPTEL
+
+### Slide 85
+85
+Ans. 2
+n Diagonal Color Correction
+(Rd, Gd, Bd)=(240, 240, 240)
+(Rs, Gs, Bs)= (200, 240, 180)
+kr=1.2 kg=1 kb=1.33
+Color: (R, G, B)= (100, 150, 200)
+f=(450)/(120+150+266) = 450/536=0.8396
+Color corrected vector:
+R=.8396 x 1.2 x 100=100.75=101
+G=.8396 x 1 x 150=125.94=126
+B=.8396 x 1.33 x 200 =223.33= 223
+(101,126,223)
+Sum of the original
+vector and the
+corrected vector
+remains the same.
+NPTEL
+
+### Slide 86
+Color Transfer
+n A more general form of color correction
+that borrows one image’s color
+characteristics from another.
+Erik Reinhard, Michael Ashikhmin, Bruce Gooch, and Peter Shirley, Color Transfer between Images, IEEE Computer Graphics
+and Applications, Sept./Oct. 2001, 34-41.
+Source
+Target illumination
+NPTEL
+
+### Slide 87 (OCR)
+t Algorithm
+Convert RGB to an opponent color space.
+LMS-cone space L 0.3811 -0:5783 0.0402]/R
+—, |M| = 10.1967 *0.7244 0.0782)/G
+i S 0.0241 0.1288 0.8444] LB
+L=logL V3 0 0
+M= log M | 1 |: 1 2 |m
+S= log S$ aj=|O —~ O7}1 1 =—-2/|M
+XB v6 1-1 olls
+Opponent color sbace 0 0 V2
+(A variant)
+
+### Slide 88 (OCR)
+s.d.'s of source and
+target distributions.
+Meansyof yo
+4 source l' = Ot ps
+l* — _ (1,) distribution a a!
+a*=a-—({a,) — ;
+a= a &
+a as
+ln =U+<li,> oP
+— 7! Means of t px
+em = o TS Oe > target p= ab
+bm = PB +< By > distribution on
+
+### Slide 89 (OCR)
+rn Convert back to RGB
+a 0 0
+P= eo off
+Mi =j]1 1 —11}/0 —~ O]|ayp
+—_ s|} 1 0 v6 | EB
+an 0 0 ir
+M=eM
+S=eS
+R 4.4679  —3.5873 0.1193 L
+q = -1.218 2.3809 ~0.1624 ol
+B 0.0497 —0.2439 1.2045 S
+
+### Slide 90
+The other example:
+Target illumination
+NPTEL
+
+### Slide 91
+Dept. of Computer Sc. & Engg., IIT, Kharagpur, India
+Color Demosaicing
+v Use of color filter array (CFA) in a single chip
+CCD camera.
+v Generation of dense pixel maps from sparse
+data by interpolation.
+v Hardware cost and computation time to be
+kept low.
+BAYER’S
+KODAK
+NPTEL
+
+### Slide 92
+qA high correlation between the red, green, and blue
+channelsà very likely to have the same texture and
+edge locations.
+qIn CFA the luminance (green) channel sampled at a
+higher rate than the chrominance (red and blue)
+channels.
+The green channel less likely to be aliased, and
+details are preserved better in the green channel than
+in the red and blue channels.
+Two observations
+Color Plane Interpolation Using Alternating Projections, Bahadir K. Gunturk, Yucel Altunbasak, Russell M.
+Mersereau, IEEE TRANSACTIONS ON IMAGE PROCESSING, VOL. 11, NO. 9, SEPTEMBER 2002, 997-1013
+NPTEL
+
+### Slide 93
+Dept. of Computer Sc. & Engg., IIT, Kharagpur, India
+Bilinear Interpolation
+BAYER’S
+qInterpolate green pixels.
+qInterpolate red and blue
+pixels.
+NPTEL
+
+### Slide 94 (OCR)
+Interpolation by averaging
+S and blue hues
+| 24 | >| 3] Go [so
+Interpolate green pixels. e,)R.16,)R,J6,.
+gg = Gat Gr to t iy Ac, 1 desde.
+* a. en fRa les JR] Gre
+Interpolate red and blue/pixels from
+average hues. BAYER’S
+G7 (Be Bg _ —2(2 =) Blue hue: B/G
+By = vale + =) By3 = y) Ge + Gis Red hue: R/G
+Gi2/B,e B B B
+Bi2 = 2 (24+ 248+)
+4 \Ge Gg Gig Gig
+Similarly red pixels are also
+interpolated. Dept. of Computer Sc. & Engg., IIT, Kharagpur, India
+
+### Slide 95 (OCR)
+Hamilton, Jr. et.al., "Adaptive color plane interpolation in
+single sensor color electronic camera" U.S Patent 5,629,734
+Laplacian corrected edge
+apoorrelated interpolation (LCEC)
+: | fel |
+Interpolate green pixels. P| fe} ||
+Define horizontal and vertical gradients fp, |c,|/B.| 6.| By
+as: AH = |G,—Ge|+|Bs sB34+B;-—B7| | | Jel ||
+AV = |G2 — Gg| + |B > By + Bs — Bo| | | fe} |
+Then compute G, as: BAYER’S
+. Second order derivative of
+if AH < Ay _Gy+G5 | Bs~ Bs +Bs~By a function:
+; oo, 2 4 (f(x+1)-F(x))-(f(x)-f(x-1)) =
+else if AH > AV | | Ft 1) +f(0-1)-2900)
+G. = G2 + Gg 4 Bs — By + Bs — Bo Estimated from the other
+/ ” 2 4 channel and subtracted for
+Else correction.
+° _ Gat Gat Got Ge | Bs—B: +B, —B3+Bs—B,+Bs —Bo
+5  T— TTT
+
+### Slide 96 (OCR)
+Laplacian corrected eage oe
+correlated interpolation =occn
+| [estes rel |
+ntd. CCE
+Interpolate Red and Blue pixels. For BAYER'’S
+red pixels, the computation is shown¢
+Case 1: pr, - 2b SO ee Cross-channel
+2 4 4 laplacian values.
+R,+Rz GNOME, +6,-G
+Case 2: Ro => = $ — S N
+Case 3: Define two diagonal 'f AN < AP
+a“ Ri, +Ro Gs — G, + Gs — Go
+directions (-ve and +ve) Rs = —— +
+_ else if AN > AP
+AP = |R3 — R7| + |G. — G3 + Gs — Go| en ey
+else
+Ry +Ro+R3+R7 Gs —G, + Gs — Go + Gs — G3 + Gs — G;
+
+### Slide 97
+ORIGINAL
+BI
+ARBH
+LCEC
+Color Demosaicing: An
+example.
+NPTEL
+
+### Slide 98
+ORIGINAL
+BI
+ARBH
+LCEC
+NPTEL
+
+### Slide 99
+Ex. 3
+30
+40
+37
+43
+40
+20
+35
+25
+60
+30
+32
+45
+45
+48
+55
+30
+38
+27
+55
+33
+45
+48
+47
+50
+46
+Consider the following CFA whose first row corresponds to the red
+(R) row and first column of that row corresponds to a green (G)
+pixel of the Bayer pattern.
+Answer the following:
+(a) What are the missing components of the central pixel?
+(b) Compute them using Bilinear interpolation, and ARBH
+techniques.
+Central pixel.
+NPTEL
+
+### Slide 100
+Ans. 3 (a)
+30 G
+40 R
+37 G
+43 R
+40 G
+20 B
+35 G
+25 B
+60 G
+30 B
+32 G
+45 R
+45 G
+48 R
+55 G
+30 B
+38 G
+27 B
+55 G
+33 B
+45 G
+48 R
+47 G
+50 R
+46 G
+(a) What are the missing components of the central pixel?
+Central pixel.
+Missing components are: (i) red (R) and (ii) blue (B).
+NPTEL
+
+### Slide 101
+Ans. 3 (b)
+30 G
+40 R
+37 G
+43 R
+40 G
+20 B
+35 G
+25 B
+60 G
+30 B
+32 G
+45 R
+45 G
+48 R
+55 G
+30 B
+38 G
+27 B
+55 G
+33 B
+45 G
+48 R
+47 G
+50 R
+46 G
+(b) Compute them using Bilinear interpolation technique.
+BI: Missing components are: (i) red (R) = (45+48)/2=46.5
+and (ii) blue (B)= (25+27)/2=26.
+25 B
+45 R
+45 G
+48 R
+27 B
+Only values required to apply BI shown.
+NPTEL
+
+### Slide 102
+Ans. 3 (b)
+30 G
+40 R
+37 G
+43 R
+40 G
+20 B
+35 G
+25 B
+60 G
+30 B
+32 G
+45 R
+45 G
+48 R
+55 G
+30 B
+38 G
+27 B
+55 G
+33 B
+45 G
+48 R
+47 G
+50 R
+46 G
+(b) Compute them using ARBH technique.
+ARBH: (i) Compute missing G values in respective B and R pixels.
+30 G
+40 R
+37 G
+43 R
+40 G
+20 B
+35 G
+25 B
+60 G
+30 B
+32 G
+45 R
+45 G
+48 R
+55 G
+30 B
+38 G
+27 B
+55 G
+33 B
+45 G
+48 R
+47 G
+50 R
+46 G
+For B pixels: top neighbor: G= (37+60+35+45)/4=44.25
+bottom neighbor: G=(45+55+47+38)/4=46.25
+For R pixels: left neighbor: G= (35+45+38+32)/4=37.5
+right neighbor: G=(60+55+55+45)/4=53.75
+NPTEL
+
+### Slide 103
+Ans. 3 (b)
+30 G
+40 R
+37 G
+43 R
+40 G
+20 B
+35 G
+25 B
+60 G
+30 B
+32 G
+45 R
+45 G
+48 R
+55 G
+30 B
+38 G
+27 B
+55 G
+33 B
+45 G
+48 R
+47 G
+50 R
+46 G
+(b) Compute them using ARBH technique.
+ARBH: (ii) Compute average of hues and multiply with green value
+37 G
+35 G
+25 B
+44.25
+60 G
+32 G
+45 R
+37.5
+45 G
+48 R
+53.75
+55 G
+38 G
+27 B
+46.25
+55 G
+47 G
+Missing Blue: 45 x ((25/44.25 + 27/46.25)/2)= 25.847
+Missing Red: 45 x ((45/37.5+48/53.75)/2)= 47.093
+Only values required
+to apply ARBH shown.
+NPTEL
+
+### Slide 104
+Two major problems in the
+reconstruction
+n Blurred Edges.
+n Appearance of false colors
+NPTEL
+
+### Slide 105
+105
+False Colors: An Example
+Original
+Reconstructed
+NPTEL
+
+### Slide 106
+106
+False Color Suppression
+RGB to YUV
+Interpolated Image in
+RGB
+Median Filtering
+YUV to RGB
+Output Image
+Projection of
+True Samples
+NPTEL
+
+### Slide 107
+107
+Examples
+LCEC
+LCEC with Median
+(3 x 3 Mask)
+LCEC with Median
+(5 x 5 Mask)
+NPTEL
+
+### Slide 108
+108
+Suppression of Impulsive
+Noise
+Reconstruction Error (U):
+Reconstruction Error (V):
+After median filtering.
+NPTEL
+
+### Slide 109
+Summary
+n Color is an important information for interpreting
+images and videos.
+n Color is captured in the RGB color space: Not
+suitable for direct interpretation of color components
+such as Hue and Saturation.
+n CIE Chromaticity Chart represents colors in a 2-D
+space according to tri-stimulus model of color
+representation and capable of providing the gamut
+triangle for reproducing colors.
+n Various other color spaces used for processing.
+NPTEL
+
+### Slide 110
+Summary (contd.)
+n In digital cameras color images are mostly captured
+using a CFA, which need to be interpolated to
+provide full color information.
+n A few problems on color processing discussed.
+n Color enhancement through saturation-
+desaturation.
+n Computing color constancy.
+n Color transfer
+n Color interpolation.
+NPTEL

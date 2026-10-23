@@ -1,0 +1,681 @@
+# Week 7 — Feature Matching and Model Fitting — study notes
+(Feature Matching & Model Fitting; Prof. Jayanta Mukhopadhyay · Lectures 29–33. Re-taught-from-scratch notes written from the slides + transcript; math is LaTeX between $...$ / $$...$$. Pretty version: https://pml2405.github.io/computer-vision-notes/notes/week7_notes.html)
+
+COMPUTER VISION · NPTEL · IIT KHARAGPUR
+
+Week 7
+
+**Feature Matching** & **Model Fitting**
+
+Prof. Jayanta Mukhopadhyay · Lectures 29–33
+
+### 📒 what's inside this week
+
+1. Lecture 29 — Feature Matching & Model Fitting · Part I
+distance & similarity measures (Lₚ, Mahalanobis, NCC, cosine), matching criteria (threshold, NN, NNDR), histogram distances (KL, EMD)
+
+2. Lecture 30 — Feature Matching & Model Fitting · Part II
+efficient search: the K-D tree (build + nearest-neighbour with pruning) and locality-sensitive hashing
+
+3. Lecture 31 — Feature Matching & Model Fitting · Part III
+model fitting, mean-square error & likelihood, model size, under/over-fitting, least-squares setup
+
+4. Lecture 32 — Feature Matching & Model Fitting · Part IV
+least squares (pseudo-inverse), total least squares, and the RANSAC idea
+
+5. Lecture 33 — Feature Matching & Model Fitting · Part V
+the RANSAC algorithm & trial-count formula, and the Hough transform
+
+# LECTURE 29 — Feature Matching & Model Fitting — Part I
+
+why match · distance functions · weighted (Mahalanobis) distance · NCC & cosine similarity · matching criteria (threshold, NN, NNDR) · histogram distances (KL, EMD)
+
+🧠 the big picture, first
+
+Everything in Weeks 4–5 assumed we already had **corresponding points** across two views (to get $F$, the cameras, then 3-D structure). This week answers **where those correspondences come from**: detect keypoints (Week 6), **describe** each by a feature vector, then **match** — decide which vector in image A pairs with which in image B.
+
+Part I is the **matching toolbox**: how to measure "closeness" of two descriptors, and what rule turns closeness into a declared match. 🧩
+
+## 1.  the matching pipeline
+
+To automate correspondence between two images:
+
+**🔧 detect → describe → match**
+
+1. **Detect** repeatable keypoints in both images (Harris, SIFT/DoG) — transformation- & scale-invariant, so the same scene point survives a change of view.
+
+2. **Describe** each keypoint by **local statistics** of its neighbourhood → a feature vector $\mathbf x=(x_0,x_1,\dots,x_n)$ (e.g. the 128-D SIFT descriptor). The location alone says nothing; the neighbourhood is what stays similar across views.
+
+3. **Match** — given a descriptor in one image, find the descriptor in the other that is closest under some distance / similarity measure.
+
+**the whole game:** a good descriptor makes the **same** scene point look near-identical in both images, and **different** points look far apart — so a distance measure can separate true matches from the rest.
+
+## 2.  distance functions between descriptors
+
+Treat a keypoint as a vector $\mathbf u,\mathbf v\in\mathbb R^{n+1}$. Smaller distance ⇒ more likely a match. The usual **$L_p$ norms**:
+
+$L_1$ (Manhattan)
+
+$$ d_1(\mathbf u,\mathbf v)=\sum_i |u_i-v_i| $$
+
+$L_2$ (Euclidean)
+
+$$ d_2(\mathbf u,\mathbf v)=\Big(\sum_i (u_i-v_i)^2\Big)^{1/2} $$
+
+$L_\infty$ (max)
+
+$$ d_\infty(\mathbf u,\mathbf v)=\max_i |u_i-v_i| $$
+
+### weighted distance — not every component is equally trustworthy
+
+A plain $L_2$ gives every component equal say. But some descriptor dimensions are more **reliable** (more discriminative) than others. Give them more weight with a **weighted / Mahalanobis distance**:
+
+weighted distance ($A$ positive semi-definite, symmetric)
+
+$$ d_A(\mathbf u,\mathbf v)=(\mathbf u-\mathbf v)^{T} A\,(\mathbf u-\mathbf v) $$
+
+With a **diagonal** $A=\operatorname{diag}(w_0,w_1,\dots,w_n)$ it collapses to a per-component weighted sum:
+
+$$ d_A(\mathbf u,\mathbf v)=\sum_i w_i\,(u_i-v_i)^2,\qquad \text{a natural choice } \ w_i=\frac{1}{\sigma_i^{2}} $$
+
+**read it as:** weight each dimension by $1/\sigma_i^{2}$ — the inverse variance of that component across all descriptors. A **noisy**, high-variance dimension ($\sigma_i$ large) gets **down-weighted**; a stable one counts more. ($A$ PSD guarantees $d_A\ge 0$.)
+
+## 3.  similarity measures — NCC & cosine
+
+A **distance** is small for a match; a **similarity** is large for a match (the inverse idea). Two standard ones, both peaking at $1$ for identical patterns:
+
+normalized cross-correlation (NCC)
+
+$$ \mathrm{NCC}(\mathbf f,\mathbf g)=\frac{\operatorname{cov}(\mathbf f,\mathbf g)}{\sigma_{\mathbf f}\,\sigma_{\mathbf g}}=\frac{\sum_i (f_i-\bar f)(g_i-\bar g)}{\sqrt{\sum_i (f_i-\bar f)^2}\ \sqrt{\sum_i (g_i-\bar g)^2}} $$
+
+cosine similarity
+
+$$ \cos\theta=\frac{\mathbf f\cdot\mathbf g}{\lVert\mathbf f\rVert\,\lVert\mathbf g\rVert} $$
+
+**the difference in one line:cosine** uses the raw vectors (angle between them); **NCC** first **subtracts the mean** of each vector (it is the cosine of the mean-centred vectors = Pearson correlation). NCC is invariant to an additive brightness offset; cosine is not.
+
+**✍️ worked example — NCC vs cosine (illustrative numbers)**
+Let $\mathbf f=(1,2,3)$, $\mathbf g=(1,3,2)$.
+
+1. **Cosine:** $\mathbf f\cdot\mathbf g=1+6+6=13$, $\lVert\mathbf f\rVert=\lVert\mathbf g\rVert=\sqrt{14}$, so $\cos\theta=\dfrac{13}{14}=0.929$.
+
+2. **NCC:** means $\bar f=\bar g=2$. Centred: $\mathbf f-\bar f=(-1,0,1)$, $\mathbf g-\bar g=(-1,1,0)$. Numerator $=(-1)(-1)+0+0=1$; denominator $=\sqrt{2}\cdot\sqrt{2}=2$, so $\mathrm{NCC}=\tfrac12=0.5$.
+
+Same two vectors, two very different scores — because NCC removes the mean first. (The Week-7 assignment's Q4 is exactly this: compute NCC and cosine for two length-4 features.)
+
+## 4.  matching criteria — turning "close" into "a match"
+
+Given a query descriptor $\mathbf y$ and a candidate set $\{\mathbf x_i\}$ in the other image, three policies:
+| policy | rule | note |
+| **Fixed threshold** | report all $\mathbf x_i$ with $d(\mathbf y,\mathbf x_i)<\text{th}$ | a **range query** — may return many candidates, yet can also **miss** a true match whose nearest neighbour sits just outside the radius |
+| **Nearest neighbour (NN)** | $\mathbf x_{i^\ast}=\arg\min_i d(\mathbf y,\mathbf x_i)$ | always returns the single closest — even if it is actually far / wrong |
+| **NN distance ratio (NNDR)** | accept the NN only if $\dfrac{d_1}{d_2}<\text{th}$ | **most robust**; $d_1,d_2$ = distance to 1st & 2nd nearest neighbour |
+
+### why NNDR is the robust choice
+
+If the nearest neighbour is **distinctly** nearer than the runner-up, the ratio $d_1/d_2$ is **small** → a confident, unambiguous match. If the two nearest are almost tied ($d_1/d_2\!\to\!1$), the descriptor is ambiguous and we **reject** it — even though plain NN would have blindly accepted it.
+
+#### NNDR: accept a clear winner, reject a near-tie
+
+[diagram text: confident match | query | d₁ small | d₂ big | d₁/d₂ ≪ 1 → accept ✓ | ambiguous | query | d₁ | d₂ | d₁/d₂ ≈ 1 → reject ✗]
+
+Plain NN accepts both; NNDR rejects the near-tie, killing false matches from repetitive texture.
+
+**✍️ worked example — NNDR decision**
+Query has nearest neighbour at $d_1=3$ and next-nearest at $d_2=9$, threshold $=0.4$.
+
+Ratio $\dfrac{d_1}{d_2}=\dfrac{3}{9}=0.333$. Since $0.333<0.4$, the ratio does **not** exceed the threshold ⇒ **accept** the nearest neighbour as a match. (Assignment Q5 — note it is $d_1/d_2$, not $d_2/d_1$.)
+
+## 5.  matching histograms — KL divergence & EMD
+
+Region/image descriptors are often **histograms** (e.g. of gradients or colours). A histogram is just a feature vector (each bin = one component), so $L_p$ norms still work ($L_1$ is common). But two **special** measures treat a histogram as a **probability distribution**:
+
+Kullback–Leibler (KL) divergence
+
+$$ D_{KL}(P\Vert Q)=\sum_i p(i)\,\ln\!\frac{p(i)}{q(i)} $$
+
+KL measures how different two distributions are: $0$ when identical, larger as they diverge. It is **not symmetric** ($D_{KL}(P\Vert Q)\neq D_{KL}(Q\Vert P)$) — read it as "extra cost of using $Q$ to describe data that is really $P$."
+
+**✍️ worked example — KL divergence**
+$P=(\tfrac12,\tfrac14,\tfrac18,\tfrac18)$, $Q=(\tfrac14,\tfrac14,\tfrac14,\tfrac14)$.
+
+$$ D_{KL}=\tfrac12\ln\tfrac{1/2}{1/4}+\tfrac14\ln\tfrac{1/4}{1/4}+\tfrac18\ln\tfrac{1/8}{1/4}+\tfrac18\ln\tfrac{1/8}{1/4} $$
+
+$=\tfrac12\ln 2+0+\tfrac18\ln\tfrac12+\tfrac18\ln\tfrac12 = 0.3466-0.0866-0.0866 = \mathbf{0.1733}$ (nats). (Assignment Q6; uses natural log.)
+
+**🚚 Earth Mover's Distance (EMD)**
+Think of histogram $P$ as piles of earth and $Q$ as holes to fill. Moving mass $m_{ij}$ from bin $i$ to bin $j$ costs $m_{ij}\,d_{ij}$ (mass × bin-distance). EMD $=$ the **minimum total normalized transport cost** to turn $P$ into $Q$:
+
+$$ \mathrm{EMD}(P,Q)=\min_{\{m_{ij}\ge 0\}}\ \frac{\sum_{i,j} m_{ij}\,d_{ij}}{\sum_{i,j} m_{ij}} $$
+
+subject to: mass out of bin $i\le p_i$, mass into bin $j\le q_j$. Unlike bin-wise $L_p$, EMD understands that a small shift of a peak is a small change — it accounts for how far mass moves, not just which bins differ. (An optimization / transportation problem; solved via linear programming.)
+
+### match = describe each keypoint, measure closeness, then decide with a robust rule.
+
+distances $L_p$ / Mahalanobis $(\mathbf u-\mathbf v)^TA(\mathbf u-\mathbf v)$ · similarities NCC (mean-centred) & cosine · criteria threshold / NN / **NNDR** · histograms via KL & EMD.
+
+### Self-check quiz
+
+1. What is the one operational difference between cosine similarity and NCC?
+
+→ Answer: NCC subtracts each vector's mean before taking the cosine (it's Pearson correlation / cosine of the mean-centred vectors); cosine uses the raw vectors
+
+2. In a weighted distance $(\mathbf u-\mathbf v)^TA(\mathbf u-\mathbf v)$ with diagonal $A$, why choose $w_i=1/\sigma_i^2$?
+
+→ Answer: to down-weight noisy high-variance dimensions and trust stable low-variance ones — each component is scaled by its inverse variance
+
+3. Nearest neighbour picks the closest descriptor. Why is NNDR more robust?
+
+→ Answer: it accepts a match only if the nearest is distinctly closer than the 2nd-nearest ($d_1/d_2$ small); it rejects ambiguous near-ties that plain NN would blindly accept
+
+4. Compute $D_{KL}(P\Vert Q)$ for $P=(\tfrac12,\tfrac14,\tfrac18,\tfrac18)$, $Q=(\tfrac14,\tfrac14,\tfrac14,\tfrac14)$.
+
+→ Answer: $\tfrac12\ln2+0+2\cdot\tfrac18\ln\tfrac12 = 0.1733$ nats
+
+5. Why can EMD see two histograms as "close" when an $L_1$ distance calls them far apart?
+
+→ Answer: EMD measures the cost of moving mass (mass × distance), so a small shift of a peak is a small change; $L_1$ compares bins independently and sees a fully non-overlapping shift as maximal
+
+— end of Lecture 29 notes ✏️
+
+# LECTURE 30 — Feature Matching & Model Fitting — Part II
+
+making matching efficient · the K-D tree (build + nearest-neighbour search with pruning) · Locality-Sensitive Hashing
+
+🧠 the big picture, first
+
+Matching a query against $n$ candidate descriptors by brute force costs $O(n)$ distance computations — **per query**, over thousands of keypoints and a big database, that is far too slow. This lecture **organises** the candidate set so search runs in roughly **sub-linear** time: a **K-D tree** (a geometric binary search tree) and **Locality-Sensitive Hashing**.
+
+Key move: pre-index the database once, then every query is fast. 🌳
+
+## 1.  why brute force hurts
+
+Feature matching is really a **range / nearest-neighbour query**: "return the candidate(s) nearest this query vector." Comparing to all $n$ candidates is $O(n)$ each time. As in databases, we fix this with **indexing** (organise the data so most of it can be skipped) or **hashing** (bucket similar items together). Two schemes exploit the fact that descriptors are **multi-dimensional points**:
+
+- **K-D tree** — a binary space-partitioning tree for exact/approximate NN search.
+
+- **Locality-Sensitive Hashing (LSH)** — a hash whose collisions are geometry-aware (nearby points hash together).
+
+## 2.  the K-D tree — a binary search tree in $k$ dimensions
+
+A **K-D tree** generalises the binary search tree to $k$-dimensional keys ($k$ = descriptor dimension; a 1-D tree is an ordinary BST). Each node stores a full feature vector, but at each node we compare on **one** coordinate — the **cut dimension** — and the cut dimension **alternates** down the tree (x, y, x, y, … for $k=2$).
+
+**🌱 building rule (insert one point at a time)**
+
+1. Root uses cut dimension = axis 1 (say $x$).
+
+2. To insert a point, walk down like a BST but compare only on the **current node's cut dimension**: smaller ⇒ go left, greater ⇒ go right.
+
+3. The cut dimension cycles each level ($x\!\to\! y\!\to\! x\!\to\!\dots$). Place the point at the first empty slot.
+
+**✍️ worked example — build a 2-D tree (X-split at root)**
+Insert in order: $(5,5),(12,10),(8,1),(2,8),(10,14)$.
+
+1. $(5,5)$ → **root** (cut = $x$).
+
+2. $(12,10)$: $x{=}12>5$ → **right** of root.
+
+3. $(8,1)$: $x{=}8>5$ → right to $(12,10)$; now cut = $y$: $1<10$ → **left child of $(12,10)$**.
+
+4. $(2,8)$: $x{=}2<5$ → **left child of root**.
+
+5. $(10,14)$: $x{=}10>5$ → right to $(12,10)$; cut = $y$: $14>10$ → **right child of $(12,10)$**.
+
+**⇒ the left child of the root is $(2,8)$.** (Assignment Q9.)
+
+#### the tree
+
+[diagram text: 5,5 | 2,8 | 12,10 | 8,1 | 10,14 | x-cut | y-cut]
+
+root x-split; children of (12,10) split on y.
+
+#### the space partition
+
+[diagram text: x=5 | y=10 | 5,5 | 2,8 | 12,10 | 8,1 | 10,14]
+
+each node splits its region with one axis-aligned cut.
+
+## 3.  nearest-neighbour search — you can't just walk down
+
+Unlike a BST, you **cannot** commit to one branch at each node: the true nearest neighbour of a query may lie just across a boundary in the sibling cell. So the search backtracks, with **pruning**:
+
+**🔎 NN search (branch-and-bound)**
+
+- Descend to the leaf cell containing the query; record the **current best distance** $r$ and the best key so far.
+
+- Backtrack. At each node, **only prune a sub-tree if every corner of its bounding box is farther than $r$** — i.e. the whole cell is provably beyond the current best. Otherwise you must search it too.
+
+- Always explore the sub-tree **closer** to the query first — it tightens $r$ fastest and maximises later pruning.
+
+**the discipline:** never discard a sub-tree unless **all** its cell's corner distances exceed your current smallest distance. That guarantee is what keeps the answer exact.
+
+typical query complexity
+
+$$ O\!\big(\log N + 2^{k}\big) $$
+
+$\log N$ to find the query's cell, $2^{k}$ to check neighbouring cells. Worst case is still linear (like a BST); in practice it is fast for modest $k$, but degrades as dimension $k$ grows ("curse of dimensionality").
+
+## 4.  Locality-Sensitive Hashing (LSH)
+
+Ordinary hashing scatters items randomly. **LSH** instead wants a hash whose **collisions preserve locality**: nearby vectors should get the **same** hash with **high** probability, far ones with low probability.
+
+a random-hyperplane hash
+
+$$ h_{\mathbf r}(\mathbf x)=\begin{cases}1 & \mathbf r\cdot\mathbf x>0\\[2pt] 0 & \text{otherwise}\end{cases} $$
+
+collision probability
+
+$$ \Pr\!\big[h_{\mathbf r}(\mathbf x)=h_{\mathbf r}(\mathbf y)\big]=1-\frac{\theta(\mathbf x,\mathbf y)}{\pi} $$
+
+$\mathbf r$ is a random unit vector (each component drawn from a normal distribution). The hash asks "which side of the random hyperplane $\mathbf r$ is $\mathbf x$ on?" Two vectors separated by a **small angle** $\theta$ almost always land on the same side ⇒ same bit ⇒ high collision probability (note the resemblance to $\cos\theta$).
+
+**🪣 from one bit to a search structure**
+
+- Use $k$ independent random vectors → a $k$-bit code → an index into one of $2^{k}$ **buckets**. A vector is stored in the bucket matching its code.
+
+- To reduce the chance of missing a true neighbour, repeat with $L$ **independent** hash families ($L$ separate bucket tables).
+
+- Query: compute its $L$ bucket codes, gather candidates from those $L$ buckets, and do exact distance only within them.
+
+### index once, query fast: a K-D tree partitions space; LSH buckets by geometry.
+
+K-D tree: alternating cut dimensions, NN search prunes sub-trees whose whole cell is beyond the current best ($\approx O(\log N+2^k)$). LSH: random-hyperplane bits, $\Pr[\text{collision}]=1-\theta/\pi$, $k$-bit buckets × $L$ tables.
+
+### Self-check quiz
+
+1. In a K-D tree, how is the comparison axis chosen at each node?
+
+→ Answer: it's the "cut dimension", which alternates by level ($x,y,x,y,\dots$ for 2-D); at each node you compare only that one coordinate
+
+2. Insert $(5,5),(12,10),(8,1),(2,8),(10,14)$ with an X-split root — which point is the root's left child?
+
+→ Answer: $(2,8)$ — it's the only point with $x<5$
+
+3. Why can't K-D tree NN search just follow one branch like a BST?
+
+→ Answer: the true nearest neighbour can lie just across a split boundary in the sibling cell; you must backtrack and only prune a sub-tree when its entire bounding box is farther than the current best distance
+
+4. What property must an LSH hash function have, and how does the random-hyperplane hash achieve it?
+
+→ Answer: nearby points collide with high probability; $h_{\mathbf r}(\mathbf x)=\text{sign}(\mathbf r\cdot\mathbf x)$ gives $\Pr[\text{equal}]=1-\theta/\pi$, so small-angle (near) vectors almost always share the bit
+
+— end of Lecture 30 notes ✏️
+
+# LECTURE 31 — Feature Matching & Model Fitting — Part III
+
+what model fitting is · mean-square error & likelihood · model size · under/over-fitting · what goes wrong (outliers, clutter, missing data) · choosing a technique
+
+🧠 the big picture, first
+
+Once you have data points (from matching), **model fitting** finds the parametric model that best explains them. You have already done this: a **homography** $H$, the **fundamental matrix** $F$, the **camera matrix** $P$ were all fitted from corresponding points. This lecture pulls out the **general principles** — how to judge a fit, size a model, and cope with noisy/outlier-ridden data — before the concrete line-fitting methods.
+
+## 1.  the model-fitting problem
+
+Given a set of data points, **fit a model that establishes the relationship among them.** The form of the model comes from **knowledge** of how the data was generated — that prior knowledge is what makes the problem solvable.
+
+**📎 examples you already know are model fitting**
+
+- **Homography** between two views of a plane → a $3\times3$ non-singular matrix (Week 2).
+
+- **Fundamental matrix** from stereo correspondences → a $3\times3$ singular (rank-2) matrix (Weeks 4–5).
+
+- **Camera / projection matrix** $P$ from 3-D↔2-D points → a $3\times4$ matrix (Week 3).
+
+- Simpler 2-D shape models: fit a **straight line**, circle, or polynomial through scattered points.
+
+- Or fit a known object's **boundary shape** (a polygonal/parametric model) and search for it in another image — object detection.
+
+**the recipe is always:** know the model's **mathematical form** and its properties (e.g. "$F$ is singular"), then use those constraints to solve for its parameters from the data. When the form is uncertain, you guess a structure and then **check the error**.
+
+## 2.  how good is the fit? — error & likelihood
+
+Suppose each observation $y_i$ should equal a model prediction $\hat y_i$. The workhorse measure is the **mean-square error**:
+
+mean-square error (MSE)
+
+$$ E=\frac{1}{n}\sum_{i=1}^{n}\big(y_i-\hat y_i\big)^2 $$
+
+For vector observations, replace the squared difference by the squared **norm** $\lVert \mathbf y_i-\hat{\mathbf y}_i\rVert^2$ — exactly the criterion you minimised when fitting $H$, $F$ and $P$.
+
+A probabilistic alternative is the **likelihood** $P(\text{data}\mid\text{model})$ — higher is better ($0$ to $1$). Comparing likelihoods (or their ratios) of competing models tells you which to prefer.
+
+## 3.  model size = number of independent parameters
+
+The **size / complexity** of a model is its count of independent parameters. A linear model over an $n$-component feature vector,
+
+$$ y=a_1x_1+a_2x_2+\dots+a_n x_n + a_0, $$
+
+has $n+1$ parameters. Use a subset of components → fewer; add non-linear terms → more. Size directly controls the risk of a bad fit:
+
+#### under-fit · good fit · over-fit
+
+[diagram text: under-fit | too few params | good fit | low train & test | over-fit | too many params]
+
+under-fit misses the trend (high training error); over-fit chases noise (low training, high test error).
+
+**🎯 training error vs test error**
+
+- **Training error** — error on the data used to fit. High ⇒ model too weak (**under-fitting**): add parameters.
+
+- **Test error** — error on held-out data with known ground truth. Low training error but **high test error** ⇒ **over-fitting**: the model memorised noise; use fewer parameters.
+
+- **Ideal:** low training and low test error — that's a trustworthy fit.
+
+## 4.  what goes wrong in real data
+| issue | what it means |
+| **Noise** | feature locations aren't exact — estimation error perturbs every point. |
+| **Outliers / clutter** | points not generated by the model at all (e.g. correspondences off the plane when fitting a homography). A least-squares fit that tries to minimise overall error gets dragged toward them. |
+| **Multiple structures** | the data actually contains several lines; a single-line model can't describe them. |
+| **Missing data** | occlusion ⇒ only partial evidence of the model. |
+
+## 5.  picking a line-fitting technique
+
+The next two lectures fit the simplest model — a **straight line through 2-D points** — but the ideas extend to $H$, $F$, $P$. Which method depends on what's wrong with the data:
+| situation | method |
+| clean points on one line | **Least squares** (and **total least squares** for perpendicular error / vertical lines) — L32 |
+| many **outliers** / clutter | **RANSAC** (random sample consensus) — robust, general — L32–33 |
+| **many lines** at once | **Hough transform** (voting) — L33 |
+
+## 6.  setting up least-squares line fitting
+
+Model: a line $y=mx+c$ (an affine relation — colloquially "linear fit"). For point $i$: $y_i=mx_i+c$. The **vertical error** is the gap between the observed $y_i$ and the line's prediction $mx_i+c$; we minimise the sum of its squares:
+
+vertical least-squares objective
+
+$$ E=\sum_{i=1}^{n}\big(y_i-mx_i-c\big)^2\quad\longrightarrow\quad \min_{m,\,c}E $$
+
+#### vertical error = observed − predicted
+
+[diagram text: y=mx+c | error]
+
+"vertical" least squares: measure the gap along $y$ only. (L32 solves it — and fixes its blind spot for vertical lines.)
+
+### fit = choose a model form, then minimise error — while guarding against outliers, clutter & over-fitting.
+
+judge with MSE / likelihood · size = #independent params · watch training vs test error · pick least-squares (clean), RANSAC (outliers), or Hough (many lines).
+
+### Self-check quiz
+
+1. What determines the "size" of a model, and how does it relate to under/over-fitting?
+
+→ Answer: the number of independent parameters; too few ⇒ under-fit (high training error), too many ⇒ over-fit (low training, high test error)
+
+2. You fit a model: training error is tiny but test error is large. Diagnosis and fix?
+
+→ Answer: over-fitting — the model memorised noise; reduce the number of parameters
+
+3. Give two examples from earlier weeks that are really "model fitting."
+
+→ Answer: estimating a homography $H$ (Week 2) and the fundamental matrix $F$ (Weeks 4–5) — also the camera matrix $P$ (Week 3)
+
+4. Which fitting technique suits data with many outliers, and which suits an image with many lines?
+
+→ Answer: RANSAC for outliers; the Hough transform (voting) for many lines
+
+— end of Lecture 31 notes ✏️
+
+# LECTURE 32 — Feature Matching & Model Fitting — Part IV
+
+solving least squares (normal equations → pseudo-inverse) · $m=\operatorname{cov}/\operatorname{var}$, $R^2$ · total least squares (perpendicular error) · RANSAC — the idea
+
+🧠 the big picture, first
+
+We set up $E=\sum(y_i-mx_i-c)^2$. Now we **solve** it — twice. First the clean matrix solution (the **pseudo-inverse**, the same tool that gave us $H$, $F$, $P$). Then **total least squares**, which fixes vertical-line failure by measuring **perpendicular** error. Finally, the idea behind **RANSAC** for when outliers poison the fit.
+
+## 1.  least squares in matrix form → pseudo-inverse
+
+Stack the $n$ equations $y_i=mx_i+c$. With unknowns $C=\begin{bmatrix}m\\c\end{bmatrix}$:
+
+$$ E=\sum_{i=1}^n\big(y_i-mx_i-c\big)^2=\big\lVert Y-XC\big\rVert^2,\quad Y=\begin{bmatrix}y_1\\\vdots\\y_n\end{bmatrix},\ X=\begin{bmatrix}x_1&1\\\vdots&\vdots\\x_n&1\end{bmatrix} $$
+
+Expand and differentiate w.r.t. $C$ (matrix calculus):
+
+$$ E=(Y-XC)^T(Y-XC),\qquad \frac{\partial E}{\partial C}=-2X^TY+2X^TXC=0 $$
+
+normal equations → the pseudo-inverse
+
+$$ X^TX\,C=X^TY\ \Longrightarrow\ C=\big(X^TX\big)^{-1}X^TY $$
+
+**recognise this?** $C=(X^TX)^{-1}X^TY$ is the **same pseudo-inverse** solution we used to fit the homography and projection matrices — least squares is one universal machine: build $Y=XC$, solve for $C$.
+
+### the same answer, component-wise
+
+Setting $\partial E/\partial m=\partial E/\partial c=0$ gives two **normal equations** and a tidy closed form:
+
+the two normal equations
+
+$$ \begin{aligned} m\textstyle\sum x_i^2 + c\textstyle\sum x_i &= \textstyle\sum x_i y_i\\ m\textstyle\sum x_i + n\,c &= \textstyle\sum y_i \end{aligned} $$
+
+slope & intercept
+
+$$ m=\frac{\operatorname{cov}(x,y)}{\operatorname{var}(x)},\qquad c=\bar y-m\,\bar x $$
+
+**✍️ worked example — fit $y=ax+b$ to $(0,2),(1,5),(2,8)$**
+Sums: $\sum x=3,\ \sum y=15,\ \sum x^2=5,\ \sum xy=0+5+16=21,\ n=3$.
+
+Normal equations: $\ 5a+3b=21\ $ and $\ 3a+3b=15$.
+
+Subtract: $2a=6\Rightarrow a=3$; then $3(3)+3b=15\Rightarrow b=2$.
+
+**⇒ $y=3x+2$.** (Assignment Q1.)
+
+**💡 insight — shift all $y$ by a constant: slope unchanged, intercept moves**
+If every $y_i\to y_i'=y_i+k$, only the **right side of the second normal equation** changes: $\sum y_i \to \sum y_i + nk$. The first normal equation's $\sum x_i y_i$ term shifts too, but it works out that the geometry (slope) is untouched — only the intercept absorbs the offset:
+
+$$ a'=a,\qquad b'=b+k $$
+
+e.g. a line with slope $a=2.5$ and intercept $b=-1.0$, shifted by $k=+3$, becomes $a'=2.5,\ b'=-1.0+3=2.0$. **The rule to remember: slope is invariant, the intercept shifts by exactly the offset.** (Assignment Q10.)
+
+### goodness of fit — $R^2$
+
+$$ R^2=1-\frac{\sum_i (y_i-\hat y_i)^2}{\sum_i (y_i-\bar y)^2}=1-\frac{\text{residual (unexplained) variance}}{\text{total variance of } y}\ \in[0,1] $$
+
+The **coefficient of determination**: the fraction of the data's variance the model explains. Close to $1$ (rule of thumb $R^2\gtrsim 0.8$) ⇒ good fit. Always report it alongside the fitted line.
+
+**⚠️ two blind spots of vertical least squares**
+It measures error along $y$ only, so it is **not rotation-invariant**, and it **fails for vertical lines** ($x=$const): there $m\to\infty$ because $\operatorname{var}(x)\to 0$. The cure is **total least squares**.
+
+## 2.  total least squares — perpendicular error
+
+Measure each point's **perpendicular** distance to the line, not its vertical gap. Write the line as $px+qy=d$ with unit normal $(p,q)$, i.e. $p^2+q^2=1$. The signed distance of $(x_i,y_i)$ is $px_i+qy_i-d$, so:
+
+total-least-squares objective
+
+$$ E=\sum_{i=1}^n\big(px_i+qy_i-d\big)^2,\quad \text{s.t. } p^2+q^2=1 $$
+
+Differentiate w.r.t. $d$: $\ \partial E/\partial d=-2\sum(px_i+qy_i-d)=0\Rightarrow d=p\bar x+q\bar y$ — so the line passes through the centroid, and geometrically $d$ is the **perpendicular distance from the origin** to the line. Substitute back: the error becomes $E=\lVert U\mathbf n\rVert^2$, where $\mathbf n=(p,q)^T$ and $U$ is the $n\times2$ **centred-data matrix** with rows $[\,x_i-\bar x,\ y_i-\bar y\,]$:
+
+$$ E=\lVert U\mathbf n\rVert^2=\mathbf n^{T}\big(U^{T}U\big)\mathbf n=\mathbf n^{T}M\,\mathbf n,\qquad M=U^{T}U $$
+
+the $2\times2$ scatter matrix $M=U^{T}U$
+
+$$ M=\begin{bmatrix}\sum(x_i-\bar x)^2 & \sum(x_i-\bar x)(y_i-\bar y)\\[2pt] \sum(x_i-\bar x)(y_i-\bar y) & \sum(y_i-\bar y)^2\end{bmatrix} $$
+
+**the solution:** minimise $\mathbf n^{T}M\,\mathbf n$ subject to $\lVert\mathbf n\rVert=1$ ⇒ $\mathbf n$ is the **eigenvector of the smallest eigenvalue** of the (symmetric) scatter matrix $M$. That eigenvector is the line's normal $(p,q)$; then $d=p\bar x+q\bar y$ finishes it. Works for **any** orientation, vertical lines included.
+
+## 3.  RANSAC — the idea (outliers break least squares)
+
+One outlier drags the least-squares line away from the true trend, because LS minimises the overall squared error and the outlier's huge residual dominates. **RANSAC** (RANdom SAmple Consensus) sidesteps this: **find the reliable inliers first, then fit only to them.**
+
+#### least squares chases the outlier; RANSAC ignores it
+
+[diagram text: outlier | RANSAC (inliers) | least squares]
+
+A single outlier tilts the LS fit; RANSAC keeps the line on the inliers.
+
+**🎲 RANSAC in one breath**
+
+1. Pick a **small random subset** of points (minimal to define the model — 2 for a line).
+
+2. **Fit** the model to that subset.
+
+3. Count **inliers**: points within a distance threshold of the model.
+
+4. Repeat many times; **keep the model with the most inliers**, then refit using all its inliers.
+
+General — the same loop robustly fits $H$, $F$, $P$, not just lines. Full algorithm & the trial-count formula: next lecture.
+
+### least squares = pseudo-inverse $C=(X^TX)^{-1}X^TY$; total least squares = smallest-eigenvector of the scatter matrix.
+
+scalar form $m=\operatorname{cov}(x,y)/\operatorname{var}(x),\ c=\bar y-m\bar x$; report $R^2$; TLS uses perpendicular error (handles vertical lines); RANSAC fits inliers to beat outliers.
+
+### Self-check quiz
+
+1. Write the least-squares solution for $C$ in matrix form and name it.
+
+→ Answer: $C=(X^TX)^{-1}X^TY$ — the pseudo-inverse (normal-equations) solution
+
+2. Fit $y=ax+b$ to $(0,2),(1,5),(2,8)$.
+
+→ Answer: $\sum x=3,\sum y=15,\sum x^2=5,\sum xy=21,n=3$ → $5a+3b=21,\ 3a+3b=15$ → $a=3,\ b=2$, so $y=3x+2$
+
+3. Why does vertical least squares fail for a vertical line, and what fixes it?
+
+→ Answer: the slope $m=\operatorname{cov}/\operatorname{var}(x)\to\infty$ as $\operatorname{var}(x)\to 0$; total least squares (perpendicular error) fixes it
+
+4. In total least squares, how do you get the line's normal $(p,q)$?
+
+→ Answer: it's the eigenvector of the smallest eigenvalue of the $2\times2$ scatter (variance–covariance) matrix; then $d=p\bar x+q\bar y$
+
+5. Why does one outlier ruin a least-squares line but not a RANSAC fit?
+
+→ Answer: LS minimises total squared error so the outlier's large residual tilts the line; RANSAC first selects inliers (by a distance threshold) and fits only to them
+
+— end of Lecture 32 notes ✏️
+
+# LECTURE 33 — Feature Matching & Model Fitting — Part V
+
+RANSAC algorithm & the trial-count formula · the Hough transform (point↔line duality, the accumulator, the $\rho$–$\theta$ form) · topic wrap-up
+
+🧠 the big picture, first
+
+Two robust fitters finish the topic. **RANSAC** — with the formula for how many random trials you need. And the **Hough transform** — a **voting** scheme that shines when there are **many** lines: every point votes in a parameter space, and peaks in the vote tally are the lines.
+
+## 1.  the RANSAC algorithm, with its four parameters
+
+**🎲 RANSAC (line fitting, but general)**
+
+1. Select **$s$** points uniformly at random ($s$ = minimum to fit the model; $s=2$ for a line).
+
+2. **Fit** the model to those $s$ points (e.g. by least squares).
+
+3. Count **inliers**: points whose distance to the model is below threshold **$t$**.
+
+4. If the inlier count $\ge$ consensus size **$d$**, accept, and **refit** using all inliers. Otherwise retry.
+
+5. Repeat **$N$** times; keep the best. If no trial yields a good consensus, the data may not support the model.
+| param | meaning | how to set it |
+| **$s$** | sample size | minimum points to define the model (2 = line, 4 = homography, …) |
+| **$t$** | inlier distance threshold | from noise: for zero-mean Gaussian noise $\sigma$, $t=1.96\sigma$ ⇒ ≈95% of true inliers pass |
+| **$d$** | consensus set size | match the expected inlier count $\approx(1-e)\,\lvert\text{data}\rvert$; don't set it well below that |
+| **$N$** | number of trials | from the outlier ratio $e$ (formula below) |
+
+### how many trials $N$? — a probability argument
+
+Let $e$ be the outlier ratio, so one random point is an inlier with probability $(1-e)$. Then:
+
+- All $s$ sampled points are inliers: $\ (1-e)^s$.
+
+- A trial is "bad" (has $\ge1$ outlier): $\ 1-(1-e)^s$.
+
+- All $N$ trials bad: $\ \big(1-(1-e)^s\big)^N$. We want this $\le 1-p$ (with $p$ the desired success prob).
+
+required number of trials
+
+$$ N=\frac{\log\big(1-p\big)}{\log\big(1-(1-e)^s\big)} $$
+
+**✍️ worked example — how many RANSAC trials?**
+$p=0.99$, outlier ratio $e=0.20$, sample size $s=2$.
+
+$(1-e)^s=0.8^2=0.64$, so $1-0.64=0.36$.
+
+$$ N=\frac{\ln(1-0.99)}{\ln(0.36)}=\frac{\ln 0.01}{\ln 0.36}=\frac{-4.6052}{-1.0217}=4.51\ \Rightarrow\ \boxed{N=5} $$
+
+Round **up** to the next integer. (Assignment Q8.) $N$ rises steeply as the outlier ratio $e$ grows — RANSAC is poor for very low inlier ratios.
+
+**⚖️ RANSAC — pros & cons+** simple, general (extends to $H$, $F$, $P$), works well in practice. **−** four parameters to tune, needs enough inliers, and $N$ blows up for high outlier ratios.
+
+## 2.  the Hough transform — voting for lines
+
+When the image holds **many** lines, fit them all at once by **voting**: let each point vote for every model compatible with it. Noise votes inconsistently and washes out; the true lines collect consistent votes and stand out. It even tolerates missing data (other points still vote).
+
+**🔁 point ↔ line duality (image space ↔ Hough space)**
+
+- A **line** $y=m_1x+b_1$ in the image ⇒ a single **point** $(m_1,b_1)$ in Hough $(m,b)$ space.
+
+- A **point** $(x_1,y_1)$ in the image ⇒ a **line** in Hough space: $\,b=-x_1\,m+y_1\,$ (every $(m,b)$ on it is a line through $(x_1,y_1)$).
+
+- Two image points ⇒ two Hough lines; their **intersection** $(m^\ast,b^\ast)$ is the single line through both points. Votes pile up at that intersection.
+
+#### each image point → a line in $(m,b)$ space; intersections = shared lines
+
+[diagram text: image space (x,y) | (x₁,y₁) | (x₂,y₂) | Hough space (m,b) | b=−x₁m+y₁ | b=−x₂m+y₂ | (m*,b*)]
+
+the intersection $(m^\ast,b^\ast)$ is the parameters of the line joining both points — that cell gets the most votes.
+
+**⚠️ exam note — the sign convention**
+The correct duality (from $y=mx+b\Rightarrow b=y-mx$) is $\ b=-x_1 m + y_1$. The **Week-7 assignment (Q2) writes it with a plus sign**, $c=mx+y$, so for points $a=(2,5),\ b=(4,1)$ it reports $c=2m+5$ and $c=4m+1$ (option a). Learn the correct derivation, but if the exam uses the assignment's convention, **match $c=mx+y$** to get their answer.
+
+### the $\rho$–$\theta$ (polar / normal) form — the practical one
+
+Slope-intercept space is unbounded ($m\to\infty$ for vertical lines). Use the normal parametrization instead:
+
+polar line equation
+
+$$ \rho=x\cos\theta+y\sin\theta $$
+
+$\rho$ = perpendicular distance from the origin, $\theta$ = its angle. Both are **bounded**: $\theta\in[0^\circ,180^\circ)$, $\rho\in[0,\text{image diagonal}]$ — so the parameter space discretizes cleanly. A point $(x,y)$ now traces a **sinusoid** in $(\rho,\theta)$ space.
+
+**🗳️ the accumulator algorithm**
+
+1. Discretize $(\rho,\theta)$ into a grid = the **accumulator array** $A$; init to $0$.
+
+2. For each edge point $(x,y)$: for every $\theta\in[0^\circ,180^\circ)$, compute $\rho=x\cos\theta+y\sin\theta$ and increment $A(\rho,\theta)$.
+
+3. **Local maxima** of $A$ = detected lines; each peak $(\rho,\theta)$ gives one line. Multiple peaks ⇒ multiple lines.
+
+#### votes in the accumulator
+
+[diagram text: single line → one sharp peak | many lines → several peaks | noise → blurred cluster]
+
+brightness = vote count. Grid resolution matters: too coarse merges lines; too fine splits a line across bins. Smooth $A$; use only strong-gradient edge points.
+
+## 3.  Week 7 on one page
+
+**📌 feature matching & model fitting — cheat-sheet**
+| sub-topic | tools |
+| **matching measures** | $L_p$ & weighted/Mahalanobis distance; NCC (mean-centred) & cosine similarity |
+| **matching criteria** | fixed threshold · nearest neighbour (arg min) · **NNDR** $d_1/d_2$ (robust) |
+| **histogram distances** | $L_1$; KL divergence $\sum p\ln(p/q)$; Earth Mover's Distance |
+| **efficient search** | **K-D tree** (alternating cuts, prune by cell corners) · **LSH** (random-hyperplane bits, $\Pr=1-\theta/\pi$) |
+| **fit (clean)** | least squares $C=(X^TX)^{-1}X^TY$, $m=\operatorname{cov}/\operatorname{var}$; total least squares (perp. error, smallest eigenvector) |
+| **fit (outliers)** | **RANSAC**: $N=\dfrac{\log(1-p)}{\log(1-(1-e)^s)}$ |
+| **fit (many lines)** | **Hough** voting; $\rho=x\cos\theta+y\sin\theta$; accumulator peaks |
+
+### outliers? sample & count inliers (RANSAC). many lines? let every point vote (Hough).
+
+RANSAC $N=\log(1-p)/\log(1-(1-e)^s)$ trials; Hough votes in $(\rho,\theta)$, $\rho=x\cos\theta+y\sin\theta$, peaks in the accumulator = detected lines.
+
+### Self-check quiz
+
+1. In RANSAC, how do you set the inlier threshold $t$ from the noise level?
+
+→ Answer: for zero-mean Gaussian noise with std $\sigma$, use $t=1.96\sigma$ so ≈95% of true inliers fall within threshold
+
+2. How many trials for $p=0.99$, outlier ratio $e=0.2$, $s=2$?
+
+→ Answer: $N=\dfrac{\ln0.01}{\ln(1-0.8^2)}=\dfrac{\ln0.01}{\ln0.36}=4.51\Rightarrow N=5$ (round up)
+
+3. In the Hough transform, what does a single image point map to, and what does an accumulator peak mean?
+
+→ Answer: a point maps to a line in parameter space ($b=-x_1m+y_1$, or a sinusoid in $\rho$–$\theta$); a peak = a line supported by many points
+
+4. Why prefer the $\rho$–$\theta$ parametrization over $(m,b)$?
+
+→ Answer: $m$ is unbounded (infinite for vertical lines); $\rho\in[0,\text{diag}]$, $\theta\in[0,180°)$ are bounded, so the accumulator discretizes cleanly
+
+5. Transform image points $(2,5),(4,1)$ to Hough parameter-space lines.
+
+→ Answer: correct form $c=-mx+y$: $c=-2m+5$ and $c=-4m+1$; note the assignment's convention writes $c=mx+y$ → $c=2m+5,\ c=4m+1$ (its option a)
+
+— end of Lecture 33 · end of Week 7 ✏️

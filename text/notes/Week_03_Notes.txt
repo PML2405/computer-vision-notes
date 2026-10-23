@@ -1,0 +1,757 @@
+# Week 3 — Camera Geometry — study notes
+(Camera Geometry — single-view; Prof. Jayanta Mukhopadhyay · Lectures 11–15. Re-taught-from-scratch notes written from the slides + transcript; math is LaTeX between $...$ / $$...$$. Pretty version: https://pml2405.github.io/computer-vision-notes/notes/week3_notes.html)
+
+COMPUTER VISION · NPTEL · IIT KHARAGPUR
+
+Week 3
+
+**Camera Geometry** — single-view
+
+Prof. Jayanta Mukhopadhyay · Lectures 11–15
+
+### 📒 what's inside this week
+
+1. Lecture 11 — Camera Geometry · Part I
+pinhole model, perspective projection, P = K[R|t]
+
+2. Lecture 12 — Camera Geometry · Part II
+the calibration matrix K, slicing P, estimating P by DLT
+
+3. Lecture 13 — Camera Geometry · Part III
+reading centre/vanishing points/principal point off P, RQ
+
+4. Lecture 14 — Camera Geometry · Part IV
+worked problems, the affine camera, imaging a plane/line, zoom
+
+5. Lecture 15 — Camera Geometry · Part V
+conjugate-rotation homography, vanishing points & lines, summary
+
+# LECTURE 11 — Camera Geometry — Part I
+
+the pinhole model · perspective projection as a matrix · building the 3×4 camera matrix P = K[R|t]
+
+🧠 the big picture, first
+
+A camera is a machine that **flattens a 3-D world onto a 2-D image**. This lecture writes that flattening as a single matrix multiply: $\mathbf x = P\mathbf X$, where $P$ is a $3\times4$ matrix built from what the camera is ($K$) and where it sits ($R,\mathbf t$).
+
+Get $P$ and you can predict exactly where any world point lands in the photo. The catch: you can't run it backwards (a pixel came from a whole ray, not one point). 📸
+
+## 1.  the pinhole camera & perspective projection
+
+Put the **camera centre** (centre of projection) at the origin. A world point $P=(X,Y,Z)$ sends a ray through the centre; where that ray hits the **image plane** (a distance $f$ = the **focal length** away) is the image point $(x,y)$. By **similar triangles**:
+
+perspective projection
+
+$$ x=f\,\frac{X}{Z},\qquad y=f\,\frac{Y}{Z} $$
+
+#### similar triangles give x = fX/Z
+
+[diagram text: centre O | Z (optical axis) | image plane (f) | P=(X,Y,Z) | p=(x,y)]
+
+Big triangle (O, P, its foot) ∼ small triangle (O, p, its foot) ⇒ $x/f = X/Z$.
+
+**💡 why is the image plane drawn in front of the centre?**
+Physically the sensor sits **behind** the lens/centre, so the true image forms **inverted** (upside-down and left-right flipped). To avoid dragging that sign flip through every formula, we place a **virtual image plane** in front of the centre at the **same distance $f$**. It carries an **upright image of exactly the same size**, and the geometry is identical (same similar triangles) — so all the equations come out clean. That convention is why every diagram here shows the plane in front. 🙃➡️🙂
+
+Names to know: the $XY$-plane of the camera frame is the **principal plane**; the $Z$-axis is the **principal (optical) axis**; the axis pierces the image plane at the **principal point**. That $\div Z$ is why far things look small — **perspective foreshortening**.
+
+## 2.  writing it as a matrix — the 3×4 projection matrix
+
+The division by $Z$ is non-linear… until we use **homogeneous coordinates**. Represent the world point as a 4-vector $(X,Y,Z,1)^{T}$ and the image point as a 3-vector; then projection is linear:
+
+$$ \begin{bmatrix}fX\\fY\\Z\end{bmatrix}=\begin{bmatrix}f&0&0&0\\0&f&0&0\\0&0&1&0\end{bmatrix}\begin{bmatrix}X\\Y\\Z\\1\end{bmatrix} $$
+
+**read it as:** the output $(fX,fY,Z)$ is a homogeneous image point — divide by the last entry $Z$ and you recover $(fX/Z,\,fY/Z)$, exactly our projection. The scale factor **is** the depth $Z$.
+
+That $3\times4$ matrix is the **projection matrix** $P$. In canonical form it splits as:
+
+$$ P=\operatorname{diag}(f,f,1)\,[\,I\mid \mathbf 0\,] $$
+
+Pulling $f$ out leaves the bare $[\,I\mid\mathbf 0\,]$ — the **minimal / canonical** camera. This is precisely the camera you get when the image plane is **normalised to unit distance** ($f=1$) from the centre. Everything else ($f$, the principal point, pixels, skew) is just extra structure layered on top of this canonical core.
+
+**dimension check:** this is a linear map from the **3-D projective space** $\mathbb P^3$ (world points $(X,Y,Z,1)^{T}$) down to the **2-D projective space** $\mathbb P^2$ (image points $(x,y,1)^{T}$) — written $\mathbb P^3\!\to\!\mathbb P^2$. Contrast a **homography**, which is $\mathbb P^2\!\to\!\mathbb P^2$ (plane→plane, square and invertible). The drop in dimension is why depth is lost.
+
+**⚠️ 3-D→2-D is NOT invertible**
+Unlike a homography (a square, invertible $3\times3$ map between two planes), $P$ is $3\times4$ — not square. A 3-D point maps to a unique pixel, but a pixel maps back to an entire **ray** of 3-D points. You cannot recover depth from one image. 🚫
+
+## 3.  shifting the origin — the principal point
+
+Real image coordinates start from a corner, not the principal point. If the principal point sits at $(p_x,p_y)$, every image coordinate is offset: $x=f\tfrac{X}{Z}+p_x$, $y=f\tfrac{Y}{Z}+p_y$. That offset moves into the **third column**, and the focal/offset part becomes the **calibration matrix** $K$:
+
+calibration matrix (so far)
+
+$$ K=\begin{bmatrix}f&0&p_x\\0&f&p_y\\0&0&1\end{bmatrix},\qquad \mathbf x=K\,[\,I\mid\mathbf 0\,]\,\mathbf X $$
+
+**check the offset by hand — where does the $+p_x$ come from?**
+
+1. The third column of $P$ changes from $(0,0,1)^{T}$ to $(p_x,p_y,1)^{T}$. Multiply out: $\begin{bmatrix}f&0&p_x&0\\0&f&p_y&0\\0&0&1&0\end{bmatrix}\begin{bmatrix}X\\Y\\Z\\1\end{bmatrix}=\begin{bmatrix}fX+p_xZ\\ fY+p_yZ\\ Z\end{bmatrix}$.
+
+2. Dehomogenise (divide by the last entry $Z$): $\ x'=\dfrac{fX+p_xZ}{Z}=f\dfrac{X}{Z}+p_x$, and likewise $\ y'=f\dfrac{Y}{Z}+p_y$. ✔️ — exactly the shifted coordinates we wanted.
+
+## 4.  the camera isn't at the origin — extrinsics R, t
+
+Usually the world has its own frame, offset and rotated from the camera's. A world point $\tilde{\mathbf X}$ converts to camera coordinates by a **rigid motion**: rotate + translate.
+
+$$ \tilde{\mathbf X}_{\text{cam}}=R\big(\tilde{\mathbf X}-\tilde{\mathbf C}\big) $$
+
+$R$ = $3\times3$ **rotation** (orthonormal) matrix; $\tilde{\mathbf C}$ = the camera centre's position in world coordinates. (Tilde = ordinary non-homogeneous coordinates.)
+
+**assemble $P$ step-by-step — the $4\times4$ world→camera block**
+
+1. Write the rigid motion in homogeneous form as one $4\times4$ matrix: $\begin{bmatrix}\tilde{\mathbf X}_{\text{cam}}\\ 1\end{bmatrix}=\begin{bmatrix}R & -R\tilde{\mathbf C}\\ \mathbf 0^{T} & 1\end{bmatrix}\begin{bmatrix}\tilde{\mathbf X}\\ 1\end{bmatrix}$.
+
+2. Cascade it with the canonical camera $K[\,I\mid\mathbf 0\,]$: $\quad \mathbf x = K\,[\,I\mid\mathbf 0\,]\begin{bmatrix}R & -R\tilde{\mathbf C}\\ \mathbf 0^{T} & 1\end{bmatrix}\mathbf X$.
+
+3. Count the shapes: $\underbrace{K}_{3\times3}\cdot\underbrace{[\,I\mid\mathbf 0\,]}_{3\times4}\cdot\underbrace{\text{block}}_{4\times4}$ collapses into a single $3\times4$ matrix — and that product **is** $P$. (Multiplying the first two already gives $K[\,R\mid -R\tilde{\mathbf C}\,]$.)
+
+Fold this into the projection — the full projective camera:
+
+the full camera matrix
+
+$$ P=K\,[\,R\mid \mathbf t\,]=K\,R\,[\,I\mid -\tilde{\mathbf C}\,],\qquad \mathbf t=-R\tilde{\mathbf C} $$
+
+**read it as:** "un-rotate & un-shift the world into the camera's frame ($[R\mid\mathbf t]$), then apply the lens ($K$)." Handy consequence: the camera centre is recoverable straight from $P$, since the $-\tilde{\mathbf C}$ sits right there.
+
+## 5.  real sensors — pixels & skew
+
+A digital sensor (CCD/CMOS) has a finite pixel density. If there are $m_x$ pixels per unit length horizontally and $m_y$ vertically, the focal length in **pixels** becomes $\alpha_x=f\,m_x$ and $\alpha_y=f\,m_y$ (they differ if pixels aren't square). Add a **skew** $s$ for sensors whose axes aren't exactly perpendicular:
+
+the full calibration matrix
+
+$$ K=\begin{bmatrix}\alpha_x & s & p_x\\ 0 & \alpha_y & p_y\\ 0 & 0 & 1\end{bmatrix} $$
+
+$s\approx \alpha_x\tan\theta$ for a tiny deviation $\theta$ from 90°; on modern cameras $s\approx0$. $K$ is **upper-triangular** with 5 free numbers.
+
+## 6.  counting the parameters — 11 DOF
+
+The $3\times4$ $P$ has 12 entries, but it's defined only up to scale ⇒ 11 degrees of freedom, split into two groups:
+| group | parameters | count |
+| **Intrinsic** (inside $K$) | $\alpha_x,\ \alpha_y,\ s,\ p_x,\ p_y$ | 5 |
+| **Extrinsic** (in $[R\mid\mathbf t]$) | 3 rotation + 3 translation | 6 |
+
+**Intrinsics** describe the camera itself (lens + sensor); **extrinsics** describe its pose in the world. Together: $P=K[R\mid\mathbf t]$, $\ \mathbf x=P\mathbf X$.
+
+### a camera = one 3×4 matrix $P=K[R\,|\,\mathbf t]$: lens & sensor ($K$) times pose ($R,\mathbf t$).
+
+perspective divides by depth; projection is linear in homogeneous coords; 11 DOF = 5 intrinsic + 6 extrinsic; not invertible.
+
+### Self-check quiz
+
+1. Why does a distant object appear smaller in a photo?
+
+→ Answer: perspective projection divides by depth: $x=fX/Z$, so larger $Z$ shrinks the image coordinate
+
+2. Why can't you recover a 3-D point from its single image point?
+
+→ Answer: $P$ is $3\times4$ (not invertible); a pixel corresponds to a whole ray of 3-D points — depth is lost
+
+3. What do the 5 intrinsic parameters in $K$ represent?
+
+→ Answer: focal lengths in pixels $\alpha_x,\alpha_y$, skew $s$, and principal point $p_x,p_y$
+
+4. Write the full camera matrix in terms of $K$, $R$ and the camera centre $\tilde{\mathbf C}$.
+
+→ Answer: $P=K R\,[\,I\mid-\tilde{\mathbf C}\,]=K[\,R\mid\mathbf t\,]$ with $\mathbf t=-R\tilde{\mathbf C}$
+
+5. Why is the image plane drawn in front of the camera centre?
+
+→ Answer: it's a virtual plane at the same distance $f$; the real image behind the lens is inverted, so the front plane gives an upright, same-size image with identical geometry
+
+— end of Lecture 11 notes ✏️
+
+# LECTURE 12 — Camera Geometry — Part II
+
+intrinsic parameters · the calibration matrix K · pixels, principal point & skew
+
+🧠 the big picture, first
+
+Last lecture we said a camera is a machine that turns a **3-D world point $\mathbf X$** into a **2-D image point $\mathbf x$** by a single matrix multiply, $\mathbf x = P\mathbf X$. Today we open up that matrix $P$ and see what is inside.
+
+$P$ splits cleanly into two halves: **where the camera sits and points** (the extrinsic part, $R$ and the centre) and **how the camera turns metres on the focal plane into pixels** (the intrinsic part, the calibration matrix $K$). We will also learn how to recover $P$ from a handful of point matches, and read the camera centre and vanishing points straight off it. 📷
+
+## 1.  recap — the projective camera $P$
+
+A **projective camera** is a $3\times4$ matrix $P$ that maps a world point to an image point in **homogeneous (projective) coordinates**:
+
+$$ \mathbf x = P\,\mathbf X,\qquad \mathbf x=\begin{bmatrix}x\\y\\w\end{bmatrix}\ (3\text{-vector}),\quad \mathbf X=\begin{bmatrix}X\\Y\\Z\\1\end{bmatrix}\ (4\text{-vector}) $$
+
+**read it as:** “stick a $1$ onto the 3-D point to make it a 4-vector, hit it with $P$, and out drops a 3-vector image point.” The image point is **homogeneous**: divide by its last entry $w$ to read off the real pixel $\big(x/w,\ y/w\big)$.
+
+The professor reminds us that $P$ is not one solid block — it factors into recognisable pieces:
+
+the camera, factored
+
+$$ P = K\,[\,R \mid \mathbf t\,] = K\,R\,[\,I \mid -\tilde{\mathbf C}\,] $$
+
+**🧩 what each factor does**
+
+- **$R$** — a $3\times3$ **rotation matrix**. It rotates the world axes until they line up with the camera's own axes (a change of orientation). Extrinsic.
+
+- **$\mathbf t$ / $\tilde{\mathbf C}$** — the **translation** that moves the world origin onto the camera centre $\tilde{\mathbf C}$. Extrinsic.
+
+- **$K$** — the **calibration matrix**: it converts the tidy metric image on the focal plane into actual pixel indices. Intrinsic. This is today's star.
+
+#### the two coordinate frames: world vs camera
+
+[diagram text: world origin | Xw | Yw | Zw | camera centre C̃ | xc | yc | zc (optical axis) | translation t (+ rotation R)]
+
+Extrinsics ($R,\mathbf t$) carry you from the world frame to the camera-centred frame; intrinsics ($K$) then take over inside the camera.
+
+## 2.  the calibration matrix $K$ — intrinsic parameters
+
+**Intrinsic (internal) parameters** are the ones baked into the camera hardware itself — the lens focal length, the sensor's pixel size, where the optical axis lands on the chip. They do **not** change when you move the camera around. All of them live in one upper-triangular $3\times3$ matrix:
+
+the calibration matrix
+
+$$ K=\begin{bmatrix} f_x & s & p_x\\[2pt] 0 & f_y & p_y\\[2pt] 0 & 0 & 1 \end{bmatrix} $$
+
+**read it as:** “scale the two axes by $f_x,f_y$, shear them by the skew $s$, then shift the origin to the principal point $(p_x,p_y)$.” Three simple 2-D operations — scaling, shearing, translating — stacked into one matrix.
+
+### step 1 — from an ideal image to pixels
+
+Imagine the perfect, textbook image formed on the focal plane, measured in **millimetres** with its origin on the optical axis. A camera-frame point $(X,Y,Z)$ lands there at the ideal coordinates $\big(f\tfrac{X}{Z},\ f\tfrac{Y}{Z}\big)$, where $f$ is the **focal length** in mm. But a sensor doesn't count millimetres — it counts **pixels**. Two fixes are needed.
+
+**🔧 the two fixes that build $K$**
+
+1. **Scale mm → pixels.** Let $m_x$ = pixels per mm along the horizontal, $m_y$ = pixels per mm along the vertical. Then the focal length expressed in pixels along each axis is
+$$ f_x = f\,m_x,\qquad f_y = f\,m_y $$
+These $f_x,f_y$ are the **resolution factors** — the same $f$ measured in two different pixel rulers. (Lecture wording: the professor calls $m_x,m_y$ the “number of pixels along the horizontal / vertical direction”. Read that as the pixel density — pixels per unit length — which is the standard meaning used here, so $f\,m$ correctly comes out in pixels.)
+
+2. **Shift the origin.** Pixel indices are counted from a corner of the sensor, not from the optical axis. So we add the **principal point** $(p_x,p_y)$ — the pixel where the optical axis actually pierces the image (usually near the centre of the frame).
+
+Putting both together, the pixel coordinates $(u,v)$ of a camera-frame point are:
+
+$$ u = f_x\,\frac{X}{Z} + s\,\frac{Y}{Z} + p_x,\qquad v = f_y\,\frac{Y}{Z} + p_y $$
+
+**read it as:** “take the ideal projection, magnify it by the pixels-per-unit resolution, nudge in a pinch of skew, and slide the origin over to the principal point.” That is exactly multiplying by $K$.
+
+#### ideal metric image → pixel array (what $K$ does)
+
+[diagram text: pixel (0,0) | u | v | principal pt (pₓ,p_y) | x (mm) | y (mm) | skewed axis | skew s | s ≠ 0 ⇒ axes not perpendicular]
+
+Left: pixel indices start at a corner; the metric image sits centred on the principal point. Right: skew tilts one axis. $K$ encodes all of this.
+
+### the five knobs inside $K$
+| entry | name | what it means |
+| $f_x=f\,m_x$ | focal length in pixels (x) | how many pixels one unit of horizontal focal length spans |
+| $f_y=f\,m_y$ | focal length in pixels (y) | same, vertically; differs from $f_x$ if pixels aren't square |
+| $p_x$ | principal point (x) | column index where the optical axis hits the sensor |
+| $p_y$ | principal point (y) | row index where the optical axis hits the sensor |
+| $s$ | skew | tilt between the pixel axes; $s=0$ for an ideal rectangular grid |
+
+That is 5 intrinsic parameters — remember this count, it comes back in Section 5.
+
+### aspect ratio, the determinant & why $K$ is upper-triangular
+
+**📏 aspect ratio**
+The ratio $\dfrac{f_y}{f_x}=\dfrac{m_y}{m_x}$ is the **aspect ratio** of a pixel. Square pixels ⇒ $m_x=m_y$ ⇒ ratio $=1$ ⇒ $f_x=f_y$.
+
+**🧮 determinant of $K$**
+Because $K$ is triangular, its determinant is just the product of the diagonal:
+
+$$ \det K = f_x\,f_y $$
+
+the professor's “product of the two resolution factors”.
+
+**▲ why upper-triangular?**
+Going from the ideal image to pixels only ever **scales the axes, shears them, and offsets the origin** — none of those operations feed the last (homogeneous) coordinate back into the first two rows. Every such 2-D affine map has zeros below the diagonal, so their product $K$ is upper-triangular. (Formally, $K$ falls out of the RQ decomposition of the left $3\times3$ block of $P$, which is defined to give an upper-triangular $K$ and an orthonormal $R$.)
+
+### projection for a camera at the origin
+
+If the camera sits at the world origin looking straight down its axis (no rotation, no translation, so $R=I$ and $\tilde{\mathbf C}=\mathbf 0$), the whole camera collapses to just its intrinsics:
+
+canonical projection (camera at origin)
+
+$$ \mathbf x = K\,[\,I \mid \mathbf 0\,]\,\mathbf X $$
+
+**read it as:** “$[\,I\mid\mathbf 0\,]$ just chops the homogeneous $1$ off $\mathbf X$ to give $(X,Y,Z)$; then $K$ turns that into a pixel.” It's the simplest possible camera — pure intrinsics.
+
+**worked example — project one point through $K$ (illustrative numbers)**
+Let $f_x=f_y=800$ px, principal point $(p_x,p_y)=(320,240)$, skew $s=0$, camera at the origin. A point in front of the camera has camera-frame coordinates $(X,Y,Z)=(0.2,\,0.1,\,2)$.
+
+1. $K[I\mid\mathbf 0]\mathbf X = K\,(0.2,\ 0.1,\ 2)^{\top} = \big(800(0.2)+320(2),\ \ 800(0.1)+240(2),\ \ 2\big) = (800,\ 560,\ 2)$.
+
+2. Dehomogenise (divide by $w=2$): pixel $=(800/2,\ 560/2)=(400,\ 280)$.
+
+3. Check with the shortcut: $u=f_x\tfrac{X}{Z}+p_x=800(0.1)+320=400$; $\ v=f_y\tfrac{Y}{Z}+p_y=800(0.05)+240=280$. ✔️
+
+With a non-zero skew $s$, step 1's first entry would gain a term $s\cdot Y = s(0.1)$ — a small horizontal shear.
+
+## 3.  $K^{-1}$ and normalized (canonical) coordinates
+
+Since $K$ is upper-triangular, so is its inverse $K^{-1}$. Multiplying a pixel by $K^{-1}$ **undoes** the camera's internal calibration:
+
+$$ \hat{\mathbf x} = K^{-1}\mathbf x $$
+
+**🎯 what $K^{-1}\mathbf x$ gives you**
+It returns the point's **normalized (canonical) image coordinates**: the ideal image you'd get from a camera whose **focal plane sits at unit distance** ($f=1$) and whose **axes are parallel to the camera-centred coordinate axes**. In other words, you strip away the pixel scaling, the principal-point offset and the skew, leaving pure direction information.
+
+**intuition:** $K$ is the “make it look like this particular sensor” step; $K^{-1}$ is the “forget which sensor took it” step. Normalized coordinates let different cameras speak the same geometric language.
+
+## 4.  slicing $P$ into blocks: $M$ and $\mathbf p_4$
+
+The professor introduces the working notation. Write the $3\times4$ matrix $P$ as its left $3\times3$ block $M$ plus its last column $\mathbf p_4$:
+
+$$ P = [\,M \mid \mathbf p_4\,],\qquad M = K R \quad(\text{a }3\times3\text{ block}),\qquad \mathbf p_4 = \text{4th column}\ (3\times1) $$
+
+Factor $M$ back out and you reach the **canonical form** of the camera:
+
+$$ P = [\,M \mid \mathbf p_4\,] = M\,[\,I \mid M^{-1}\mathbf p_4\,] = M\,[\,I \mid -\tilde{\mathbf C}\,] $$
+
+**read it as:** “pull $M$ out front, and the leftover last column becomes $-\tilde{\mathbf C}$.” Matching the two forms gives a free formula for the camera centre: $\tilde{\mathbf C} = -M^{-1}\mathbf p_4$.
+
+Two useful decompositions of the same $P$: $\ [\,M\mid\mathbf p_4\,]$ (block + column) and $\ M[\,I\mid-\tilde{\mathbf C}\,]$ (canonical). $M$ itself further splits as $M=KR$ — intrinsics times rotation.
+
+## 5.  properties of the projective camera
+
+**📋 the facts to memorise**
+
+- **Size & rank.** $P$ is $3\times4$ and has **rank 3** (full row rank).
+
+- **Degrees of freedom = 11.** $P$ has $12$ entries but is defined only up to scale (multiply the whole matrix by any non-zero constant and it's the same camera), so one degree is spent — leaving $11$ independent parameters.
+
+- **$11 = 6 + 5$.** Six **extrinsic** parameters (3 for the rotation $R$ + 3 for the translation of the origin) and five **intrinsic** parameters (the $f_x,f_y,s,p_x,p_y$ inside $K$).
+
+$$ \underbrace{11}_{\text{DOF of }P} \;=\; \underbrace{6}_{\text{extrinsic }(R,\ \mathbf t)} \;+\; \underbrace{5}_{\text{intrinsic }(K)} $$
+
+## 6.  from one match to two equations (the cross-product trick)
+
+Suppose experimentally we know a 3-D scene point $\mathbf X_i$ **and** its observed image point $\mathbf x_i=(x_i,\,y_i,\,w_i)^{\top}$. We'd like to use this pair to pin down $P$. The catch: because we're in projective space, $\mathbf x_i$ and $P\mathbf X_i$ are only equal **up to an unknown scale factor** $\lambda$, so we cannot just set their entries equal:
+
+$$ \mathbf x_i \sim P\mathbf X_i \qquad(\text{equal in direction, not in length}) $$
+
+**✖️ kill the scale with a cross product**
+Two vectors that point the **same direction** (differ only by a scale) have a **zero cross product**. So the scale factor simply vanishes if we write:
+
+$$ \mathbf x_i \times (P\mathbf X_i) = \mathbf 0 $$
+
+Write $P$ as three **row** vectors $\mathbf r_1^{\top},\mathbf r_2^{\top},\mathbf r_3^{\top}$ (each $1\times4$). Then $P\mathbf X_i$ is a column of three scalars, and the cross product with $\mathbf x_i$ expands into three equations:
+
+$$ P\mathbf X_i=\begin{bmatrix}\mathbf r_1^{\top}\mathbf X_i\\ \mathbf r_2^{\top}\mathbf X_i\\ \mathbf r_3^{\top}\mathbf X_i\end{bmatrix},\qquad \mathbf x_i \times P\mathbf X_i=\begin{bmatrix} y_i\,\mathbf r_3^{\top}\mathbf X_i - w_i\,\mathbf r_2^{\top}\mathbf X_i\\[2pt] w_i\,\mathbf r_1^{\top}\mathbf X_i - x_i\,\mathbf r_3^{\top}\mathbf X_i\\[2pt] x_i\,\mathbf r_2^{\top}\mathbf X_i - y_i\,\mathbf r_1^{\top}\mathbf X_i \end{bmatrix}=\mathbf 0 $$
+
+Regrouping so the unknown rows $\mathbf r_1,\mathbf r_2,\mathbf r_3$ stand on the right gives the tidy matrix form (note each block is a $1\times4$ row, $\mathbf 0^{\top}$ is a $1\times4$ zero):
+
+$$ \begin{bmatrix} \mathbf 0^{\top} & -w_i\mathbf X_i^{\top} & \ \ y_i\mathbf X_i^{\top}\\[2pt] w_i\mathbf X_i^{\top} & \mathbf 0^{\top} & -x_i\mathbf X_i^{\top}\\[2pt] -y_i\mathbf X_i^{\top} & \ \ x_i\mathbf X_i^{\top} & \mathbf 0^{\top} \end{bmatrix} \begin{bmatrix}\mathbf r_1\\ \mathbf r_2\\ \mathbf r_3\end{bmatrix}=\mathbf 0 $$
+
+**⚠️ only two of the three are independent**
+Multiply row 1 by $x_i$, row 2 by $y_i$, add them — you recover row 3 (times $w_i$). So the third equation is **redundant**: each point correspondence supplies exactly 2 independent equations.
+
+**so, the headcount:** $P$ has 11 unknowns; each match gives 2 equations. You need at least $\lceil 11/2\rceil = 6$ point correspondences (giving $12$ equations) to solve for the camera. 🎯
+
+## 7.  estimating $P$ — the Direct Linear Transform (DLT)
+
+Collect $n$ correspondences. Each contributes $2$ rows, so stacking them gives a tall matrix $A$ of size $2n\times12$ acting on the $12$-vector $\mathbf p$ (all the entries of $P$, read out row by row):
+
+$$ A\,\mathbf p = \mathbf 0,\qquad A\in\mathbb R^{\,2n\times12},\quad \mathbf p=\big(\mathbf r_1;\,\mathbf r_2;\,\mathbf r_3\big)\in\mathbb R^{12} $$
+
+With $n\ge6$ we have more equations than unknowns (an **over-determined** homogeneous system), so we solve it in the **least-squares** sense. Since any scaled $\mathbf p$ is also a solution, we pin the scale with the constraint $\lVert\mathbf p\rVert=1$:
+
+DLT objective
+
+$$ \min_{\mathbf p}\ \lVert A\mathbf p\rVert \quad\text{subject to}\quad \lVert\mathbf p\rVert = 1 $$
+
+**🛠️ how to actually solve it**
+
+- **Eigenvector route:** the minimiser is the **eigenvector of $A^{\top}A$ with the smallest eigenvalue** (equivalently, the last right-singular vector of $A$). Reshape that 12-vector back into $P$.
+
+- **Non-homogeneous route:** fix one element of $\mathbf p$ to a value and solve the remaining ordinary least-squares system.
+
+- This is the very same **Direct Linear Transform** machinery used earlier to estimate a homography — identical recipe, bigger matrix.
+
+## 8.  reading geometry straight off $P$
+
+### the camera centre is $P$'s null-space
+
+The camera centre $\tilde{\mathbf C}$ is a **singular point**: you cannot photograph the very point light rays pass through — there is no ray joining a point to itself. In projective terms the homogeneous centre $\mathbf C=(\tilde{\mathbf C};1)$ maps to the zero vector:
+
+$$ P\,\mathbf C = \mathbf 0 $$
+
+Split $P=[\,M\mid\mathbf p_4\,]$ and multiply out: $\ M\tilde{\mathbf C}+\mathbf p_4=\mathbf 0$, which rearranges to the formula we already glimpsed:
+
+camera centre (finite camera)
+
+$$ \tilde{\mathbf C} = -\,M^{-1}\,\mathbf p_4 $$
+
+**read it as:** “grab the left $3\times3$ block $M$, invert it, and multiply the last column — negated — to get where the camera is.” Valid whenever $M$ is invertible.
+
+**🔎 finite vs. camera-at-infinity**
+For a **finite** camera $M$ is **non-singular** and the formula above works. For a camera **at infinity** the centre is itself a **point at infinity**, so its homogeneous scale factor is $0$ and $M$ turns out **singular** ($M^{-1}$ does not exist, so $-M^{-1}\mathbf p_4$ is unavailable). The professor writes the centre directly in homogeneous form as the **null-direction of $M$**:
+
+$$ \mathbf C=\begin{bmatrix}\mathbf d\\[2pt] 0\end{bmatrix},\qquad M\,\mathbf d=\mathbf 0 $$
+
+i.e. solve for the direction $\mathbf d$ that $M$ collapses to zero, and stack a $0$ underneath it (the last coordinate $0$ marks a point on the plane at infinity). This singular case is elaborated in the next lecture.
+
+**worked example — camera centre from $M,\mathbf p_4$ (illustrative)**
+Say a solved camera has left block $M=I$ (identity, illustrative) and last column $\mathbf p_4=(2,-3,5)^{\top}$.
+
+1. $M^{-1}=I$, so $M^{-1}\mathbf p_4=(2,-3,5)^{\top}$.
+
+2. $\tilde{\mathbf C}=-M^{-1}\mathbf p_4=(-2,\ 3,\ -5)^{\top}$ — the camera sits at that world location.
+
+### the columns of $P$ are vanishing points
+
+Write $P$ as four columns $[\,\mathbf p_1\ \mathbf p_2\ \mathbf p_3\ \mathbf p_4\,]$. A **vanishing point** is the image of a **point at infinity** along some direction $\mathbf d$ — all world lines parallel to $\mathbf d$ appear to converge there. A point at infinity is written $(\mathbf d;\,0)$ (last coordinate $0$). Feed the axis directions in:
+
+$$ P\begin{bmatrix}1\\0\\0\\0\end{bmatrix}=\mathbf p_1,\quad P\begin{bmatrix}0\\1\\0\\0\end{bmatrix}=\mathbf p_2,\quad P\begin{bmatrix}0\\0\\1\\0\end{bmatrix}=\mathbf p_3,\quad P\begin{bmatrix}0\\0\\0\\1\end{bmatrix}=\mathbf p_4 $$
+
+**🧭 the four columns, decoded**
+
+- $\mathbf p_1$ = vanishing point of the **world X-axis**
+
+- $\mathbf p_2$ = vanishing point of the **world Y-axis**
+
+- $\mathbf p_3$ = vanishing point of the **world Z-axis**
+
+- $\mathbf p_4$ = image of the **world origin** $(0,0,0)$ — since $(0,0,0,1)^{\top}$ picks out the last column
+
+#### a vanishing point: parallel rails meet at the image of infinity
+
+[diagram text: horizon | vanishing point = image of the point at infinity | parallel world lines (same direction d)]
+
+All lines sharing a direction $\mathbf d$ project to lines meeting at one image point — the vanishing point $P\,(\mathbf d;0)$. The three axis directions give the columns $\mathbf p_1,\mathbf p_2,\mathbf p_3$.
+
+### $P = K[R\mid\mathbf t]$: intrinsics $K$ turn metres into pixels, extrinsics $R,\mathbf t$ place the camera.
+
+$K$ = upper-triangular ($f_x,f_y,s,p_x,p_y$) · 11 DOF = 6 + 5 · 6 matches → DLT recovers $P$ · centre $=-M^{-1}\mathbf p_4$, columns = vanishing points.
+
+### Self-check quiz
+
+1. Write the calibration matrix $K$ and name what $f_x$ and $p_x$ mean.
+
+→ Answer: $K=\begin{bmatrix}f_x&s&p_x\\0&f_y&p_y\\0&0&1\end{bmatrix}$; $f_x=f\,m_x$ is the focal length in pixels along x, $p_x$ is the principal-point column (where the optical axis meets the sensor)
+
+2. A projective camera $P$ has how many degrees of freedom, and how do they split?
+
+→ Answer: 11 total = 6 extrinsic (3 rotation + 3 translation) + 5 intrinsic ($f_x,f_y,s,p_x,p_y$)
+
+3. One point correspondence gives how many independent equations, and why not three?
+
+→ Answer: 2 — the cross-product $\mathbf x_i\times P\mathbf X_i=\mathbf 0$ yields 3 rows, but one is a linear combination of the other two, so it's redundant; hence you need ≥ 6 matches
+
+4. Given $P=[\,M\mid\mathbf p_4\,]$ with $M$ non-singular, where is the camera centre?
+
+→ Answer: $\tilde{\mathbf C}=-M^{-1}\mathbf p_4$, obtained from $P\mathbf C=\mathbf 0$
+
+— end of Lecture 12 notes ✏️
+
+# LECTURE 13 — Camera Geometry — Part III
+
+reading a camera out of its matrix P — centre, vanishing points, principal point, back-projection, depth
+
+🧠 the big picture, first
+
+The $3\times4$ matrix $P$ isn't just a projector — it's a **treasure chest**. Slice it the right way and it hands you the camera's centre, its viewing directions, its principal point, and the depth of any point — all by simple linear algebra.
+
+This lecture is a toolbox of "given $P$, extract ___" recipes. Learn which slice of $P$ answers which question. 🔑
+
+## 1.  three ways to slice $P$
+
+$$ P=[\,M\mid \mathbf p_4\,]=[\,\mathbf p_1\ \mathbf p_2\ \mathbf p_3\ \mathbf p_4\,]=\begin{bmatrix}\mathbf r_1^{T}\\ \mathbf r_2^{T}\\ \mathbf r_3^{T}\end{bmatrix} $$
+
+$M$ = the left $3\times3$ block, $\mathbf p_4$ = the 4th column; $\mathbf p_i$ = columns; $\mathbf r_i^{T}$ = rows. Each slice reveals something different. 👇
+
+## 2.  the camera centre = the null-space of $P$
+
+The camera centre $C$ is the one point with **no image** — you can't draw a ray from the centre to itself. Mathematically it's killed by $P$:
+
+centre = right null vector
+
+$$ P\,\mathbf C=\mathbf 0 \quad\Rightarrow\quad \tilde{\mathbf C}=-\,M^{-1}\mathbf p_4 $$
+
+**read it as:** plug $\mathbf C=(\tilde{\mathbf C},1)$ into $[M\mid\mathbf p_4]\mathbf C=\mathbf 0$ ⇒ $M\tilde{\mathbf C}+\mathbf p_4=\mathbf 0$ ⇒ $\tilde{\mathbf C}=-M^{-1}\mathbf p_4$.
+
+If $M$ is **singular** (not invertible), the centre lies **at infinity** — a direction, written $\mathbf C=(\mathbf d,0)$ found as the null vector of $M$ ($M\mathbf d=\mathbf 0$). That's an affine camera (next lecture).
+
+**🧮 the same thing by Cramer's rule (no explicit inverse)**
+Writing $P=[\,\mathbf p_1\ \mathbf p_2\ \mathbf p_3\ \mathbf p_4\,]$ by columns, the centre's coordinates are ratios of $3\times3$ column determinants:
+
+$$ X=\det[\mathbf p_2\,\mathbf p_3\,\mathbf p_4],\ \ Y=-\det[\mathbf p_1\,\mathbf p_3\,\mathbf p_4],\ \ Z=\det[\mathbf p_1\,\mathbf p_2\,\mathbf p_4],\ \ T=-\det[\mathbf p_1\,\mathbf p_2\,\mathbf p_3] $$
+
+giving $\mathbf C=(X,Y,Z,T)^{T}$ (de-homogenise by $T$). This is just Cramer's rule applied to $M\tilde{\mathbf C}=-\mathbf p_4$, and it works even when you'd rather not invert $M$.
+
+## 3.  the columns = vanishing points
+
+Project a point at infinity along an axis (e.g. $\mathbf X=(1,0,0,0)^{T}$ for the X-direction). The result is just a column of $P$:
+
+**🧭 columns tell you where axes vanish**
+
+- $\mathbf p_1$ = vanishing point of the **X-axis** (image of its point at infinity).
+
+- $\mathbf p_2$ = vanishing point of the **Y-axis**; $\ \mathbf p_3$ = vanishing point of the **Z-axis**.
+
+- $\mathbf p_4$ = image of the **world origin** $(0,0,0,1)^{T}$ (a real, finite point — scale is 1, not 0).
+
+In general the vanishing point of any direction $\mathbf d$ is $M\mathbf d$ — **only $M$ matters** for vanishing points (the translation $\mathbf p_4$ drops out).
+
+## 4.  the rows = planes; the principal point
+
+Each row $\mathbf r_i^{T}$ defines a plane $\mathbf r_i^{T}\mathbf X=0$ of world points that image onto a special image line:
+
+- $\mathbf r_3^{T}\mathbf X=0$ — the **principal plane** (parallel to the image plane, through the centre; its points image at infinity, scale = 0).
+
+- $\mathbf r_1^{T}\mathbf X=0$ and $\mathbf r_2^{T}\mathbf X=0$ — the two **axis planes** (imaged onto the image $Y$- and $X$-axes).
+
+Let $\mathbf m_3^{T}$ be the third row of $M$ (i.e. $(p_{31},p_{32},p_{33})$) — it's the **normal direction of the principal plane**, so it points along the **principal ray**. The **principal point** is its image:
+
+$$ \mathbf x_0=M\,\mathbf m_3,\qquad \text{principal-ray direction}=\det(M)\,\mathbf m_3 $$
+
+(Multiplying by $\det(M)$ fixes the sign so the ray points the right way — towards the scene, not behind the camera.)
+
+## 5.  back-projection & depth
+
+A pixel $\mathbf x$ came from a whole **ray**. That ray passes through the centre $\tilde{\mathbf C}$ in the direction $M^{-1}\mathbf x$, so every world point on it is:
+
+back-projected ray
+
+$$ \tilde{\mathbf X}(\lambda)=\tilde{\mathbf C}+\lambda\,M^{-1}\mathbf x $$
+
+To get a single point you need one more constraint (a known plane, or a known distance). And the **depth** of a scene point $\tilde{\mathbf X}$ is its distance along the principal axis — the projection onto the unit principal-ray direction:
+
+$$ \text{depth}=\hat{\mathbf m}_3^{T}\big(\tilde{\mathbf X}-\tilde{\mathbf C}\big) $$
+
+## 6.  recovering K, R, C from P
+
+Since $M=KR$ with $K$ upper-triangular and $R$ orthogonal, this is exactly what an **RQ decomposition** produces:
+
+**🧩 the recipe**
+
+1. RQ-decompose $M \to$ upper-triangular $\times$ orthogonal $= K\,R$. Read the 5 intrinsics off $K$, the rotation off $R$.
+
+2. Camera centre $\tilde{\mathbf C}=-M^{-1}\mathbf p_4$; translation $\mathbf t=-R\tilde{\mathbf C}$.
+
+3. Fix signs so $K$ has positive focal lengths (the decomposition is unique up to that sign convention).
+
+### $P$ is a treasure chest: centre = its null-space, columns = vanishing points, rows = planes, $M=KR$.
+
+$\tilde{\mathbf C}=-M^{-1}\mathbf p_4$; $\mathbf p_{1,2,3}$ = axis vanishing points; principal point $=M\mathbf m_3$; decompose with RQ.
+
+### Self-check quiz
+
+1. How do you find the camera centre from $P=[M\mid\mathbf p_4]$?
+
+→ Answer: it's the null-space of $P$: $\tilde{\mathbf C}=-M^{-1}\mathbf p_4$
+
+2. What does the 4th column $\mathbf p_4$ of $P$ represent?
+
+→ Answer: the image of the world origin $(0,0,0,1)^{T}$
+
+3. Which row of $P$ gives the principal plane, and what's special about it?
+
+→ Answer: the third row: $\mathbf r_3^{T}\mathbf X=0$ — the plane through the centre parallel to the image plane
+
+4. How are the intrinsics $K$ and rotation $R$ recovered from $P$?
+
+→ Answer: RQ-decompose the left block $M=KR$ ($K$ upper-triangular, $R$ orthogonal)
+
+— end of Lecture 13 notes ✏️
+
+# LECTURE 14 — Camera Geometry — Part IV
+
+worked problems on P · the affine camera · imaging a plane/line · views from a fixed centre (rotation & zoom)
+
+🧠 the big picture, first
+
+Two halves today. First we **practise** the "read-off-$P$" recipes from Lecture 13 on real problems (exam style!). Then we meet two important special cases: the **affine camera** and what happens when the camera **only rotates or zooms** — which quietly brings back the homography.
+
+## 1.  worked problem — extracting geometry from $P$
+
+**given a projection matrix $P=[\,M\mid\mathbf p_4\,]$, find…**
+
+1. **Camera centre:** $\tilde{\mathbf C}=-M^{-1}\mathbf p_4$ (invert $M$ via cofactors/determinant). Leave it in world 3-D coords — don't "de-homogenise".
+
+2. **Vanishing point of the X-axis:** $P\,(1,0,0,0)^{T}=\mathbf p_1$ (the first column of $P$). To read it as an image point, **divide by its last coordinate**. (e.g. $\mathbf p_1=(a,b,c)^{T}\to(a/c,\,b/c)$ — illustrative)
+
+3. **Image of the origin:** $P\,(0,0,0,1)^{T}=\mathbf p_4$. His example gives $(1,1,1)^{T}\to(1,1)$.
+
+4. **Vanishing point of a direction with direction-cosines $(4\!:\!3\!:\!2)$:** $P\,(4,3,2,0)^{T}=M(4,3,2)^{T}$, then divide by the last coordinate to read the image point.
+
+Rule of thumb: **direction** (scale 0) ⇒ vanishing point; **finite point** (scale 1) ⇒ ordinary image point.
+
+## 2.  worked problem — back-projecting to a known distance
+
+**image point $(2,7)$ is 40 units from the centre — find the 3-D point**
+
+1. Camera centre: $\tilde{\mathbf C}=-M^{-1}\mathbf p_4$.
+
+2. Ray direction: $\mathbf d=M^{-1}(2,7,1)^{T}$ (back-project the homogeneous pixel).
+
+3. Walk 40 units along the unit direction: $\ \tilde{\mathbf X}=\tilde{\mathbf C}+40\,\dfrac{\mathbf d}{\lVert\mathbf d\rVert}$.
+
+A single image gives a ray; the extra "distance = 40" constraint picks the one point on it. 🎯
+
+**📐 bonus recipes on the same $P$**
+
+- **Principal plane** = last row: $\mathbf r_3^{T}\mathbf X=0$, e.g. $(1,-5,8,1)\Rightarrow x-5y+8z+1=0$.
+
+- **Dihedral angle** between planes $x_1Ox_2$ and $x_3Ox_4$ (through the centre $O$): each plane is $\boldsymbol\pi=P^{T}(\mathbf x_i\times\mathbf x_j)$; take unit normals, $\cos^{-1}$ of their dot product. His answer: $\approx 53.75^{\circ}$.
+
+- **Shortcut for a camera at the origin** (canonical, $f=1$, no $P$ given): a homogeneous image point $\mathbf x=(x,y,1)^{T}$ is the direction of its ray from $O$. So the plane through $O$ and two image points $\mathbf x_1,\mathbf x_2$ has **normal** $\ \mathbf n=\mathbf x_1\times\mathbf x_2$, and the **unit** normal is $\mathbf n/\lVert\mathbf n\rVert$. (This is $\boldsymbol\pi=P^{T}(\mathbf x_1\times\mathbf x_2)$ with $P^{T}\to I$, and it's what you use when only image points — not $P$ or $K$ — are given.)
+
+## 3.  the affine camera (centre at infinity)
+
+What if $M$ is **singular**? Then the centre sits at infinity and the camera projects with **parallel rays** instead of converging ones — an **affine camera**. Canonically its last row is $(0,0,0,1)$.
+
+**🧊 properties of the affine camera**
+
+- Its **principal plane is the plane at infinity**, and the centre lies on it.
+
+- **Points at infinity map to points at infinity** ⇒ parallel lines stay parallel in the image (no vanishing points).
+
+- The relation simplifies to plain Euclidean coordinates: $\ \tilde{\mathbf x}=M_{2\times3}\,\tilde{\mathbf X}+\mathbf t$ (no divide-by-$Z$!).
+
+- **8 DOF** ($M_{2\times3}$ has 6, $\mathbf t$ has 2) — so **4 point correspondences** suffice; more points ⇒ linear least-squares. ($M_{2\times3}$ must be rank 2.)
+
+A good model when the object is small & far (weak perspective) — the maths gets much friendlier.
+
+## 4.  imaging a plane = a homography
+
+Put a scene **plane** at $Z=0$ (always possible by choosing coordinates). Then a point on it is $(X,Y,0,1)^{T}$, and $P\mathbf X$ drops its 3rd column:
+
+$$ \mathbf x=[\,\mathbf p_1\ \mathbf p_2\ \mathbf p_4\,]\begin{bmatrix}X\\Y\\1\end{bmatrix}=H_{3\times3}\begin{bmatrix}X\\Y\\1\end{bmatrix} $$
+
+**key takeaway:** the perspective image of a **plane** is a $3\times3$ **homography** between the plane and the image — exactly the map from Week 2. That's why rectifying a planar signboard worked.
+
+## 5.  imaging a 3-D line
+
+A 3-D line images to a 2-D line $\mathbf l$. The camera centre and the 3-D line span a **plane**, and that plane is simply:
+
+$$ \boldsymbol\pi=P^{T}\mathbf l $$
+
+Proof in one line: image points satisfy $\mathbf l^{T}\mathbf x=0=\mathbf l^{T}P\mathbf X=(P^{T}\mathbf l)^{T}\mathbf X$ — a point-on-plane relation with plane $P^{T}\mathbf l$.
+
+## 6.  two views from the same centre — rotation & zoom
+
+If the camera stays put ($\tilde{\mathbf C}$ fixed) but **rotates** or changes intrinsics, the two images of any scene are related by a homography — regardless of depth:
+
+same-centre homography
+
+$$ \mathbf x_2=H\,\mathbf x_1,\qquad H=K_2R_2\,(K_1R_1)^{-1} $$
+
+Special case — pure **zoom** (no rotation, image planes parallel, focal-length ratio $k$): the calibration just scales,
+
+$$ K_2=K_1\,\operatorname{diag}(k,k,1),\qquad H=K_2K_1^{-1} $$
+
+so zooming multiplies displacements from the principal point by $k$ — a similarity about the principal point. This is the geometry behind panorama **stitching** (rotate-only) and digital zoom.
+
+### read $P$ for centre/vanishing-points/planes; parallel rays ⇒ affine camera; a plane images as a homography.
+
+image of a plane = 3×3 H; image of a line's plane = $P^{T}\mathbf l$; rotate/zoom about a fixed centre = homography $K_2R_2(K_1R_1)^{-1}$.
+
+### Self-check quiz
+
+1. You project the point at infinity $(4,3,2,0)^{T}$. Is the result a vanishing point or an ordinary image point, and how do you read it off?
+
+→ Answer: a vanishing point ($=M(4,3,2)^{T}$); divide by its last coordinate to get the 2-D image location
+
+2. What geometric feature makes a camera "affine", and what does it do to parallel lines?
+
+→ Answer: its centre is at infinity (M singular, last row $(0,0,0,1)$) → parallel projection → parallel lines stay parallel (no vanishing points)
+
+3. The image of a planar scene is what kind of transformation?
+
+→ Answer: a $3\times3$ homography between the scene plane and the image
+
+4. Two photos from the same centre (camera only rotates) are related how?
+
+→ Answer: by a homography $H=K_2R_2(K_1R_1)^{-1}$ — independent of scene depth (basis of panorama stitching)
+
+— end of Lecture 14 notes ✏️
+
+# LECTURE 15 — Camera Geometry — Part V
+
+conjugate-rotation homography · vanishing points & lines · panorama mosaicing · single-view wrap-up
+
+🧠 the big picture, first
+
+We close single-view geometry with the **payoffs**: rotating a camera gives a special homography that literally encodes the rotation angle; vanishing points let us recover directions and rotations; and stitching it all together builds **panoramas**.
+
+## 1.  the conjugate-rotation homography
+
+Fix the camera centre and only **rotate** it by $R$ (intrinsics $K$ unchanged). Then $P_1=K[I\mid\mathbf 0]$ and $P_2=K[R\mid\mathbf 0]$, and the two images relate by:
+
+rotation homography
+
+$$ \mathbf x'=H\mathbf x,\qquad H=K\,R\,K^{-1} $$
+
+Because $H$ is **similar** to the rotation $R$, it shares $R$'s eigenvalues:
+
+$$ \text{eig}(H)=\big\{\,\mu,\ \mu e^{\,i\theta},\ \mu e^{-i\theta}\,\big\} $$
+
+**🌀 two gifts from this "conjugate rotation"**
+
+- The complex eigenvalues give the **rotation angle $\theta$** directly — you can measure how much the camera turned between two shots.
+
+- The eigenvector of the **real** eigenvalue is the **vanishing point of the rotation axis**.
+
+## 2.  two applications: rectification & mosaicing
+
+**🖼️ synthetic fronto-parallel views**
+Photograph an oblique planar surface, pick target corners with the true aspect ratio, compute the homography, and warp → a straightened, **fronto-parallel** view (rectification, as in Week 2).
+
+**🌄 panoramic mosaicing**
+A camera with a narrow field of view **rotates** to capture a wide scene. Each view relates to a reference by a homography $H_i$; warp them all onto one reference plane and blend → a single **panorama**. (Rotation-only ⇒ depth doesn't matter.)
+
+## 3.  vanishing points, properly
+
+A **vanishing point** is the image of a **point at infinity** — geometrically, where the line through the camera centre parallel to a scene line $L$ meets the image plane. All lines in direction $\mathbf d$ share one vanishing point:
+
+vanishing point of direction d
+
+$$ \mathbf v=K\mathbf d\quad(\text{no rotation}),\qquad \mathbf v=KR\,\mathbf d\quad(\text{rotated camera}) $$
+
+**read it as:** a vanishing point depends only on **direction + $K$ (+ rotation)** — **not** on the camera's position. Translate the camera and vanishing points stay put. 🌙 That's why the **moon seems to follow you** as you walk: pure translation, so its (near-infinite) direction — and thus its image position — doesn't change.
+
+**Payoff:** if you can measure vanishing points (intersect images of parallel lines) and you know $K$, then $\mathbf d\propto K^{-1}\mathbf v$ recovers 3-D directions — and two such directions constrain the **rotation** $R$ (it's orthonormal + has one angle).
+
+## 4.  the vanishing line of a plane (the horizon)
+
+Every vanishing point of every line lying in a plane $\pi$ falls on a single image line — the **vanishing line** (the plane's **horizon**). Geometrically it's where the plane through the camera centre parallel to $\pi$ meets the image plane.
+
+The 3-D plane through the centre and an image line $\mathbf l$ is $\boldsymbol\pi=P^{T}\mathbf l$; its first three entries are the **plane normal**. For a canonical camera $K[I\mid0]$ the normal direction is simply $K^{T}\mathbf l$.
+
+**worked exercise — normal of a plane from its horizon**
+A line images as $3x+4y=5$, i.e. $\mathbf l=(3,4,-5)^{T}$, and it is the **horizon** of some plane. Find that plane's normal.
+
+1. Plane through centre & line: $\boldsymbol\pi=P^{T}\mathbf l$ → (professor's numbers) $7x+4y+8\ldots z+\ldots=0$.
+
+2. The **normal** is the first three components of $\boldsymbol\pi$; normalise to a unit vector. ✅
+
+To get a vanishing line in practice: take several sets of parallel lines in the plane, find each set's vanishing point, and join them.
+
+## 5.  single-view geometry — the whole cheat-sheet
+
+**📌 everything encoded in $P=[\,M\mid\mathbf p_4\,]$**
+| you want… | read it as |
+| camera centre | $\tilde{\mathbf C}=-M^{-1}\mathbf p_4$ (affine: null-vector of $M$) |
+| vanishing point of direction $\mathbf d$ | $M\mathbf d$ (columns $\mathbf p_1,\mathbf p_2,\mathbf p_3$ = X,Y,Z axes) |
+| image of world origin | $\mathbf p_4$ |
+| principal plane / point | $\mathbf r_3^{T}\mathbf X=0$ / $\ \mathbf x_0=M\mathbf m_3$ |
+| back-projected ray | $\tilde{\mathbf X}(\lambda)=\tilde{\mathbf C}+\lambda M^{-1}\mathbf x$ |
+| plane of an image line $\mathbf l$ | $\boldsymbol\pi=P^{T}\mathbf l$ |
+| recover $K,R$ | RQ-decompose $M=KR$ |
+
+**DOF:** full projective camera = 11 (5 intrinsic + 6 extrinsic), needs ≥ 6 point correspondences to estimate. **Affine camera** = 8 DOF, needs ≥ 4. Next up: **two-view / stereo** geometry. ➡️
+
+### rotate a camera → $H=KRK^{-1}$ (its eigenvalues give the angle); vanishing points depend on direction, not position.
+
+$\mathbf v=KR\mathbf d$; a plane's horizon = image of the parallel plane through the centre; stitch rotation-homographies → panoramas.
+
+### Self-check quiz
+
+1. Two photos from the same centre differ by a camera rotation $R$. What is the homography between them, and what can its eigenvalues tell you?
+
+→ Answer: $H=KRK^{-1}$; its complex eigenvalues $\mu e^{\pm i\theta}$ reveal the rotation angle $\theta$
+
+2. Why does a vanishing point not move when you translate (but don't rotate) the camera?
+
+→ Answer: it depends only on direction and $K$ ($\mathbf v=K\mathbf d$), not on camera position — the "moon follows you" effect
+
+3. What is the vanishing line of a plane, geometrically?
+
+→ Answer: the horizon — where the plane through the camera centre parallel to that plane meets the image; all the plane's vanishing points lie on it
+
+4. Given a known $K$ and a measured vanishing point $\mathbf v$, how do you get the 3-D direction?
+
+→ Answer: $\mathbf d \propto K^{-1}\mathbf v$ (then normalise)
+
+— end of Lecture 15 · end of Week 3 ✏️🎉

@@ -1,0 +1,350 @@
+# Week 8 — Color Fundamentals and Processing — assignment solution
+(source: NPTEL, 10 PDF pages; fractions/matrices from the PDF may be flattened in this text)
+
+Nptel Online Certification Course
+Indian Institute of Technology Kharagpur
+Computer Vision
+Assignment - Week 8
+Number of questions: 10
+Total marks: 10x2=20
+FOR QUESTIONS 1 AND 2:
+Consider a pixel 𝑝in RGB space given by
+
+40
+50
+30
+
+. Based on the given data solve the following
+questions 1 and 2:
+QUESTION 1:
+Type:Comprehensive
+What is the saturation value of this pixel in HSV color space?
+a) 0.15
+b) 0.25
+c) 0.33
+d) 0.45
+Correct Answer: b)
+Detailed Solution:
+𝑉= 𝑅+𝐺+𝐵
+3
+= 40.
+𝑆= 1 −𝑚𝑖𝑛(𝑅,𝐺,𝐵)
+𝑉
+= 0.25.
+QUESTION 2:
+Type:Comprehensive
+What is the corresponding value of the pixel 𝑝in CMY space?
+a)
+
+215
+105
+165
+
+b)
+
+200
+150
+225
+
+c)
+
+115
+205
+165
+
+d)
+
+215
+205
+225
+
+Correct Answer: d)
+Detailed Solution:
+
+𝐶
+𝑀
+𝑌
+
+=
+
+255
+255
+255
+
+−
+
+𝑅
+𝐺
+𝐵
+
+=
+
+215
+205
+225
+
+.
+QUESTION 3:
+Type: MSQ
+Which of the following statements are correct?
+a) Color captured in the RGB color space is not suitable for direct interpretation of color
+components.
+b) CIE Chromaticity Chart represents colors in a 2-D space according to tri-stimulus model
+of color representation.
+c) In digital cameras color images are mostly captured using a CFA.
+d) Luminance Y is encoded using less bits than chrominance values I and Q.
+Correct Answer: a), b), c)
+Detailed Solution:
+Luminance Y is encoded using more bits than chrominance values I and Q.
+QUESTION 4:
+Type: Numeric
+Interpolate 𝐺5 using laplacian corrected edge correlated interpolation using given Bayer’s
+pattern.
+Bayer’s Pattern =
+
+𝐵1
+𝐺2
+𝐵3
+𝐺4
+𝐵5
+𝐺6
+𝐵7
+𝐺8
+𝐵9
+
+Corresponding CFA values =
+
+32
+90
+32
+72
+90
+130
+136
+94
+26
+
+Correct Answer: 104
+Detailed Solution:
+Δ𝐻= |𝐺4 −𝐺6| + |𝐵5 −𝐵3 + 𝐵5 −𝐵7| = 70
+Δ𝑉= |𝐺2 −𝐺8| + |𝐵5 −𝐵1 + 𝐵5 −𝐵9| = 126
+As Δ𝐻< Δ𝑉
+𝐺5 = 𝐺4+𝐺6
+2
++ 𝐵5−𝐵3+𝐵5−𝐵7
+4
+= 104
+QUESTION 5:
+Type: MCQ
+Consider that the color of a source illuminant is represented by an RGB vector
+(120, 160, 200), whereas the target color is given by (60, 120, 150). Given a color vector
+(120, 80, 160) in the source image, compute the color corrected vector using diagonal
+correction rule.
+a) (90, 90, 180)
+b) (75, 150, 75)
+c) (50, 100, 50)
+d) (100, 50, 100)
+Correct Answer: a)
+Detailed Solution:
+𝑘𝑟= 𝑅𝑑
+𝑅𝑠= 0.5,
+𝑘𝑔= 𝐺𝑑
+𝐺𝑠= 0.75,
+𝑘𝑏= 𝐵𝑑
+𝐵𝑠= 0.75
+where, 𝑅𝑑represent the 𝑅value of the target color vector and 𝑅𝑠represent the 𝑅value of the
+source color vector.
+𝑓=
+𝑅+𝐺+𝐵
+𝑘𝑟𝑅+𝑘𝑔𝐺+𝑘𝑏𝐵= 1.5
+𝑅𝑢= 𝑓𝑘𝑟𝑅,
+𝐺𝑢= 𝑓𝑘𝑔𝐺,
+𝐵𝑢= 𝑓𝑘𝑏𝐵
+QUESTIONS 6:
+Type: MSQ
+Which of the following statements are true?
+a) Image reconstruction using color demosaicing leads to sharp edges in an image.
+b) Green channel is less likely to be aliased.
+c) In CFA, green channels are sampled at a higher rate than red and blue.
+d) High correlation between red, green and blue channels are very likely to have similar
+texture and edge locations.
+Correct Answer: b), c), d)
+Detailed Solution:
+Image reconstruction using color demosaicing lead to blurred edges in an image. In CFA,
+green channels are sampled at a higher rate than red and blue. High correlation between red,
+green and blue channels are very likely to have similar texture and edge locations. Green
+channel is less likely to be aliased and details are preserved better in green channels
+compared to red or blue.
+FOR QUESTIONS 7 AND 8:
+Given Bayer’s pattern.
+Bayer’s Pattern =
+
+𝐺1
+𝑅2
+𝐺3
+𝑅4
+𝐺5
+𝐵6
+𝐺7
+𝐵8
+𝐺9
+𝐵10
+𝐺11
+𝑅12
+𝐺13
+𝑅14
+𝐺15
+𝐵16
+𝐺17
+𝐵18
+𝐺19
+𝐵20
+𝐺21
+𝑅22
+𝐺23
+𝑅24
+𝐺25
+
+Corresponding CFA values =
+
+10
+14
+18
+24
+30
+15
+25
+35
+45
+55
+24
+45
+150
+225
+168
+65
+87
+124
+100
+144
+34
+225
+200
+235
+245
+
+.
+Based on the given information, solve questions 7 and 8.
+QUESTION 7:
+Type: Comprehensive
+Using interpolation by averaging red and blue hues, compute 𝐺8.
+Correct Answer: 59.5
+Detailed Solution:
+𝐺8 = 𝐺3+𝐺7+𝐺9+𝐺13
+4
+.
+QUESTION 8:
+Type: Comprehensive
+Using interpolation by averaging red and blue hues, compute 𝐵12.
+Correct Answer: 64.7
+Detailed Solution:
+𝐵12 = 𝐺12
+4 ( 𝐵6
+𝐺6 + 𝐵8
+𝐺8 + 𝐵16
+𝐺16 + 𝐵18
+𝐺18).
+QUESTION 9:
+Type: MCQ
+Given the coordinates in the normalized x-y chromaticity space of three primary colors as
+(2/3, 1/3), (1/5, 3/4), and (1/6, 1/10), compute the corresponding maximally saturated
+color in the x-y chromaticity space preserving the same hue and intensity for the given point
+(0.31, 0.27) in x-y chromaticity space. Evaluate all the results upto three decimal places.
+a) approximately (0.489, 0.308)
+b) approximately (0.708, 0.186)
+c) approximately (0.269, 0.154)
+d) approximately (0.208, 0.286)
+Correct Answer: c)
+Detailed Solution: Given the three primary colors as 𝑅= (2/3, 1/3), 𝐺= (1/5, 3/4), and
+𝐵= (1/6, 1/10) in x-y chromaticity space. We have white point 𝑤= (1/3, 1/3) and a given
+point 𝑞= (0.31, 0.27). If you move the point radially to the gamut edge, you will find a
+Maximum Saturation given a hue. Intersection of point between the line formed by an edge of
+the triangle and 𝑤𝑞, will be the required answer.
+Use the projective space concept of cross product between two points will give you a line
+passing through the points.
+𝐵𝐺= (1/6, 1/10, 1) × (1/5, 3/4, 1) = (−0.65, 0.033, 0.105)
+𝐵𝑅= (−0.233, 0.5, −0.011)
+𝐺𝑅= (0.417, 0.467, −0.433)
+𝑤𝑞= (0.063, −0.023, −0.013)
+𝐵𝐺× 𝑤𝑞= (0.002, −0.002, 0.013) →Intersection at (0.154, −0.154).
+𝐺𝑅× 𝑤𝑞= (−0.016, −0.022, −0.039) →Intersection at (0.410, 0.564).
+𝐵𝑅× 𝑤𝑞= (−0.007, −0.004, −0.026) →Intersection at (0.269, 0.154).
+QUESTION 10:
+Type:Numeric
+Given Bayer’s pattern.
+Bayer’s Pattern =
+
+𝐺1
+𝑅2
+𝐺3
+𝑅4
+𝐺5
+𝐵6
+𝐺7
+𝐵8
+𝐺9
+𝐵10
+𝐺11
+𝑅12
+𝐺13
+𝑅14
+𝐺15
+𝐵16
+𝐺17
+𝐵18
+𝐺19
+𝐵20
+𝐺21
+𝑅22
+𝐺23
+𝑅24
+𝐺25
+
+Corresponding CFA values =
+
+10
+20
+18
+24
+30
+15
+25
+35
+45
+55
+24
+45
+150
+200
+168
+65
+87
+124
+100
+144
+34
+225
+200
+235
+245
+
+.
+Interpolate 𝑅19 and 𝑅7 using billinear interpolation, and compute value of 𝑅19+𝑅7 (till 1
+decimal place).
+Correct Answer: 250.0
+Detailed Solution:
+𝑅19 = 𝑅14+𝑅24
+2
+. 𝑅7 = 𝑅2+𝑅12
+2
+.

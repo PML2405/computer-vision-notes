@@ -1,0 +1,990 @@
+{
+ "course": "Computer Vision (NPTEL 106105216)",
+ "instructor": "Prof. Jayanta Mukhopadhyay",
+ "institute": "IIT Kharagpur",
+ "base": "https://pml2405.github.io/computer-vision-notes/",
+ "all_notes_text": "https://pml2405.github.io/computer-vision-notes/text/all-notes.txt",
+ "weeks": [
+  {
+   "week": 1,
+   "title": "Fundamentals of Image Processing and Transforms",
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-01.txt",
+   "lectures": [
+    {
+     "n": 1,
+     "title": "Fundamentals of Image Processing – Part I",
+     "book_page": 1,
+     "transcript_page": 5
+    },
+    {
+     "n": 2,
+     "title": "Fundamentals of Image Processing – Part II",
+     "book_page": 21,
+     "transcript_page": 25
+    },
+    {
+     "n": 3,
+     "title": "Image Transform – Part I",
+     "book_page": 39,
+     "transcript_page": 43
+    },
+    {
+     "n": 4,
+     "title": "Image Transform – Part II",
+     "book_page": 58,
+     "transcript_page": 62
+    }
+   ]
+  },
+  {
+   "week": 2,
+   "title": "Projective Geometry",
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-02.txt",
+   "lectures": [
+    {
+     "n": 5,
+     "title": "Projective Geometry – Part I",
+     "book_page": 79,
+     "transcript_page": 5
+    },
+    {
+     "n": 6,
+     "title": "Projective Geometry – Part II",
+     "book_page": 94,
+     "transcript_page": 20
+    },
+    {
+     "n": 7,
+     "title": "Projective Transformation",
+     "book_page": 114,
+     "transcript_page": 40
+    },
+    {
+     "n": 8,
+     "title": "Homography:Properties – Part I",
+     "book_page": 140,
+     "transcript_page": 66
+    },
+    {
+     "n": 9,
+     "title": "Homography:Properties – Part II",
+     "book_page": 155,
+     "transcript_page": 81
+    },
+    {
+     "n": 10,
+     "title": "Homography:Properties – Part III",
+     "book_page": 172,
+     "transcript_page": 98
+    }
+   ]
+  },
+  {
+   "week": 3,
+   "title": "Camera Geometry",
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-03.txt",
+   "lectures": [
+    {
+     "n": 11,
+     "title": "Camera Geometry – Part I",
+     "book_page": 189,
+     "transcript_page": 5
+    },
+    {
+     "n": 12,
+     "title": "Camera Geometry – Part II",
+     "book_page": 208,
+     "transcript_page": 24
+    },
+    {
+     "n": 13,
+     "title": "Camera Geometry – Part III",
+     "book_page": 223,
+     "transcript_page": 39
+    },
+    {
+     "n": 14,
+     "title": "Camera Geometry – Part IV",
+     "book_page": 240,
+     "transcript_page": 56
+    },
+    {
+     "n": 15,
+     "title": "Camera Geometry – Part V",
+     "book_page": 261,
+     "transcript_page": 77
+    }
+   ]
+  },
+  {
+   "week": 4,
+   "title": "Stereo Geometry",
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-04.txt",
+   "lectures": [
+    {
+     "n": 16,
+     "title": "Stereo Geometry – Part I",
+     "book_page": 279,
+     "transcript_page": 5
+    },
+    {
+     "n": 17,
+     "title": "Stereo Geometry – Part II",
+     "book_page": 295,
+     "transcript_page": 21
+    },
+    {
+     "n": 18,
+     "title": "Stereo Geometry – Part III",
+     "book_page": 310,
+     "transcript_page": 36
+    },
+    {
+     "n": 19,
+     "title": "Stereo Geometry – Part IV",
+     "book_page": 322,
+     "transcript_page": 48
+    }
+   ]
+  },
+  {
+   "week": 5,
+   "title": "Stereo Geometry",
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-05.txt",
+   "lectures": [
+    {
+     "n": 20,
+     "title": "Stereo Geometry – Part V",
+     "book_page": 334,
+     "transcript_page": 5
+    },
+    {
+     "n": 21,
+     "title": "Stereo Geometry – Part VI",
+     "book_page": 346,
+     "transcript_page": 17
+    },
+    {
+     "n": 22,
+     "title": "Stereo Geometry – Part VII",
+     "book_page": 363,
+     "transcript_page": 34
+    },
+    {
+     "n": 23,
+     "title": "Stereo Geometry – Part VIII",
+     "book_page": 380,
+     "transcript_page": 51
+    }
+   ]
+  },
+  {
+   "week": 6,
+   "title": "Feature Detection and Description",
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-06.txt",
+   "lectures": [
+    {
+     "n": 24,
+     "title": "Feature Detection And Description – Part I",
+     "book_page": 394,
+     "transcript_page": 5
+    },
+    {
+     "n": 25,
+     "title": "Feature Detection And Description – Part II",
+     "book_page": 413,
+     "transcript_page": 24
+    },
+    {
+     "n": 26,
+     "title": "Feature Detection And Description – Part III",
+     "book_page": 432,
+     "transcript_page": 43
+    },
+    {
+     "n": 27,
+     "title": "Feature Detection And Description – Part IV",
+     "book_page": 449,
+     "transcript_page": 60
+    },
+    {
+     "n": 28,
+     "title": "Feature Detection And Description – Part V",
+     "book_page": 474,
+     "transcript_page": 85
+    }
+   ]
+  },
+  {
+   "week": 7,
+   "title": "Feature Matching and Model Fitting",
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-07.txt",
+   "lectures": [
+    {
+     "n": 29,
+     "title": "Feature Matching And Model Fitting – Part I",
+     "book_page": 485,
+     "transcript_page": 5
+    },
+    {
+     "n": 30,
+     "title": "Feature Matching And Model Fitting – Part II",
+     "book_page": 502,
+     "transcript_page": 22
+    },
+    {
+     "n": 31,
+     "title": "Feature Matching And Model Fitting – Part III",
+     "book_page": 514,
+     "transcript_page": 34
+    },
+    {
+     "n": 32,
+     "title": "Feature Matching And Model Fitting – Part IV",
+     "book_page": 527,
+     "transcript_page": 47
+    },
+    {
+     "n": 33,
+     "title": "Feature Matching And Model Fitting – Part V",
+     "book_page": 540,
+     "transcript_page": 60
+    }
+   ]
+  },
+  {
+   "week": 8,
+   "title": "Color Fundamentals and Processing",
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-08.txt",
+   "lectures": [
+    {
+     "n": 34,
+     "title": "Color Fundamentals And Processing – Part I",
+     "book_page": 558,
+     "transcript_page": 5
+    },
+    {
+     "n": 35,
+     "title": "Color Fundamentals And Processing – Part II",
+     "book_page": 574,
+     "transcript_page": 21
+    },
+    {
+     "n": 36,
+     "title": "Color Fundamentals And Processing – Part III",
+     "book_page": 591,
+     "transcript_page": 38
+    },
+    {
+     "n": 37,
+     "title": "Color Fundamentals And Processing – Part IV",
+     "book_page": 613,
+     "transcript_page": 60
+    },
+    {
+     "n": 38,
+     "title": "Color Fundamentals And Processing – Part V",
+     "book_page": 633,
+     "transcript_page": 80
+    },
+    {
+     "n": 39,
+     "title": "Color Fundamentals And Processing – Part VI",
+     "book_page": 651,
+     "transcript_page": 98
+    },
+    {
+     "n": 40,
+     "title": "Color Fundamentals And Processing – Part VII",
+     "book_page": 665,
+     "transcript_page": 112
+    }
+   ]
+  },
+  {
+   "week": 9,
+   "title": "Range Image Processing",
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-09.txt",
+   "lectures": [
+    {
+     "n": 41,
+     "title": "Range Image Processing – Part I",
+     "book_page": 679,
+     "transcript_page": 5
+    },
+    {
+     "n": 42,
+     "title": "Range Image Processing – Part II",
+     "book_page": 693,
+     "transcript_page": 19
+    },
+    {
+     "n": 43,
+     "title": "Range Image Processing – Part III",
+     "book_page": 707,
+     "transcript_page": 33
+    },
+    {
+     "n": 44,
+     "title": "Range Image Processing – Part IV",
+     "book_page": 720,
+     "transcript_page": 46
+    },
+    {
+     "n": 45,
+     "title": "Range Image Processing – Part V",
+     "book_page": 735,
+     "transcript_page": 61
+    }
+   ]
+  },
+  {
+   "week": 10,
+   "title": "Clustering and Classification",
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-10.txt",
+   "lectures": [
+    {
+     "n": 46,
+     "title": "Clustering And Classification – Part I",
+     "book_page": 757,
+     "transcript_page": 5
+    },
+    {
+     "n": 47,
+     "title": "Clustering And Classification – Part II",
+     "book_page": 780,
+     "transcript_page": 28
+    },
+    {
+     "n": 48,
+     "title": "Clustering And Classification – Part III",
+     "book_page": 799,
+     "transcript_page": 47
+    },
+    {
+     "n": 49,
+     "title": "Clustering And Classification – Part IV",
+     "book_page": 816,
+     "transcript_page": 64
+    },
+    {
+     "n": 50,
+     "title": "Clustering And Classification – Part V",
+     "book_page": 832,
+     "transcript_page": 80
+    }
+   ]
+  },
+  {
+   "week": 11,
+   "title": "Dimension Reduction and Sparse Representation",
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-11.txt",
+   "lectures": [
+    {
+     "n": 51,
+     "title": "Dimension Reduction And Sparse Representation – Part I",
+     "book_page": 855,
+     "transcript_page": 5
+    },
+    {
+     "n": 52,
+     "title": "Dimension Reduction And Sparse Representation – Part II",
+     "book_page": 871,
+     "transcript_page": 21
+    },
+    {
+     "n": 53,
+     "title": "Dimension Reduction And Sparse Representation – Part III",
+     "book_page": 891,
+     "transcript_page": 41
+    },
+    {
+     "n": 54,
+     "title": "Dimension Reduction And Sparse Representation – Part IV",
+     "book_page": 909,
+     "transcript_page": 59
+    }
+   ]
+  },
+  {
+   "week": 12,
+   "title": "Deep Neural Architecture and Applications",
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-12.txt",
+   "lectures": [
+    {
+     "n": 55,
+     "title": "Deep Neural Architecture And Applications – Part I",
+     "book_page": 927,
+     "transcript_page": 5
+    },
+    {
+     "n": 56,
+     "title": "Deep Neural Architecture And Applications – Part II",
+     "book_page": 950,
+     "transcript_page": 28
+    },
+    {
+     "n": 57,
+     "title": "Deep Neural Architecture And Applications – Part III",
+     "book_page": 970,
+     "transcript_page": 48
+    },
+    {
+     "n": 58,
+     "title": "Deep Neural Architecture And Applications – Part IV",
+     "book_page": 988,
+     "transcript_page": 66
+    },
+    {
+     "n": 59,
+     "title": "Deep Neural Architecture And Applications – Part V",
+     "book_page": 1007,
+     "transcript_page": 85
+    },
+    {
+     "n": 60,
+     "title": "Deep Neural Architecture And Applications – Part VI",
+     "book_page": 1028,
+     "transcript_page": 106
+    }
+   ]
+  }
+ ],
+ "files": [
+  {
+   "week": 1,
+   "kind": "notes",
+   "label": "Study notes",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/notes/week1_notes.html",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/notes/Week_01_Notes.txt",
+   "pages": null,
+   "bytes_html": 3349210,
+   "bytes": 3349210,
+   "text_bytes": 35541,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-01.txt"
+  },
+  {
+   "week": 1,
+   "kind": "solutions",
+   "label": "Assignment solution",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_01_Assignment_Solution.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/solutions/Week_01_Assignment_Solution.txt",
+   "pages": 7,
+   "bytes": 90703,
+   "text_bytes": 5717,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-01.txt"
+  },
+  {
+   "week": 1,
+   "kind": "slides",
+   "label": "Lecture slides",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_01_Slides.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/slides/Week_01_Slides.txt",
+   "pages": 67,
+   "bytes": 6131011,
+   "text_bytes": 24112,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-01.txt"
+  },
+  {
+   "week": 1,
+   "kind": "transcript",
+   "label": "Lecture transcript",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_01_Transcript.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_01_Transcript.txt",
+   "pages": 82,
+   "bytes": 4279864,
+   "text_bytes": 92371,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-01.txt"
+  },
+  {
+   "week": 2,
+   "kind": "notes",
+   "label": "Study notes",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/notes/week2_notes.html",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/notes/Week_02_Notes.txt",
+   "pages": null,
+   "bytes_html": 4848352,
+   "bytes": 4848352,
+   "text_bytes": 95894,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-02.txt"
+  },
+  {
+   "week": 2,
+   "kind": "solutions",
+   "label": "Assignment solution",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_02_Assignment_Solution.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/solutions/Week_02_Assignment_Solution.txt",
+   "pages": 10,
+   "bytes": 254407,
+   "text_bytes": 6887,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-02.txt"
+  },
+  {
+   "week": 2,
+   "kind": "slides",
+   "label": "Lecture slides",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_02_Slides.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/slides/Week_02_Slides.txt",
+   "pages": 83,
+   "bytes": 4131984,
+   "text_bytes": 20875,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-02.txt"
+  },
+  {
+   "week": 2,
+   "kind": "transcript",
+   "label": "Lecture transcript",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_02_Transcript.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_02_Transcript.txt",
+   "pages": 114,
+   "bytes": 4987006,
+   "text_bytes": 145683,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-02.txt"
+  },
+  {
+   "week": 3,
+   "kind": "notes",
+   "label": "Study notes",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/notes/week3_notes.html",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/notes/Week_03_Notes.txt",
+   "pages": null,
+   "bytes_html": 1915458,
+   "bytes": 1915458,
+   "text_bytes": 46797,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-03.txt"
+  },
+  {
+   "week": 3,
+   "kind": "solutions",
+   "label": "Assignment solution",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_03_Assignment_Solution.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/solutions/Week_03_Assignment_Solution.txt",
+   "pages": 7,
+   "bytes": 90994,
+   "text_bytes": 7490,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-03.txt"
+  },
+  {
+   "week": 3,
+   "kind": "slides",
+   "label": "Lecture slides",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_03_Slides.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/slides/Week_03_Slides.txt",
+   "pages": 51,
+   "bytes": 2514644,
+   "text_bytes": 12611,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-03.txt"
+  },
+  {
+   "week": 3,
+   "kind": "transcript",
+   "label": "Lecture transcript",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_03_Transcript.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_03_Transcript.txt",
+   "pages": 94,
+   "bytes": 3768049,
+   "text_bytes": 127698,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-03.txt"
+  },
+  {
+   "week": 4,
+   "kind": "notes",
+   "label": "Study notes",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/notes/week4_notes.html",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/notes/Week_04_Notes.txt",
+   "pages": null,
+   "bytes_html": 1873432,
+   "bytes": 1873432,
+   "text_bytes": 19135,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-04.txt"
+  },
+  {
+   "week": 4,
+   "kind": "solutions",
+   "label": "Assignment solution",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_04_Assignment_Solution.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/solutions/Week_04_Assignment_Solution.txt",
+   "pages": 10,
+   "bytes": 245550,
+   "text_bytes": 5626,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-04.txt"
+  },
+  {
+   "week": 4,
+   "kind": "slides",
+   "label": "Lecture slides",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_04-05_Slides.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/slides/Week_04-05_Slides.txt",
+   "pages": 73,
+   "shared_with_weeks": [
+    4,
+    5
+   ],
+   "bytes": 3583740,
+   "text_bytes": 20668,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-04.txt"
+  },
+  {
+   "week": 4,
+   "kind": "transcript",
+   "label": "Lecture transcript",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_04_Transcript.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_04_Transcript.txt",
+   "pages": 59,
+   "bytes": 3726650,
+   "text_bytes": 80770,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-04.txt"
+  },
+  {
+   "week": 5,
+   "kind": "notes",
+   "label": "Study notes",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/notes/week5_notes.html",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/notes/Week_05_Notes.txt",
+   "pages": null,
+   "bytes_html": 1872159,
+   "bytes": 1872159,
+   "text_bytes": 20087,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-05.txt"
+  },
+  {
+   "week": 5,
+   "kind": "solutions",
+   "label": "Assignment solution",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_05_Assignment_Solution.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/solutions/Week_05_Assignment_Solution.txt",
+   "pages": 8,
+   "bytes": 90841,
+   "text_bytes": 9045,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-05.txt"
+  },
+  {
+   "week": 5,
+   "kind": "slides",
+   "label": "Lecture slides",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_04-05_Slides.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/slides/Week_04-05_Slides.txt",
+   "pages": 73,
+   "shared_with_weeks": [
+    4,
+    5
+   ],
+   "bytes": 3583740,
+   "text_bytes": 20668,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-05.txt"
+  },
+  {
+   "week": 5,
+   "kind": "transcript",
+   "label": "Lecture transcript",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_05_Transcript.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_05_Transcript.txt",
+   "pages": 64,
+   "bytes": 4439497,
+   "text_bytes": 78716,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-05.txt"
+  },
+  {
+   "week": 6,
+   "kind": "notes",
+   "label": "Study notes",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/notes/week6_notes.html",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/notes/Week_06_Notes.txt",
+   "pages": null,
+   "bytes_html": 2183793,
+   "bytes": 2183793,
+   "text_bytes": 28093,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-06.txt"
+  },
+  {
+   "week": 6,
+   "kind": "solutions",
+   "label": "Assignment solution",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_06_Assignment_Solution.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/solutions/Week_06_Assignment_Solution.txt",
+   "pages": 10,
+   "bytes": 258879,
+   "text_bytes": 5974,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-06.txt"
+  },
+  {
+   "week": 6,
+   "kind": "slides",
+   "label": "Lecture slides",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_06_Slides.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/slides/Week_06_Slides.txt",
+   "pages": 78,
+   "bytes": 3742945,
+   "text_bytes": 23736,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-06.txt"
+  },
+  {
+   "week": 6,
+   "kind": "transcript",
+   "label": "Lecture transcript",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_06_Transcript.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_06_Transcript.txt",
+   "pages": 95,
+   "bytes": 6092056,
+   "text_bytes": 117552,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-06.txt"
+  },
+  {
+   "week": 7,
+   "kind": "notes",
+   "label": "Study notes",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/notes/week7_notes.html",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/notes/Week_07_Notes.txt",
+   "pages": null,
+   "bytes_html": 1908164,
+   "bytes": 1908164,
+   "text_bytes": 38750,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-07.txt"
+  },
+  {
+   "week": 7,
+   "kind": "solutions",
+   "label": "Assignment solution",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_07_Assignment_Solution.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/solutions/Week_07_Assignment_Solution.txt",
+   "pages": 6,
+   "bytes": 95442,
+   "text_bytes": 7032,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-07.txt"
+  },
+  {
+   "week": 7,
+   "kind": "slides",
+   "label": "Lecture slides",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_07_Slides.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/slides/Week_07_Slides.txt",
+   "pages": 53,
+   "bytes": 3604514,
+   "text_bytes": 16131,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-07.txt"
+  },
+  {
+   "week": 7,
+   "kind": "transcript",
+   "label": "Lecture transcript",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_07_Transcript.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_07_Transcript.txt",
+   "pages": 77,
+   "bytes": 4852028,
+   "text_bytes": 99761,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-07.txt"
+  },
+  {
+   "week": 8,
+   "kind": "notes",
+   "label": "Study notes",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/notes/week8_notes.html",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/notes/Week_08_Notes.txt",
+   "pages": null,
+   "bytes_html": 1908029,
+   "bytes": 1908029,
+   "text_bytes": 41354,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-08.txt"
+  },
+  {
+   "week": 8,
+   "kind": "solutions",
+   "label": "Assignment solution",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_08_Assignment_Solution.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/solutions/Week_08_Assignment_Solution.txt",
+   "pages": 10,
+   "bytes": 258046,
+   "text_bytes": 7213,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-08.txt"
+  },
+  {
+   "week": 8,
+   "kind": "slides",
+   "label": "Lecture slides",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_08_Slides.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/slides/Week_08_Slides.txt",
+   "pages": 110,
+   "bytes": 19617974,
+   "text_bytes": 32643,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-08.txt"
+  },
+  {
+   "week": 8,
+   "kind": "transcript",
+   "label": "Lecture transcript",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_08_Transcript.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_08_Transcript.txt",
+   "pages": 125,
+   "bytes": 5476616,
+   "text_bytes": 162555,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-08.txt"
+  },
+  {
+   "week": 9,
+   "kind": "notes",
+   "label": "Study notes",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/notes/week9_notes.html",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/notes/Week_09_Notes.txt",
+   "pages": null,
+   "bytes_html": 1883418,
+   "bytes": 1883418,
+   "text_bytes": 25314,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-09.txt"
+  },
+  {
+   "week": 9,
+   "kind": "solutions",
+   "label": "Assignment solution",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_09_Assignment_Solution.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/solutions/Week_09_Assignment_Solution.txt",
+   "pages": 5,
+   "bytes": 90914,
+   "text_bytes": 5347,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-09.txt"
+  },
+  {
+   "week": 9,
+   "kind": "slides",
+   "label": "Lecture slides",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_09_Slides.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/slides/Week_09_Slides.txt",
+   "pages": 58,
+   "bytes": 3853482,
+   "text_bytes": 19482,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-09.txt"
+  },
+  {
+   "week": 9,
+   "kind": "transcript",
+   "label": "Lecture transcript",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_09_Transcript.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_09_Transcript.txt",
+   "pages": 82,
+   "bytes": 3833561,
+   "text_bytes": 107936,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-09.txt"
+  },
+  {
+   "week": 10,
+   "kind": "notes",
+   "label": "Study notes",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/notes/week10_notes.html",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/notes/Week_10_Notes.txt",
+   "pages": null,
+   "bytes_html": 1883893,
+   "bytes": 1883893,
+   "text_bytes": 26075,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-10.txt"
+  },
+  {
+   "week": 10,
+   "kind": "solutions",
+   "label": "Assignment solution",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_10_Assignment_Solution.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/solutions/Week_10_Assignment_Solution.txt",
+   "pages": 10,
+   "bytes": 305764,
+   "text_bytes": 8558,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-10.txt"
+  },
+  {
+   "week": 10,
+   "kind": "slides",
+   "label": "Lecture slides",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_10_Slides.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/slides/Week_10_Slides.txt",
+   "pages": 98,
+   "bytes": 2943411,
+   "text_bytes": 30755,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-10.txt"
+  },
+  {
+   "week": 10,
+   "kind": "transcript",
+   "label": "Lecture transcript",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_10_Transcript.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_10_Transcript.txt",
+   "pages": 102,
+   "bytes": 6303544,
+   "text_bytes": 118037,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-10.txt"
+  },
+  {
+   "week": 11,
+   "kind": "solutions",
+   "label": "Assignment solution",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_11_Assignment_Solution.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/solutions/Week_11_Assignment_Solution.txt",
+   "pages": 6,
+   "bytes": 100901,
+   "text_bytes": 7665,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-11.txt"
+  },
+  {
+   "week": 11,
+   "kind": "slides",
+   "label": "Lecture slides",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_11_Slides.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/slides/Week_11_Slides.txt",
+   "pages": 67,
+   "bytes": 2291128,
+   "text_bytes": 21713,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-11.txt"
+  },
+  {
+   "week": 11,
+   "kind": "transcript",
+   "label": "Lecture transcript",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_11_Transcript.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_11_Transcript.txt",
+   "pages": 76,
+   "bytes": 4646502,
+   "text_bytes": 91548,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-11.txt"
+  },
+  {
+   "week": 12,
+   "kind": "solutions",
+   "label": "Assignment solution",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/1_Assignment_Solutions/Week_12_Assignment_Solution.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/solutions/Week_12_Assignment_Solution.txt",
+   "pages": 10,
+   "bytes": 191607,
+   "text_bytes": 6814,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-12.txt"
+  },
+  {
+   "week": 12,
+   "kind": "slides",
+   "label": "Lecture slides (part 1)",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_12_Slides_Part1.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/slides/Week_12_Slides_Part1.txt",
+   "pages": 41,
+   "bytes": 1231271,
+   "text_bytes": 12386,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-12.txt"
+  },
+  {
+   "week": 12,
+   "kind": "slides",
+   "label": "Lecture slides (part 2)",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/2_Lecture_Slides/Week_12_Slides_Part2.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/slides/Week_12_Slides_Part2.txt",
+   "pages": 63,
+   "bytes": 8517452,
+   "text_bytes": 19012,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-12.txt"
+  },
+  {
+   "week": 12,
+   "kind": "transcript",
+   "label": "Lecture transcript",
+   "pdf": "https://pml2405.github.io/computer-vision-notes/3_Transcripts/Week_12_Transcript.pdf",
+   "text": "https://pml2405.github.io/computer-vision-notes/text/transcripts/Week_12_Transcript.txt",
+   "pages": 127,
+   "bytes": 6563415,
+   "text_bytes": 136858,
+   "week_text": "https://pml2405.github.io/computer-vision-notes/text/weeks/week-12.txt"
+  }
+ ]
+}

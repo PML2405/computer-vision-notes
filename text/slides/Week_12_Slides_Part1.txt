@@ -1,0 +1,501 @@
+# Week 12 — lecture slides (part 1)
+(source: NPTEL, 41 slides; text layer, plus OCR on 6 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Deep neural architecture and
+applications (part II)
+Week 12: Lectures 56-57
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+Courtesy: K. Sairam
+
+### Slide 2
+Convolutional Neural Network
+
+### Slide 3
+Convolution Layer
+32
+32
+5x5x3 filter (kernel)
+32x32x3 image
+Filters always extend the full
+depth of the input volume
+Convolve the filter
+with the image
+i.e. “slide over the
+image spatially,
+computing dot
+products”.
+
+### Slide 4
+Convolution Layer
+32
+32
+32x32x3 image x
+1 number:
+the result of taking a dot product
+between the filter and a small
+5x5x3 chunk of the image
+(i.e. 5*5*3 = 75-dimensional dot
+product + bias)
+5x5x3 filter
+Locality!
+Objects tend to have a local
+spatial support.
+
+### Slide 5
+Convolution Layer
+32
+32
+32x32x3 image
+5x5x3 filter
+convolve (slide) over all
+spatial locations
+activation
+map
+Translation Invariance!
+28
+28
+Weight sharing!
+object appearance is
+independent of location
+
+### Slide 6
+Convolution Layer
+32
+32
+32x32x3 image
+5x5x3 filter
+convolve (slide) over all
+spatial locations
+28
+28
+Consider a second, green filter.
+activation
+map
+
+### Slide 7
+Convolution Layer (CONV)
+32
+32
+Convolution Layer
+activation maps
+28
+28
+We stack these up to get a “new image” of size 28x28x6!
+For example, if we had 6 5x5x3 filters, we’ll get 6 separate activation maps:
+6 # CONV
+
+### Slide 8
+Features of CONV
+n Locality:
+n objects tend to have a local spatial support
+n Translation invariance:
+n object appearance is independent of location
+n Weight sharing
+n units connected to different locations have the same
+weights
+n equivalently, each unit is applied to all locations
+n weights of filters are invariant.
+n Each unit output of filter is connected to a local
+rectangular area in the input.
+n – Receptive Field
+
+### Slide 9
+Non-Linear Layer
+n Increase the nonlinearity of the entire
+architecture without affecting the
+receptive fields of the convolution layer.
+n Commonly used in CNN is ReLU.
+
+### Slide 10
+Convolutional Neural Networks (CNN)
+32
+32
+CONV,
+ReLU
+e.g. 6
+5x5x3
+filters
+28
+28
+CONV,
+ReLU
+e.g. 10
+5x5x6
+filters
+CONV,
+ReLU
+10
+24
+24
+A CNN is a sequence of convolution layers and
+nonlinearities.
+
+### Slide 11
+Parameters involved in
+convolution layer
+n Input Volume size W1 x H1 x D1
+n No. of filters K with size Fw x Fh x D1 convolved
+with stride (Sw,Sh).
+n Input zero padded by ( Pw, Ph ) on both sides.
+n Output volume size W2 x H2 x D2?
+n W2 = (W1 – Fw + 2Pw)/Sw + 1
+n H2 = (H1 – Fh + 2Ph)/Sh + 1
+n D2 = D1
+n Parameters ?
+n (Fw * Fh * D1) * K weights + K biases
+n d-th depth slice of output is the result of
+convolution of d-th filter over the padded input
+volume with a stride, then offset by d-th bias
+
+### Slide 12
+Pooling Layer (POOL)
+n To progressively reduce the spatial size of the
+representation.
+to reduce the amount of parameters and computation in the
+network.
+to control overfitting.
+n Pooling partitions the input image into a set of non-
+overlapping rectangles.
+n For each such sub-region, outputs an aggregated value of
+the features in that region.
+n Maximum value (Max pooling)
+n Average value (Average pooling)
+Operates over each activation map independently
+
+### Slide 13 (OCR)
+4 Pooling Layer (POOL)
+224x224x64
+Single depth slice
+3/2 [4] 0)
+Oy
+
+### Slide 14
+Parameters involved in pooling
+n Input Volume size W1 x H1 x D1
+n Pool size Fw x Fh  with stride (Sw,Sh).
+n Output volume size W2 x H2 x D2?
+n W2 = (W1 – Fw )/S + 1
+n H2 = (H1 – Fh )/S + 1
+n D2 = D1
+n Parameters ?
+n 0!
+n Uncommon to use zero-padding in
+Pooling layers.
+
+### Slide 15
+Fully Connected Layer (FC)
+n Contains neurons that connect to the
+entire input volume
+n as in ordinary Neural Networks.
+n Input volume to FC layer can also be
+treated as Deep Features.
+n If the FC layer is a classifier, the input to
+FC can also be treated as feature vector
+representation for the sample.
+
+### Slide 16
+Batch Normalization
+n Normalizes input activation map to a layer by
+considering its distribution over a batch of
+training samples.
+n To make Gaussian activation maps.
+n Improves gradient flow through the network.
+n Allows higher learning rates.
+n Reduces the strong dependence on initialization.
+n Acts as a form of regularization.
+n Usually inserted after FC / CONV layers, and
+before non-linearity.
+
+### Slide 17
+Batch Normalization (BN)
+n Normalizes activation responses of a channel of
+previous layer
+n by subtracting mean of a responses of batch and
+dividing it by their standard deviation.
+n Transforms the resultant output operation by
+scaling and translation by parameters a and b.
+n learnt by the gradient descent algorithm.
+n During test time running averages and s.d.’s of
+activation maps used along with learnt
+parameter a and b for each channel at a layer.
+
+### Slide 18
+Drop out
+n Randomly dropping out nodes of network (at
+hidden / visible layers) during training.
+n Temporarily removing it from the network, along with
+all its incoming and outgoing connections.
+n To regulate overfitting, more effective for smaller
+dataset.
+n Simulates learning sparse representation in hidden
+layers.
+n Implementation
+n Retain output of a node with a probability p.
+n Typically within [0.5,1] at hidden layers and [0.8,1] in visible
+layers.
+
+### Slide 19
+Learning weights with drop out
+n Weights become larger due to drop out.
+n Needs to be scaled at the end training.
+n A simple heuristic.
+n Outgoing weights of a unit retained with
+probability p during training, multiplied by p at test
+time.
+n Scaling may be carried out during training
+time at each weight update.
+n No need to rescale weight for the test network.
+Nitish Srivastava, Geoffrey Hinton, Alex Krizhevsky, Ilya Sutskever, Ruslan Salakhutdinov, Dropout: A Simple Way to Prevent
+Neural Networks from Overfitting ,JMLR, 15(Jun):1929−1958, 2014.
+
+### Slide 20
+CNN Architectures
+
+### Slide 21
+LeNet
+n Gradient-based learning applied to document
+recognition.
+n Architecture:
+Input→CONV→POOL→CONV→POOL→FC→FC
+→Output
+n Number of parameters: 60k
+n Number of floating point operations per inference:
+341k
+n Sigmoid used for non-linearity.
+*Y. Lecun et al, Proceedings of the IEEE, 1998
+
+### Slide 22 (OCR)
+C3: f: maps 16@10x10
+INPUT C1: feature maps S4: f. maps 16@5x5
+32x32 6@26x26 $2: f. maps C5: layer cep. OUTPUT
+6@14x14. Ir Fr 120 layer 10
+- i r.
+| | Full contection | Gaussian connections
+Convolutions Subsampling Convolutions Subsampling Full connection
+Six 5*5 filters, 2*2 average Six 5*5 filters, | 2*2 average
+Stride 1 pooling, Stride 1 pooling,
+Stride 2 Stride 2
+*Y. Lecun et al, Proceedings of the IEEE, 1998
+
+### Slide 23
+AlexNet
+n Uses Local Response Normalization (LRN)
+Architecture:
+Input→CONV1→MAXPOOL1→NORM1→CO
+NV2→MAXPOOL2→NORM2
+→CONV3→CONV4→CONV5→MAXPOOL3
+→FC6→FC7→FC8→Output
+n # of Weights: 61M
+n # of floating point oeprations: 724M
+n ReLU used for non-linearity
+*Krizhevsky et al., ImageNet Classification with Deep Convolutional Neural Networks NIPS, 2012
+
+### Slide 24 (OCR)
+He. 7 a \ aE hk dense | jdense
+\ | - 192 192 128
+of 4 pooling podling
+3 E
+*Krizhevsky et al., ImageNet Classification with Deep Convolutional Neural Networks NIPS, 2012
+
+### Slide 25
+Parameters Count: AlexNet
+n Input: 227x227x3 images
+n First layer (CONV1): 96 11x11 filters applied at stride 4
+n Q: what is the output volume size?
+Along length and breadth: (227-11)/4+1 = 55
+n Output volume [55x55x96]
+n Q: What is the total number of parameters in this layer?
+n Parameters: (11*11*3)*96 = 35K (Without bias)
+n Parameters: (11*11*3)*96 + 96 (With bias)
+n Second layer (POOL1): 3x3 filters applied at stride 2
+n Q: what is the output volume size?
+n Along length and breadth: (55-3)/2+1 = 27
+n Output volume: 27x27x96 (Input to POOL1 is output of CONV1)
+n Q: what is the number of parameters in this layer?
+n Parameters: 0
+
+### Slide 26 (OCR)
+a ZFNet
+= AlexNet but:
+a» CONV1: changed from (11x11 stride’4) to (7x7 stride 2)
+=» CONV3,4,5: instead of 384, 384,256 filters use 512,
+1024, 512
+=» ImageNet top 5 error: 16.4% — 11.7%
+filter size 7 . 13
+nin a 96 3x3 max os he i. ls 7 | | :
+Input Image mine | ag “ye 256 Al
+Layer 1 Layer 2 Layer 3 Layer 4 Layer 5 Layer6 Layer7 Output
+Smaller filter size, More filters. in Jayer.,
+
+### Slide 27
+VGG
+n Smaller filters, deeper layers
+n 8 layers (AlexNet) → 13 layers
+(VGG13) / 16 layers (VGG16Net) / 19
+layers (VGG19Net)
+n Only 3x3 CONV stride 1, pad 1 and 2x2
+MAX POOL stride 2
+n 7.3% top 5 error in ILSVRC’14
+n Weights: 138M & FLOPS: 15.5G
+*Simonyan et al., arXiv 2014, ICLR 2015
+Deeper the layer, better accuracy.
+
+### Slide 28 (OCR)
+224% 224x3 224«224x 64
+112x128
+) Li 28 x 28 x hd 2 7x7x512
+LL ee 2, 1 1x1x4096 11x 1000
+a) | tee 7
+( 7 convolution+ReLU
+4 a! max pooling
+fully connected+ReLU
+: (—{) softmax
+df
+Deeper the layer, better accuracy.
+*Simonyan et al., arXiv 2014, ICLR 2015
+
+### Slide 29
+VGG
+n Stack of three 3x3 conv (stride 1) layers
+has same effective field as one 7x7 conv
+layer
+n deeper with more non-linearities
+n Fewer parameters: How?
+n 3*(32 C2) vs. (72 C2)  for C channels per layer
+
+### Slide 30
+GoogleNet
+n CONV Layers: 21 (depth), 57 (total)
+n Introduces inception modules.
+n Concatenates output of filters of different sizes.
+n Fully Connected Layers: 1
+n Weights: 7.0M & FLOPS: 1.43G
+n Architecture: ( 9 Inception Modules)
+INPUT→CONV1→POOL1→CONV2→CONV3→POOL2→INCEPTION1
+→INCEPTION2→POOL3→INCEPTION3→INCEPTION4→INCEPTION5
+→INCEPTION6→INCEPTION7→POOL4→INCEPTION8→INCEPTION9
+→POOL5→FC1→OUTPUT
+n ILSVRC’14 classification winner (6.7% top 5 error)
+*Szegedy et al., arXiv 2014, CVPR 2015
+
+### Slide 31
+GoogleNet
+*Szegedy et al., arXiv 2014, CVPR 2015
+
+### Slide 32 (OCR)
+4 Naive Inception Module
+28x28x(128+192+96+256),= 28x28x672
+concatenation
+1x1 conv, \. “8x3 conv, 5x5 conv,
+12g = 192 96 3x3 pool
+Module input:
+28x28x256
+
+### Slide 33
+ResNet
+n Problems with deeper model
+n causes overfitting
+n harder to optimize, because of vanishing gradients.
+n gradients die as we go deeper.
+*He et al., ResNet arxiv 2015
+
+### Slide 34
+ResNet
+nUse network layers to fit a residual mapping instead of
+directly trying to fit a desired underlying mapping.
+
+### Slide 35
+ResNet
+*https://www.slideshare.net/SomnathBanerjee17/lenet-to-resnet
+Total depths of 34, 50, 101, or 152 layers architectures are also
+available
+
+### Slide 36
+Other Networks
+n Network in Network (NIN)
+n Wide Residual Networks
+n Aggregated Residual Transformations for Deep Neural
+Networks (ResNeXt)
+n DenseNets
+n SqueezeNet: AlexNet-level Accuracy With 50x Fewer
+Parameters and <0.5Mb Model Size
+n MobileNet (Depthwise Separable Convolutions)
+n ShuffleNet (Grouped Convolutions)
+n FractalNet: Ultra-Deep Neural Networks without Residuals
+
+### Slide 37
+Training steps:
+• Preprocessing of training dataset.
+Normalize data.
+Decorrelate data (Diagonal Covariance
+Matrix).
+Whitening of data (Identity Covariance
+Matrix).
+Subtract Mean.
+
+### Slide 38
+Training steps:
+• Data augmentation.
+Horizontal Flips
+Random Crops on scaled input
+Color jitter
+Distortions
+Transformations
+• Weight initialization
+• Train the network by update of the weight
+parameters.
+
+### Slide 39
+Few Training Tips
+n Start with small regularization and find learning rate that
+makes the loss go down.
+n Can overfit very small portion of the training data.
+n Train first few epochs with few samples to initiate the
+hyper-parameters.
+n If big gap between training accuracy and validation
+accuracy, then it is overfitting.
+n Try increase regularization.
+n If no gap, then may increase model capacity.
+
+### Slide 40
+Transfer Learning
+n No need of a lot of a data to train a CNN.
+n Pre-trained models can be initialized for
+CNNs at the early stage of training.
+*Donahue et al, “DeCAF: A Deep Convolutional Activation Feature for Generic Visual Recognition”, ICML 2014
+Razavian et al, “CNN Features Off-the-Shelf: An Astounding Baseline for Recognition”, CVPR Workshops 2014
+
+### Slide 41
+Transfer Learning
+Train
+on
+Imag
+eNet
+2. Small
+Dataset
+classes)
+Reinitiali
+ze this
+layer and
+train
+Freeze
+these
+3. Bigger
+dataset
+Train these
+layers
+Freeze
+these
+Lower learning
+rate
+when fine-
+tuning;
+1/10 of original
+LR
+is good starting
+Point.
+With bigger
+dataset, train
+more layers

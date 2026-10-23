@@ -1,0 +1,575 @@
+# Week 3 — lecture slides
+(source: NPTEL, 51 slides; text layer, plus OCR on 31 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Camera Geometry
+(Week 03 – Lectures 11 – 15)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+
+### Slide 2
+Image formation in optical
+camera
+
+### Slide 3
+Pinhole camera
+P (X,Y,Z)
+p(x,y)
+Image plane
+Camera Center
+Image coordinate
+World coordinate
+Focal
+length
+Principal plane
+(XY-plane)
+Principal axis
+
+### Slide 4 (OCR)
+Pinhole Camera: 0 Z
+{ Mapping from P?>P2 y=
+x) TfX]) Tf 0 o<or[*
+b]=|rr|=[o f <0 ff!
+uooLz 0.0)1 01];
+XN Projection Matrix (P)
+f 0 O]71 0 0 O
+Pla f [a 1 0 0 = dagthf.0I | 0]
+0 0 1lo 0 1 0
+
+### Slide 5 (OCR)
+fX
+. . _fY
+t Offset of principal point ”~ z
+y 7 P(P, + x py + y)
+= /2 a? O(P»Py)
+O . Principal
+y|=|0 f Py ) Z
+x 1] lo 0 1 off,
+
+### Slide 6 (OCR)
+Projection Matrix under the
+{ offset
+1] lo.ow1 oJ],
+f 0 py]f1~0 0 0
+P=[o f mle 1 0 o| = Kt | 0]
+0 0 14/10 0 1 0
+7 x=K[I | O|x
+kK (Camera Calibration Matrix)
+
+### Slide 7 (OCR)
+x = Inhomogeneous Coordinate
+xX = [X] = Homogeneous Coordinate
+t Shifting of world coordinate
+ZX, = R(X-C)
+ae _{R —-RC||Y
+Z a x= KU | OX,
+SC 8 R —RCIIY
+7 He=KU 1 OS Tz
+O x Xe
+P=KR{I | —-C]=K[R | tl]
+
+### Slide 8 (OCR)
+rn CCD Camera model
+P=KR{I | -C]=K[R | ¢]
+f 0 px 0
+where K = f f Ds
+0. 0 1
+Let a, = f.nt;~__ No. of pixels s =tané
+ay =f.m,~ __ per unit eng
+ay O Dy oe Px
+k=] ay my K=|0 ay Py
+0 0 1 0 0 1
+
+### Slide 9 (OCR)
+rn General Projective Camera
+P=KR{I | -—C]=K[R | ¢]
+a 8/pgy
+where K = F Ay Dy 11 d.o.f
+0 0 1h
+Extrinsic parameters: R, tf
+Intrinsic parameters: K IKI = ax ay > 0
+P=([M | pal=MUI | Mtpyl=KRU | —C]
+where M = KR and p, is the last column of P.
+
+### Slide 10 (OCR)
+CO
++ __S_ SPy = %yPx
+Ax Ay Ay Ay Ay
+K-t= 1
+0 = _ Py
+ay ay
+0 0 1
+Upper triangular matrix.
+x=K{I | OX.
+Kx provides you the image coordinate in canonical
+form for the above.
+
+### Slide 11
+Rank of P: 3;
+Size: 3x4;
+d.o.f.=11;
+Two independent equations
+Minimum # of point correspondences between world
+and image coordinates required to estimate P: 6
+Properties of projective
+camera matrix P=[M | p4]
+# of extrinsic params: 6
+# of intrinsic params: 5
+
+### Slide 12 (OCR)
+Estimation of the camera ,_ rs
+. a 2
+{ matrix (P) rf
+XiCx= OG VN Wi) fori =1,2,....,n > 6
+PX,= X;
+= PX;X x,;=0
+OT\ wi Xi yi XT | pry
+ViXj — xiX7 om Ms
+Redundant, as x, x (1) + y, x (2)= w, x (3)
+
+### Slide 13 (OCR)
+Estimation of the camera, rs
+matrix (P) rf
+X,COxX,=(% VN Wi) fori =1,2,...,n>6
+OT  —w, Xi WX | [TM
+Y3
+For n correspondences Arnx12 r.f-0
+Minimize ||Ap|| subject to ||p||=1
+Use similar techniques, such as DLT.
+
+### Slide 14 (OCR)
+Properties of projective
+camera matrix P=[M | p,|
+rY
+P=[pP. P2 P3 Pa\= rt
+r3
+1. Camera Center (C): 1-D.right null space of P, i.e. PC=0.
+1. Finite camera: M non-singular.
+2. Camera at infinityr/singular C= A
+2. Column points: p,, pz, and pz are vanishing points of X,
+Y and Z axes. p, is the image of coordinate origin.
+1 0
+Pi =([P1 P2 P3 Pal H Pa=([P1 P2 P3 Pal H
+0 1
+
+### Slide 15
+Principal plane, axis, and point
+Xc
+Yc
+Zc
+R,t
+Principal point
+Principal plane
+Principal Axis
+
+### Slide 16 (OCR)
+Properties of projective
+poamera matrix P=[M | p,]
+rY
+P=[pP. P2 P3 Pa\= rt
+r3
+3. Principal plane: Plane parallel to image plane:
+r3; As any point belonging to this plane should be
+imaged at [x y 0]', r.X=0.
+4. Axes plane: r/X=0 > Imaged at y-axis of the image
+coordinate, i.e. plane containing camera center (r/ C=0)
+and y-axis of image plane.
+5. Similarly, r7Xx=0 > Plane defined by camera center
+(rJ C=0) and x-axis of image plane.
+6. Principal point: M@. mr3; mrsz is third row of .
+
+### Slide 17 (OCR)
+Properties of projective
+rn camera matrix P=[M|p,] yz
+P=[pP1 Pz P3 Pal = rt
+r3
+6. Principal point: 14 mr3; mrs is third row of /. A point
+at infinity along the normal of r/ X=0 plane is projected
+to the principal point (x,). P31
+P32
+=P = M.
+Xo = MP3
+7. Principal Ray: mr3; mrz3 is the third row of M. A point
+at infinity along the normal of rj X=0 plane is projected
+to the principal point (x,). det(/). mr3 directed towards
+front of camera.
+
+### Slide 18 (OCR)
+4 Projective camera on points
+Forward projection: Mapping of vanishing
+points (d, 0)’ on the planecatiinfinity (z.,,):
+x=[M | pal | | =Md
+Back Projection: v- Only affected by ©.
+[M | pal | y|=2 =|" |
+X(u) =pwD+C 0
+_ [M-1x], [é - X(W)
+a | 0. [+ Hl C= 4 _ [Mx Pa]
+_ |M-*x —M™~“p 1
+
+### Slide 19
+Depth of points
+Principal Axis
+Unit vector
+
+### Slide 20 (OCR)
+Computing camera center for
+| P=[M | p,]
+M=[Pi1 P2 P3] C=[X Y Z|!
+PC =0 = [M| “p4] |“ |=0
+= MC = —p,
+|—-Pa P2 P3] |[P1 —Pa P3|
+X¢ =O Y. =
+|P1 P2 P3| [P1 P2 P3|
+|P1 P2 —P4|
+[P1 P2 P3|
+
+### Slide 21 (OCR)
+r Camera parameters from P
+P=([M | Pa]
+=|[M | -—MC]
+= K[R | .-RC]
+1. RQO-decomposition of M s.t. M=KR, where K is an
+upper-triangular matrix and R is an orthogonal matrix.
+2. Obtain camera center using MC = —p, .
+3. From R get the orientation of camera.
+4. From K get elements of calibration matrix.
+
+### Slide 22
+Exercise -1
+Consider the following projection matrix.
+Compute the following:
+(i) Camera center
+(ii) Vanishing point of X-axis.
+(iii) Image point of origin.
+(iv)Vanishing point of the line with the
+direction cosines 2:3:4.
+
+### Slide 23 (OCR)
+-9 2 3 1
+P= | 3 —-9 6 1 |
+Solution 2 6 -10 1
+SMS \
+D4
+C = —M~*p,
+Cofactor(M) =|38 84. 58 294 26 58 75
+39 63.75
+det(M) = —9(90 — 36) + 2(12 + 30) + 3(18 + 18) = —294
+¢- 139
+294 169
+
+### Slide 24
+Solution
+(Contd.)
+p4
+p1
+Vanishing point of X-axis:
+Image point of origin:
+P [ 1 0 0 0]T=p1
+P [ 0 0 0 1]T=p4
+Vanishing point of the line with
+the direction cosines 2:3:4
+P [ 2 3 4 0]T
+= [ 0 3 -18]T
+
+### Slide 25
+Exercise-2
+n Consider the following projection matrix of
+an optical camera based imaging system.
+Answer the following with respect to P.
+(a) Given an image point (2,7) in R2, compute its
+corresponding scene point if it is known that the point
+is at a distance of 40 units from the center of camera.
+
+### Slide 26 (OCR)
+8 5 4 0
+P=|17 8 9 QO
+1 -5 8 1
+M P4
+1 | 60 13 | Camera center: “43
+M-*=-——|-47 60 —44 @ =—M-1p | 44 |
+465143 45 29 * 465] 9
+Direction ratio (/,myn); l 2 1 [-63
+m|= M117 = T55 94
+eu) = 6 ul hn n 1 86
+X(u) = C + ————~— }m _
+vie +m*+n*|,] Where p is the distance from C.
+
+### Slide 27
+Q. 2(b)
+n Compute the principal plane of the imaging
+system.
+r3
+TX=0
+The last row of P.
+Image point of a point in a principal plane: (x,y,0)
+(1,-5, 8, 1)
+
+### Slide 28
+Exercise-3
+n Consider the following camera matrix.
+Consider four image points x1=(2,5), x2=(7,9), x3=(-1,3)
+and x4=(4,-1). Let the camera center be denoted as O.
+Compute the dihedral angle between planes of Ox1x2
+and Ox3x4. A dihedral angle of two planes is the angle
+between their normals.
+
+### Slide 29 (OCR)
+x, =(2,5),
+x2=(7,9), 7 4 9 QO
+x3=(-1,3) P=|2 3 6 QO
+and 1580
+_ As. x,=(4,-1)
+35 ; 36
+T _| 86 wn =———_| 86
+=P oven} ae ee ®|
+-27 99
+24 .
+I = Pen 22 | nae | 22 |
+6 = cos” !(fi,. i) =53.752°
+
+### Slide 30 (OCR)
+in Cameras at oo
+P=[M | p,4| where W is singular.
+Affine: Last row of.P Non-affine: Otherwise
+(0 0 Od]
+Affine Camera: X x
+1. Principal plane > Plane at ©o (z,,). p|Y|=
+2. Camera center lies on 7. Z 0
+3. Points at co are mapped to points at «, ‘0
+4. Parallel lines remain parallel after projection.
+
+### Slide 31 (OCR)
+n Affine projection
+¥) M4, M2 M3 Ly xX
+| = M21 ™Mgz2,°.M23° lz
+1 1
+0 0 0 1
+~ _ [11 M2 M13] 7s
+Lx] = La, M32 mya| x] rf
+o Affine projection matrix: 8 d.o.f.
+o For estimating the matrix, it requires four point
+correspondences.
+
+### Slide 32 (OCR)
+~, _ [11 M2 M13] 7s
+Lx] = Lina, M22 mos IX] re
+in Affine Camera
+Camera Center» Direction_of parallel rays (d)
+M2x3d= 0
+o Image of the world-origin: ¢
+o Principal plane for projection matrix P, is the plane
+at oo,
+o Parallel world lines remain parallel in image.
+o M2 ,3 should be of rank 2, to ensure P, to be of
+rank 3.
+
+### Slide 33 (OCR)
+~ Ci] -~
+0 0 0 1
+Estimation of an affine camera
+Xi CO Xj=(%, Vi, 1), for i=1,2,3,...,.n
+r3;'=[0 0 0.“1]
+. T i
+Me lel = Gi
+For n points Aonxs | = Donx1
+P|=tATAl ta"
+
+### Slide 34 (OCR)
+r Projective Camera on plane
+; 7U
+co Z=0
+. Xx
+Qq=PQ=|P1 P2 P3 Pal i
+Perspective projection of 1
+scene plane is a X
+projective =[P1 P2 Pa! rn On
+transformation. 1
+
+### Slide 35 (OCR)
+a Projective camera on a line
+= (PX)'l=0
+= ”, P'™l=0
+? ma =P"
+
+### Slide 36 (OCR)
+Fixed camera center and
+| moving image plane
+xX
+P2 = K2R2[ |
+P, = K,R,[I | fF
+ST / P, = KyRo(K,R,)~*Py
+Xy = P)X = KR(K,R,)~1P,X
+= K,R2(K,R1)7*x4
+C = Hx,
+
+### Slide 37 (OCR)
+} Simple zooming (k=f,/f,, R=)
+x! = Xp + k(¥— Xp Z
+\e xd
+A I> x' = K,Ky>*x = Hx
+
+### Slide 38 (OCR)
+4 Simple Zooming
+x' = K,K, +x = Hx
+_fkl (A4—k) x] 4
+= H= =K2K
+fy 1 K °| *"* The effect of
+_fkI (425k) %1[A XX factor & is to
+— lo 1 | lo °| multiply the
+_ [KA kxo +(1 —k) %o] calibration
+0 _ 1 matrix K on
+= Ke 0 the right by
+° kl : 0 diag(k,k, 1).
+= K, lo l= K, . diag(k,k, 1)
+
+### Slide 39 (OCR)
+Rotation about an axis passing
+through the camera center
+{ (assuming at origin)
+x=K{[I | Ojx x'=K[R | Ox
+oe el - = KRK~1x
+eX =H = KRK7}
+o Hhas the same eigenevalues (upto scale) as R, namely
+u, we’, and we’, where y is the scale factor.
+o His also known as conjugate rotation homography and can
+be used to measure the angle of rotation of two views.
+o The eigen vector corresponding to the real eigen value (i.e.
+i) is the vanishing point of the rotation axis.
+From Hartley and Zisserman, “Multiple view geometry in computer vision”, Cambridge Univ. Press (2000)
+
+### Slide 40
+Application-I: Generation of
+synthetic view
+Fronto-parallel view
+Keep the same
+aspect ratio.
+1. Compute H.
+2. Warp the source image with H.
+
+### Slide 41
+Planar panoramic mosaicing
+H2
+H1
+Ref. plane
+Axis of rotation for imaging
+
+### Slide 42
+Vanishing points
+Image line
+X2
+X3
+X4
+X1
+x1
+x4
+Vanishing point
+Vanishing point of a line L is the intersecting point in
+the image plane parallel to L and passing through the
+camera center C.
+
+### Slide 43
+Vanishing points
+||l to L
+Vanishing points are independent of camera position, if
+it is not rotated.
+
+### Slide 44 (OCR)
+v =PX,=K{I | 0] lol= Kd
+n Vanishing points
+Vanishing points are independent.of camera position, if
+it is not rotated.
+With rotation R it becomes v'=KRd.
+If we know v, v’, and.Ky we can compute R.
+—1 —-1,,/ ~
+q- UU ge kv a@=Rd
+|K~*]| |K~*v']|
+Two independent constraints on R and it can be
+computed.
+
+### Slide 45 (OCR)
+Vanishing lines Parallel plane
+‘<7 through camera
+Image cee NM center(z,)
+plane ey
+—_ K'l Vanishing line
+|K7l || Line of intersection opr r
+Between I and 7, NSP l=K'l
+
+### Slide 46
+Exercise
+Given a line l in the image coordinate space by the
+following equation:
+3x+4y=5
+Compute the normal of the plane for which the line
+appears as a horizon (vanishing line).
+Suppose a camera has the following projection
+matrix P.
+
+### Slide 47 (OCR)
+; 5 4 j
+P=|7 8 9 Q
+‘ Ans. 1-5 81
+I= [34-5]!
+Plane formed by the camera ‘center and the line /: PT
+8 7 1 3 47
+5 8 —S)hy | [72
+4 9 8 5 8
+00 14° — —5
+All planes parallel to this plane have the vanishing line /.
+1 47 54
+47? + 722 + 87] 9 09
+
+### Slide 48
+Computing vanishing line
+o Identify groups of sets of parallel
+lines in a plane at different directions.
+o Obtain their vanishing points.
+o Get the line among them.
+
+### Slide 49
+Summary
+o Pinhole camera model provides the projection
+matrix which maps a 3D point to an image point.
+o Projection matrix:
+o 3x4
+o Dof: 11
+o 5 intrinsic parameters and 6 extrinsic parameters.
+o Minimum 6 point correspondences required for
+estimation
+o Affine projection matrix
+o Last row [0 0 0 1]T
+o Dof:8
+o Minimum 4 point correspondences required to estimate.
+
+### Slide 50
+Summary (contd.)
+o Geometry encoded in a projection matrix
+o P=[ M | p4] or P=[p1 p2 p3 p4] or P=[r1
+T ; r2
+T ; r3
+o Camera Center: -M-1p4
+o For affine projection matrix: Right zero of M (A direction).
+o Vanishing points
+o X-axis: p1
+o Y-axis: p2
+o Z-axis: p3
+o Image of world origin: p4
+o Special planes passing through the camera center
+o Principal plane: r3TX=0
+o Direction of optical axis: <r31, r32, r33>
+o Principal point: M [r31 r32 r33]T
+o Plane formed with x-axis of image coordinate system: r1TX=0
+o Plane formed with y-axis of image coordinate system: r2TX=0
+
+### Slide 51
+Summary (contd.)
+o Geometric derivatives from Projection Matrix:
+P= [M|p4]
+o Projection ray formed at image point x.
+o Direction ratio: M-1x
+o A point on the ray:
+Camera center (-M-1p4)
+o Plane formed with a line l in the image plane
+with the camera center: PTl
+o Vanishing point of a line with direction d
+o Md

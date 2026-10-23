@@ -1,0 +1,384 @@
+# Week 1 — Fundamentals of Image Processing and Transforms — assignment solution
+(source: NPTEL, 7 PDF pages; fractions/matrices from the PDF may be flattened in this text)
+
+Nptel Online Certification Course: Computer Vision
+Assignment 1: Fundamentals of Image processing
+Number of questions: 10
+Total marks: 10 X 2 = 20
+QUESTION 1:
+Type:MCQ
+The probability of a normal variable P(z > 1.8) = 0.0359. A random variable X is normally
+distributed with mean µ = 50 and standard deviation σ = 10. Compute P(X < 68).
+a) 0.9641
+b) 0.0359
+c) 0.1800
+d) 0.8200
+Correct Answer: a)
+Detailed Solution:
+For X = 68, the z-value is:
+z = X −µ
+σ
+= 68 −50
+10
+= 1.8
+P(X < 68) = P(z < 1.8)
+P(z > 1.8) = 0.0359
+P(z < 1.8) = 1 −0.0359 = 0.9641
+QUESTION 2:
+Type:MCQ
+Consider the following 3-bit grayscale image:
+I =
+
+0
+1
+2
+3
+3
+4
+5
+6
+0
+1
+2
+4
+5
+2
+4
+6
+
+What is the optimal threshold according to Otsu method?
+a) 1
+b) 4
+c) 5
+d) 2
+Correct Answer: d)
+Detailed Solution: The histogram is divided into two classes at each possible threshold, and
+the between-class variance is to be computed.
+The histogram of the 3-bit image is:
+Gray level (i)
+0
+1
+2
+3
+4
+5
+6
+h(i)
+2
+2
+3
+2
+3
+2
+2
+Total number of pixels:
+N = 16
+Normalized probabilities:
+p(i) = h(i)
+16
+Using Otsu’s method, compute the between-class variance for each threshold.
+t
+ω0
+ω1
+µ0
+µ1
+σ2
+B
+0
+0.125
+0.875
+0
+3.57
+1.39
+1
+0.25
+0.75
+0.50
+4.00
+2.30
+2
+0.4375
+0.5625
+1.14
+4.67
+3.06
+3
+0.5625
+0.4375
+1.56
+5.00
+2.91
+4
+0.75
+0.25
+2.33
+5.50
+1.88
+5
+0.875
+0.125
+2.71
+6.00
+1.18
+Since the maximum between-class variance occurs at t = 2.
+QUESTION 3:
+Type:MCQ
+Consider two images each of size 40 × 40, namely I1 and I2. Image I1 has 900 foreground
+pixels and 700 background pixels. Image I2 has 600 foreground pixels and 1000 background
+pixels. One pixel is selected at random from one of the two images, and it is found to be a
+background pixel. Find the probability that it was drawn from image I1.
+a)
+17
+7
+b)
+10
+17
+c)
+7
+10
+d)
+7
+17
+Correct Answer: d)
+Detailed Solution:
+Let E1 and E2 be the events of choosing images I1 and I2, respectively. Let A be the event that
+the selected pixel is a background pixel. Since one image is chosen randomly:
+P(E1) = P(E2) = 0.5
+For image I1:
+P(A|E1) = 700
+1600
+For image I2:
+P(A|E2) = 1000
+1600
+Using Bayes’ Theorem:
+P(E1|A) =
+P(A|E1) · P(E1)
+P(A|E1) · P(E1) + P(A|E2) · P(E2)
+Substituting:
+P(E1|A) =
+
+700
+1600
+ 
+1
+2
+
+
+700
+1600
+ 
+1
+2
+
++
+
+1000
+1600
+ 
+1
+2
+
+Canceling common terms:
+P(E1|A) =
+700
+700 + 1000
+= 700
+1700
+= 7
+17
+QUESTION 4:
+Type:MCQ
+Consider the image patch:
+I =
+
+3
+3
+3
+0
+0
+0
+−3
+−3
+−3
+
+Which operator is most closely represented?
+a) Median filter
+b) Histogram equalization
+c) Prewitt operator
+d) Gaussian smoothing
+Correct Answer: c)
+Detailed Solution: Prewitt masks use uniform weights to estimate gradients and detect edges
+in specific directions.
+QUESTION 5:
+Type:MCQ
+Consider the image patch:
+I =
+
+1
+2
+1
+0
+0
+0
+−1
+−2
+−1
+
+Which kernel does it correspond to?
+a) Averaging filter
+b) Sobel operator
+c) Laplacian operator
+d) Median filter
+Correct Answer: b)
+Detailed Solution: This is the Sobel mask used for vertical edge detection by emphasizing
+intensity changes along the y-direction.
+QUESTION 6:
+Type:MCQ
+Which of the following is the primary purpose of histogram equalization?
+a) Reduce image size
+b) Improve image contrast
+c) Remove image noise
+d) Detect edges
+Correct Answer: b)
+Detailed Solution: Histogram equalization redistributes intensity values over the available
+range to enhance contrast, especially in low-contrast images.
+QUESTION 7:
+Type: MCQ
+Consider the following 4 × 4 image array:
+I =
+
+0
+1
+2
+4
+2
+3
+4
+5
+1
+2
+4∗
+6
+0
+3
+5
+6
+
+What is the value after histogram equalization at location (2, 2) shown with asterisk mark in
+the image array?
+a) 3
+b) 4
+c) 5
+d) 6
+Correct Answer: c)
+Detailed Solution:
+Histogram table:
+Pixel
+Frequency
+Cumulative Sum
+Normalized Sum
+New Pixel
+0
+2
+2
+0.875
+1
+1
+2
+4
+1.75
+2
+2
+3
+7
+3.06
+3
+3
+2
+9
+3.94
+4
+4
+3
+12
+5.25
+5
+5
+2
+14
+6.13
+6
+6
+2
+16
+7.00
+7
+The marked pixel value is 4, which maps to 5 after histogram equalization. Hence, the
+answer is 5.
+QUESTION 8:
+Type:MCQ
+Consider the following kernel:
+K =
+
+2
+4
+6
+1
+2
+3
+−4
+−8
+−12
+
+What is the rank of this matrix, and is it separable?
+a) Rank = 1, separable
+b) Rank = 2, separable
+c) Rank = 2, not separable
+d) Rank = 3, not separable
+Correct Answer: a)
+Detailed Solution:
+Each row is a scalar multiple of the second row:
+R1 = 2R2,
+R3 = −4R2
+Thus, only one independent row exists, so the rank is 1. A rank-1 kernel can be written as an
+outer product of two vectors. Hence, the kernel is separable.
+QUESTION 9:
+Type: MCQ
+Consider a binary image with a fully filled white square at the center on a black background.
+How does this image look after applying image gradient operation?
+a) Entire square remains white
+b) A thin line surrounding the square boundary
+c) Only the center pixel becomes white
+d) Entire background becomes white
+Correct Answer: b)
+Detailed Solution: The gradient highlights intensity transitions only at object boundaries.
+Since the square has constant intensity inside, only its edges are detected.
+QUESTION 10:
+Type: MCQ
+Find the Fourier Transform of the time signal
+x(t) = e−3tu(t)
+a)
+1
+3+jω
+b)
+1
+2+jω
+c)
+1
+1+jω
+d)
+1
+4+jω
+Correct Answer: a)
+Detailed Solution: Using:
+X(jω) =
+Z ∞
+0
+e−3te−jωtdt
+=
+Z ∞
+0
+e−(3+ jω)tdt
+=
+1
+3 + jω

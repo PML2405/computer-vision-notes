@@ -1,0 +1,591 @@
+# Week 3 — Camera Geometry — assignment solution
+(source: NPTEL, 7 PDF pages; fractions/matrices from the PDF may be flattened in this text)
+
+Nptel Online Certification Course: Computer Vision
+Week 3: Single View Camera Geometry
+Type of questions: MCQ/MSQ
+Number of questions: 10
+Total marks: 10 X 2 = 20
+QUESTION 1:
+Type:MCQ
+A camera center is at the origin and the image plane is parallel to the XY-plane at distance
+f = 0.8. The perspective projection of the world point (2, 4, 5) is:
+(a)
+
+8
+25, 16
+25
+
+(b)
+
+2
+5, 4
+5
+
+(c)
+
+5
+8, 5
+4
+
+(d)
+
+4
+5, 8
+5
+
+Correct Answer: (a)
+Solution: Using perspective projection,
+(x, y) =
+ f X
+Z , fY
+Z
+!
+QUESTION 2:
+Type:MCQ
+If the principal point is (1, 2), what are the image coordinates of the world point (4, 6, 8) for a
+pinhole camera with f = 1?
+(a) (1.25, 2.5)
+(b) (2, 2.5)
+(c) (1.5, 2.75)
+(d) (1.75, 2.75)
+Correct Answer: (c)
+Solution: With principal point (px, py),
+x = f X
+Z + px,
+y = fY
+Z + py
+QUESTION 3:
+Type:MCQ
+Given P = K[R | −RC] where f = 2, principal point (1, 3), R = I, and camera center
+C = (2, 1, 1), find the projection matrix.
+(a)
+
+2
+0
+1
+−4
+0
+2
+3
+−6
+0
+0
+1
+−1
+
+(b)
+
+2
+0
+1
+−6
+0
+2
+3
+−8
+0
+0
+1
+−1
+
+(c)
+
+2
+0
+1
+−5
+0
+2
+3
+−5
+0
+0
+1
+−1
+
+(d)
+
+2
+0
+1
+−3
+0
+2
+3
+−5
+0
+0
+1
+−1
+
+Correct Answer: (c)
+Solution: The calibration matrix is
+K =
+
+f
+0
+px
+0
+f
+py
+0
+0
+1
+=
+
+2
+0
+1
+0
+2
+3
+0
+0
+1
+
+Since R = I,
+P = K[I | −C]
+and
+−C = (−2, −1, −1)T
+K(−C) =
+
+2
+0
+1
+0
+2
+3
+0
+0
+1
+
+
+−2
+−1
+−1
+=
+
+−5
+−5
+−1
+
+P =
+
+2
+0
+1
+−5
+0
+2
+3
+−5
+0
+0
+1
+−1
+
+QUESTION 4:
+Type:MCQ
+For the projection matrix
+P =
+
+1
+0
+2
+−4
+0
+1
+1
+−2
+0
+0
+1
+−1
+,
+find the camera center in homogeneous coordinates.
+(a) (4, 2, 1, 1)
+(b) (2, 1, 1, 1)
+(c) (1, 1, 1, 1)
+(d) (2, 2, 1, 1)
+Correct Answer: (b)
+Solution: Let M be the left 3 × 3 block and p4 be the last column. Then
+C = (−M−1p4, 1)
+Here,
+M =
+
+1
+0
+2
+0
+1
+1
+0
+0
+1
+,
+p4 =
+
+−4
+−2
+−1
+
+QUESTION 5:
+Type:MCQ
+If the principal point (px, py), focal length f, orientation R, and camera center C of a pinhole
+camera are given by (2, 1), 1,
+R =
+
+1
+0
+0
+0
+0.8
+0.6
+0
+−0.6
+0.8
+
+and (1, 2, 3), respectively, compute the 3 × 4 projection matrix P.
+(a)
+
+1
+−1.2
+1.6
+−3.4
+0
+0.2
+1.4
+−4.6
+0
+−0.6
+0.8
+−1.2
+
+(b)
+
+1
+−1.2
+1.6
+−2.4
+0
+0.2
+1.4
+−3.6
+0
+−0.6
+0.8
+−1.2
+
+(c)
+
+1
+−1.2
+1.6
+−3.4
+0
+0.2
+1.4
+−3.6
+0
+−0.6
+0.8
+−2.4
+
+(d)
+
+1
+−1.2
+1.6
+−1.4
+0
+0.2
+1.4
+−4.6
+0
+−0.6
+0.8
+−1.2
+
+Correct Answer: (a)
+Detailed Solution: The projection matrix is
+P = KR[I | −C]
+where the calibration matrix is
+K =
+
+f
+0
+px
+0
+f
+py
+0
+0
+1
+=
+
+1
+0
+2
+0
+1
+1
+0
+0
+1
+.
+First compute
+KR =
+
+1
+0
+2
+0
+1
+1
+0
+0
+1
+
+
+1
+0
+0
+0
+0.8
+0.6
+0
+−0.6
+0.8
+=
+
+1
+−1.2
+1.6
+0
+0.2
+1.4
+0
+−0.6
+0.8
+.
+Now,
+−C = (−1, −2, −3)T.
+So the last column is
+KR(−C) =
+
+1
+−1.2
+1.6
+0
+0.2
+1.4
+0
+−0.6
+0.8
+
+
+−1
+−2
+−3
+=
+
+−3.4
+−4.6
+−1.2
+.
+QUESTION 6:
+Type:MCQ
+Given the projection matrix
+P =
+
+1
+0
+1
+0
+0
+2
+1
+0
+0
+0
+1
+0
+,
+find the vanishing point of a line with direction ratio 2 : 3 : 4.
+(a) (1.5, 2.5)
+(b) (1, 2)
+(c) (2, 3)
+(d) (0.25, 0.75)
+Correct Answer: (a)
+Solution: The vanishing point is
+v = P(a, b, c, 0)T
+with (a, b, c) = (2, 3, 4). Thus,
+v =
+
+2 + 4
+6 + 4
+4
+=
+
+6
+10
+4
+
+In inhomogeneous coordinates,
+ 6
+4, 10
+4
+!
+= (1.5, 2.5)
+QUESTION 7:
+Type:MCQ
+For a camera center C = (1, 2, 3) and direction vector (2, 1, 2), find the scene point at distance
+6 units from the center along that ray.
+(a) (2, 3, 4)
+(b) (3, 3, 5)
+(c) (4, 3, 6)
+(d) (5, 4, 7)
+Correct Answer: (d)
+Solution: The unit direction vector is
+(2, 1, 2)
+√
+22 + 12 + 22 = (2, 1, 2)
+3
+So the point at distance 6 is
+X = C + 6 · (2, 1, 2)
+3
+X = (1, 2, 3) + 6 · (2, 1, 2)
+3
+= (5, 4, 7)
+QUESTION 8:
+Type:MCQ
+Given two image points x1 = (1, 0), x2 = (2, 2) and camera center O at the origin, find the
+unit normal to the plane Ox1x2.
+a)
+
+−2
+3, 1
+3, 2
+3
+!
+b)
+ 2
+3, −1
+3, 2
+3
+!
+c)
+
+−1
+3, 2
+3, 2
+3
+!
+d)
+ 1
+3, 1
+3, 1
+3
+!
+Correct Answer: (a)
+The plane Ox1x2 passes through the camera center O = (0, 0, 0) and x1 and x2. In
+homogeneous coordinates obtain the 3D rays:
+r1 =
+
+1
+0
+1
+,
+r2 =
+
+2
+2
+1
+.
+The normal to the plane is given by the cross product:
+n = r1 × r2 =
+
+i
+j
+k
+1
+0
+1
+2
+2
+1
+
+= i(0 · 1 −1 · 2) −j(1 · 1 −1 · 2) + k(1 · 2 −0 · 2) = (−2, 1, 2)T.
+Magnitude:
+∥n∥=
+p
+(−2)2 + 12 + 22 =
+√
+4 + 1 + 4 =
+√
+9 = 3.
+The unit normal:
+ˆn = n
+∥n∥= 1
+3
+
+−2
+1
+2
+=
+
+−2
+3, 1
+3, 2
+3
+!
+.
+QUESTION 9:
+Type:MCQ
+For a camera with f = 1, principal point (2, 1), and world point (5, 3, 5), what is the image
+point?
+(a) (3, 9
+5)
+(b) (3, 8
+5)
+(c) (7
+5, 8
+5)
+(d) (8
+5, 3)
+Correct Answer: (b)
+Solution: Using
+x = f X
+Z + px,
+y = fY
+Z + py
+QUESTION 10:
+Type:MCQ
+Consider a pinhole camera with camera center at the origin and image plane Z = f. A 3D
+point X = (2, 4, 2) is projected onto the image plane with f = 1. Which statements are
+correct?
+(a) The image point is (2, 4).
+(b) The projected point lies on the ray passing through the camera center and the 3D point.
+(c) If the focal length is doubled, the image point also doubles in magnitude.
+(d) The projection preserves straight lines in 3D not passing through the camera center as
+straight lines in the image.
+Correct options: (b), (c), (d)
+Solution: For a pinhole camera,
+(x, y) =
+ f X
+Z , fY
+Z
+!
+.
+With f = 1 and X = (2, 4, 2),
+(x, y) =
+ 2
+2, 4
+2
+!
+= (1, 2).
+So option (a) is false. The projection lies on the same ray from the camera center to the point,
+so (b) is true. Since image coordinates are proportional to f, doubling f doubles the
+projected coordinates, so (c) is true. A central projection maps 3D straight lines to 2D
+straight lines, so (d) is true.

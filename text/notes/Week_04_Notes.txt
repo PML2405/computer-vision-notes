@@ -1,0 +1,361 @@
+# Week 4 — Stereo Geometry — study notes
+(Stereo Geometry — epipolar geometry & the fundamental matrix; Prof. Jayanta Mukhopadhyay · Lectures 16–19. Re-taught-from-scratch notes written from the slides + transcript; math is LaTeX between $...$ / $$...$$. Pretty version: https://pml2405.github.io/computer-vision-notes/notes/week4_notes.html)
+
+COMPUTER VISION · NPTEL · IIT KHARAGPUR
+
+Week 4
+
+**Stereo Geometry** — epipolar geometry & the fundamental matrix
+
+Prof. Jayanta Mukhopadhyay · Lectures 16–19
+
+### 📒 what's inside this week
+
+1. Lecture 16 — Stereo Geometry · Part I
+two cameras, epipolar plane/lines/epipoles, fundamental & essential matrix
+
+2. Lecture 17 — Stereo Geometry · Part II
+computing F, its properties (rank-2, null-vectors), worked problems
+
+3. Lecture 18 — Stereo Geometry · Part III
+essential matrix, pure-translation stereo, depth from disparity
+
+4. Lecture 19 — Stereo Geometry · Part IV
+estimating F: the normalized 8-point algorithm
+
+# LECTURE 16 — Stereo Geometry — Part I
+
+two cameras · epipolar geometry · the fundamental matrix F and the essential matrix E
+
+🧠 the big picture, first
+
+One camera loses depth. **Two** cameras get it back — and the geometry linking their two images is beautifully constrained: given a point in the left image, its match in the right image is forced onto a single **line**, not a whole plane. That constraint is captured by one $3\times3$ matrix, the fundamental matrix $F$.
+
+This "your match must lie on this line" rule is what makes stereo matching tractable. 👀👀
+
+## 1.  the stereo setup & the epipolar plane
+
+Two cameras with centres $C$ (left/reference) and $C'$ (right) both see a scene point $X$, giving images $\mathbf x$ and $\mathbf x'$. The five points $C,\,C',\,X,\,\mathbf x,\,\mathbf x'$ all lie on one plane — the **epipolar plane**.
+
+#### epipolar geometry in one picture
+
+[diagram text: X | C | C' | baseline | x | x' | e | e' | l | l']
+
+All of X, both centres, and both image points lie in one epipolar plane.
+
+## 2.  epipoles, epipolar lines & the constraint
+
+The line joining the two centres is the **baseline**. Where it pierces each image plane is an **epipole** ($e$, $e'$):
+
+**🟢 three ways to see an epipole**
+
+- the intersection of the **baseline** with the image plane;
+
+- the **image of the other camera's centre** ($e$ = image of $C'$, $e'$ = image of $C$);
+
+- the **vanishing point of the camera-motion direction** (the baseline direction).
+
+An **epipolar line** is where an epipolar plane cuts an image plane; they come in matched pairs $(\mathbf l,\mathbf l')$, and **all** epipolar lines pass through the epipole. The payoff is the **epipolar constraint**:
+
+**read it as:** the match for left-image point $\mathbf x$ must lie on **one specific line** $\mathbf l'$ in the right image — because the true 3-D point is somewhere on $\mathbf x$'s back-projected ray, and the image of that whole ray is the epipolar line. Search a line, not the whole image. 🔎
+
+## 3.  two special configurations
+| camera motion | epipolar lines | epipoles |
+| general (converging) | converge to a point | finite, inside/near the image |
+| pure translation (no rotation) | all **parallel** (to the motion) | at **infinity** |
+
+The parallel case (e.g. a sideways-shifted camera) is what "rectified" stereo rigs engineer on purpose — parallel horizontal epipolar lines make matching a 1-D search along scanlines.
+
+## 4.  deriving the fundamental matrix $F$
+
+Let $P=K[I\mid\mathbf 0]$ and $P'=K'[R\mid\mathbf t]$. Back-project $\mathbf x$ to the point at infinity on its ray, $(K^{-1}\mathbf x,\,0)$, and image it in the right camera — that's a homography, the **homography at infinity** $H_\infty=K'RK^{-1}$. The right image point is $\mathbf x'=H_\infty\mathbf x$, and the epipolar line joins it to the epipole $e'$:
+
+$$ \mathbf l'=\mathbf e'\times\mathbf x'=[\mathbf e']_\times H_\infty\,\mathbf x = F\,\mathbf x $$
+
+fundamental matrix
+
+$$ F=[\mathbf e']_\times\,K'RK^{-1} $$
+
+Here $[\mathbf e']_\times$ is the **skew-symmetric matrix** that does "cross product with $\mathbf e'$":
+
+$$ [\mathbf e']_\times=\begin{bmatrix}0&-e_z&e_y\\ e_z&0&-e_x\\ -e_y&e_x&0\end{bmatrix} $$
+
+**What $F$ does:** feed it a point $\mathbf x$ in the left image, out comes the epipolar line $\mathbf l'=F\mathbf x$ in the right image. (Turning a point into a line is called a correlation.)
+
+## 5.  the fundamental relationship
+
+Since the match $\mathbf x'$ lies on $\mathbf l'=F\mathbf x$, point-on-line ($\mathbf x'^{T}\mathbf l'=0$) gives the single most important equation in two-view geometry:
+
+the epipolar constraint
+
+$$ \mathbf x'^{T}\,F\,\mathbf x=0 $$
+
+**read it as:** for every pair of corresponding points, this holds. It needs **no** knowledge of the 3-D point — just the two image points and $F$. Swap the cameras and the fundamental matrix becomes $F^{T}$.
+
+The epipoles are the images of the centres: $\mathbf e'=K'\mathbf t$ (image of $C$) and $\mathbf e=K R^{T}\mathbf t$ (image of $C'$, up to sign).
+
+## 6.  the essential matrix (calibrated cameras)
+
+If the cameras are **calibrated** ($K$, $K'$ known), pre-multiply the pixels by $K^{-1}$ to work in normalized coordinates. Then $F$ collapses to the simpler **essential matrix**:
+
+essential matrix
+
+$$ E=[\mathbf t]_\times R,\qquad \mathbf x'^{T}E\,\mathbf x=0\ \ (\text{normalized}) $$
+
+$E$ depends only on the relative pose $(R,\mathbf t)$ — no intrinsics — which is exactly what you need to recover the cameras' motion. ($F=K'^{-T}E\,K^{-1}$.)
+
+### two views ⇒ your match lives on an epipolar line: $\mathbf l'=F\mathbf x$, and $\mathbf x'^{T}F\mathbf x=0$ always.
+
+epipoles = images of the other centre; $F=[\mathbf e']_\times K'RK^{-1}$; calibrated ⇒ essential matrix $E=[\mathbf t]_\times R$.
+
+### Self-check quiz
+
+1. What is an epipole, in three equivalent phrasings?
+
+→ Answer: baseline ∩ image plane = image of the other camera's centre = vanishing point of the camera-motion direction
+
+2. Why does the epipolar constraint reduce stereo matching from a 2-D to a 1-D search?
+
+→ Answer: a left point's match is forced onto its single epipolar line $\mathbf l'=F\mathbf x$ in the right image
+
+3. Write the fundamental relationship for corresponding points $\mathbf x\leftrightarrow\mathbf x'$.
+
+→ Answer: $\mathbf x'^{T}F\mathbf x=0$
+
+4. How does the essential matrix differ from the fundamental matrix?
+
+→ Answer: $E=[\mathbf t]_\times R$ is for calibrated (normalized) cameras — it encodes only relative pose $R,\mathbf t$, no intrinsics
+
+— end of Lecture 16 notes ✏️
+
+# LECTURE 17 — Stereo Geometry — Part II
+
+computing F from cameras · the properties of F · worked problems (epipolar lines & epipoles)
+
+🧠 the big picture, first
+
+Lecture 16 introduced $F$. Now we get practical: **how to compute it** from camera matrices, its key **properties** (rank-2, null-vectors = epipoles, 7 DOF), and how to solve exam problems — epipolar lines and epipoles, even when only $F$ is given.
+
+## 1.  computing $F$ from the cameras
+
+**Canonical case** — reference camera $P=[I\mid\mathbf 0]$ and second camera $P'=[M\mid\mathbf m]$:
+
+canonical formula
+
+$$ F=[\mathbf m]_\times\,M $$
+
+(and the essential matrix is the special case $E=[\mathbf t]_\times R$ when $M=R,\ \mathbf m=\mathbf t$).
+
+**General case** — two arbitrary cameras $P=[M\mid\mathbf p_4]$, $P'=[M'\mid\mathbf p_4']$: build the **homography at infinity** $H_\infty=M'M^{-1}$, get the right epipole $\mathbf e'=P'C$ (image of the first centre $C=-M^{-1}\mathbf p_4$), then:
+
+$$ F=[\mathbf e']_\times\,H_\infty=[\mathbf e']_\times\,M'M^{-1} $$
+
+## 2.  the properties of $F$ (memorise these)
+
+**📋 fundamental-matrix cheat-list**
+
+- **Correspondence:** $\mathbf x'^{T}F\mathbf x=0$ for every matching pair.
+
+- **Point → line:** epipolar line in the right image $\mathbf l'=F\mathbf x$; in the left image $\mathbf l=F^{T}\mathbf x'$.
+
+- **Transpose swaps cameras:** if $F$ is the fundamental matrix of $(P,P')$, then $F^{T}$ is that of $(P',P)$.
+
+- **Rank-deficient:** $\operatorname{rank}F=2$, so $\det F=0$.
+
+- **Epipoles are the null-vectors:** $F\mathbf e=\mathbf 0$ ($\mathbf e$ = right null-vector), $\mathbf e'^{T}F=\mathbf 0$ ($\mathbf e'$ = left null-vector). Both epipoles lie on every epipolar line.
+
+- **7 degrees of freedom:** 9 entries $-1$ (overall scale) $-1$ (the $\det=0$ constraint) $=7$.
+
+Why $F\mathbf e=\mathbf 0$? The left epipole $\mathbf e$ is the image of $C'$; its "match" is $\mathbf e'$ itself, so no proper epipolar line exists at the epipole — the singularity shows up as $F\mathbf e=\mathbf 0$.
+
+## 3.  worked problem — given only $F$
+
+**given $F$: find epipolar lines for $(5,8)$ & $(7,-5)$, then both epipoles**
+
+1. **Epipolar lines** (right image): homogenise and multiply by $F$ — $\mathbf l_1=F(5,8,1)^{T}$, $\mathbf l_2=F(7,-5,1)^{T}$.
+
+2. **Right epipole** $\mathbf e'$: all epipolar lines meet at it, so intersect two of them — $\mathbf e'=\mathbf l_1\times\mathbf l_2$ (rescale the big numbers; the professor's example gives $\mathbf e'\propto(1,3,1)$).
+
+3. **Left epipole** $\mathbf e$: it's the **right null-vector** of $F$ — solve $F\mathbf e=\mathbf 0$ (drop one dependent row since $\operatorname{rank}F=2$, set the scale to 1, solve the $2\times2$ system).
+
+Equivalently, $\mathbf e'$ = right null-vector of $F^{T}$ (same "drop a row and solve" trick). Two routes, same epipole. ✅
+
+**the pattern to remember:** point→line uses $F$ (or $F^{T}$); line→epipole uses a cross product; epipole-from-$F$-alone uses the null-space. Everything is either a multiply, a cross product, or a null-vector.
+
+### $F$ is rank-2 with the epipoles as its null-vectors; compute it as $[\mathbf m]_\times M$ (or $[\mathbf e']_\times H_\infty$).
+
+$\mathbf l'=F\mathbf x$, $\mathbf l=F^{T}\mathbf x'$; epipole = intersection of two epipolar lines = null-space of $F$ / $F^{T}$; 7 DOF.
+
+### Self-check quiz
+
+1. For the canonical pair $P=[I\mid\mathbf 0]$, $P'=[M\mid\mathbf m]$, what is $F$?
+
+→ Answer: $F=[\mathbf m]_\times M$
+
+2. Why is $\det F=0$, and what are the null-vectors of $F$?
+
+→ Answer: $F$ has rank 2 (rank-deficient); its right null-vector is the left epipole $\mathbf e$ ($F\mathbf e=0$), and $\mathbf e'^{T}F=0$ for the right epipole
+
+3. You have $F$ and two left-image points. How do you get the right epipole $\mathbf e'$?
+
+→ Answer: compute two epipolar lines $\mathbf l_i=F\mathbf x_i$ and intersect them: $\mathbf e'=\mathbf l_1\times\mathbf l_2$
+
+4. How many degrees of freedom does $F$ have?
+
+→ Answer: 7 — nine entries minus scale minus the $\det F=0$ constraint
+
+— end of Lecture 17 notes ✏️
+
+# LECTURE 18 — Stereo Geometry — Part III
+
+the essential matrix · pure-translation stereo · depth from disparity · reducing any rig to parallel
+
+🧠 the big picture, first
+
+Finally, actual **depth**. In the friendly "parallel" stereo rig, the horizontal **shift** between a point's two images (its **disparity**) is all you need: near things shift a lot, far things barely shift. One clean formula converts that shift into $Z$.
+
+## 1.  the essential matrix, a bit more
+
+For calibrated cameras, work in normalized coordinates $\mathbf x_c=K^{-1}\mathbf x$. Then $\mathbf x_c'^{T}E\,\mathbf x_c=0$ with $E=[\mathbf t]_\times R$, and it links to $F$ by:
+
+$$ F=K'^{-T}E\,K^{-1}\qquad\Longleftrightarrow\qquad E=K'^{T}F\,K $$
+
+$E$ has only **6** parameters (3 rotation + 3 translation), minus scale ⇒ **5 DOF**; like $F$ it is rank-2 ($\det E=0$).
+
+## 2.  the pure-translation rig
+
+If the two cameras differ by **translation only** ($R=I$), the essential/fundamental matrix collapses to just the epipole's skew matrix:
+
+$$ F=[\mathbf e']_\times\quad(\text{same camera, } K=K') $$
+
+If that translation is along the **x-axis**, the epipole is $\mathbf e'=(1,0,0)^{T}$ and the constraint $\mathbf x'^{T}F\mathbf x=0$ forces the **y-coordinates to be equal**:
+
+$$ [\,x'\ y'\ 1\,]\begin{bmatrix}0&0&0\\0&0&-1\\0&1&0\end{bmatrix}\begin{bmatrix}x\\y\\1\end{bmatrix}=0\ \Rightarrow\ y=y' $$
+
+**read it as:** a point and its match sit on the **same horizontal scanline**. Matching becomes a 1-D search left↔right — the whole reason rectified stereo rigs are built this way. ↔️
+
+## 3.  depth from disparity
+
+Two identical cameras ($K=K'$), baseline $t_x$ along x, no rotation. Writing the two projections and subtracting gives the horizontal shift, and hence the depth:
+
+the stereo depth equation
+
+$$ x-x'=\frac{f\,t_x}{Z}\ \ \Longrightarrow\ \ Z=\frac{f\,t_x}{x-x'} $$
+
+$\ x-x' = $ **disparityread it as:** depth is **inversely** proportional to disparity. Big shift ⇒ close; tiny shift ⇒ far (a mountain barely shifts as you move your head). You only need the two images + the rig's $f,\,t_x$.
+
+**worked example — computing Z**
+$K=\operatorname{diag}(6,6,1)$ (so $f=6$), baseline $t_x=\tfrac{10}{6}$ (so $ft_x=10$). Left point $(6,8)$, right point $(9.33,8)$ — note $y$ matches, confirming the translation case.
+
+1. Disparity $=x-x'=6-9.33=-3.33$ (use magnitude $3.33$).
+
+2. $Z=\dfrac{f\,t_x}{|x-x'|}=\dfrac{10}{3.33}=\mathbf{3}$. ✅
+
+## 4.  any rig → a parallel rig
+
+Real cameras also rotate. Trick: introduce an **imaginary camera** at the same centre but rotated by $R$ so its image plane is parallel to the reference. Warp the right image to it by the **rotational homography**:
+
+$$ H=K'R\,K'^{-1}\quad(\text{maps }\mathbf x'\to\mathbf x'_{(2)}) $$
+
+**🔧 the reduction recipe**
+
+1. Compute the rotational homography and warp the right image → now it's a **parallel** stereo pair.
+
+2. Apply the disparity formula from §3 on the warped correspondences to get $Z$.
+
+This "rectify then triangulate" pipeline is how general stereo is turned into the easy horizontal-shift case.
+
+### parallel stereo ⇒ matches share a scanline and depth is just $Z=f\,t_x/(x-x')$.
+
+$E=[\mathbf t]_\times R$ (5 DOF); pure translation ⇒ $F=[\mathbf e']_\times$, $y=y'$; rotate-away with a homography to rectify, then triangulate.
+
+### Self-check quiz
+
+1. In a parallel (translation-only, x-axis) rig, what's special about a point and its match?
+
+→ Answer: they have the same $y$-coordinate (lie on the same horizontal scanline) → 1-D matching
+
+2. Write the depth-from-disparity equation and state the key intuition.
+
+→ Answer: $Z=f t_x/(x-x')$; depth is inversely proportional to disparity — near points shift more
+
+3. Cameras $K=\operatorname{diag}(6,6,1)$, $ft_x=10$, matches $(6,8)\leftrightarrow(9.33,8)$. Find $Z$.
+
+→ Answer: disparity $=3.33$, so $Z=10/3.33=3$
+
+4. How do you get depth from a general (rotated) stereo pair?
+
+→ Answer: warp one view by the rotational homography $H=K'RK'^{-1}$ to make the pair parallel (rectify), then apply the disparity formula
+
+— end of Lecture 18 notes ✏️
+
+# LECTURE 19 — Stereo Geometry — Part IV
+
+estimating F from point matches — the 8-point algorithm & why you must normalize
+
+🧠 the big picture, first
+
+So far we knew the cameras and computed $F$. In the real world we only have **two photos** and some matched points. Good news: each match gives a **linear equation** in $F$'s entries, so a handful of matches pins $F$ down — the 8-point algorithm.
+
+One catch that ruins naive implementations: **numerical scaling**. We'll fix it with normalization. ⚖️
+
+## 1.  one match → one linear equation
+
+The epipolar constraint $\mathbf x'^{T}F\mathbf x=0$, written out with $\mathbf x=(x,y,1)$ and $\mathbf x'=(x',y',1)$, is **linear** in the nine unknowns $f_{ij}$:
+
+$$ x'x\,f_{11}+x'y\,f_{12}+x'f_{13}+y'x\,f_{21}+y'y\,f_{22}+y'f_{23}+x\,f_{31}+y\,f_{32}+f_{33}=0 $$
+
+**read it as:** stack $F$'s nine entries into a vector $\mathbf f$; then this is just $(\text{a 9-vector of measured products})\cdot\mathbf f=0$. Every correspondence adds one such row.
+
+## 2.  stack them: $A\mathbf{f}=\mathbf{0}$ — the 8-point algorithm
+
+With $n$ correspondences you get an $n\times9$ matrix $A$ and solve $A\mathbf f=\mathbf 0$. Two standard ways:
+
+**🧮 solving for $\mathbf f$**
+
+- **Homogeneous:** minimise $\lVert A\mathbf f\rVert$ subject to $\lVert\mathbf f\rVert=1$ → smallest right-singular vector of $A$ (SVD). Needs $\ge 8$ points.
+
+- **Non-homogeneous:** fix $f_{33}=1$, move it to the right → $A'\mathbf f'=\mathbf b$ (with $\mathbf b=-\mathbf 1$). With exactly 8 points, $\mathbf f'=A'^{-1}\mathbf b$; with more, least-squares $\mathbf f'=(A'^{T}A')^{-1}A'^{T}\mathbf b$ (pseudo-inverse).
+
+Either way the **minimum is 8 correspondences** — hence the **8-point algorithm**.
+
+## 3.  don't forget: $F$ must be rank-2
+
+The plain 8-point solution ignores the constraint $\det F=0$, so it returns a full-rank (invalid) $F$. Because $F$ genuinely has only **7 DOF** (9 − scale − rank), you either enforce singularity afterwards (project the estimate to the nearest rank-2 matrix via SVD — covered next lecture) or use a **7-point** method that builds the $\det=0$ constraint in from the start.
+
+## 4.  the crucial fix — normalization
+
+**⚠️ why raw pixels give garbage**
+The rows of $A$ mix **products** like $x'x$ (up to $\sim100\times100=10{,}000$) with plain terms like $x$ ($\sim100$) and the constant $1$. That's **3–4 orders of magnitude** of spread → an ill-conditioned $A$ → a numerically poor $F$.
+
+Fix it exactly like the homography DLT: translate each image's points to have their centroid at the origin and scale them small (roughly average distance $\sqrt2$). Call these maps $T$ (left) and $T'$ (right), so $\mathbf y=T\mathbf x$, $\mathbf y'=T'\mathbf x'$. Estimate $\tilde F$ on the well-behaved $\mathbf y$'s, then undo the transforms:
+
+normalized 8-point algorithm
+
+$$ \tilde F=\text{(8-point on }\mathbf y,\mathbf y'),\qquad F=T'^{T}\,\tilde F\,T $$
+
+**why $F=T'^{T}\tilde F T$:** from $\mathbf y'^{T}\tilde F\mathbf y=0$ substitute $\mathbf y=T\mathbf x,\ \mathbf y'=T'\mathbf x'$ ⇒ $\mathbf x'^{T}(T'^{T}\tilde F T)\mathbf x=0$, so the bracket is the original $F$. This **normalized 8-point algorithm** is the one everyone actually uses. ✅
+
+### each match gives one linear equation in $F$; ≥ 8 matches + SVD solve it — but normalize first.
+
+$A\mathbf f=\mathbf 0$ (n×9); enforce rank-2 (det $F=0$, 7 DOF); normalize with $T,T'$ then de-normalize $F=T'^{T}\tilde F T$.
+
+### Self-check quiz
+
+1. How many independent linear equations does one point correspondence give for estimating $F$, and how many for the whole matrix?
+
+→ Answer: 1 equation per correspondence; $F$ has 8 effective unknowns (scale-free) → minimum 8 correspondences
+
+2. The basic 8-point solution violates which property of $F$, and how is it fixed?
+
+→ Answer: it ignores $\det F=0$ (rank-2); fix by projecting to the nearest rank-2 matrix via SVD (or use the 7-point method)
+
+3. Why must the points be normalized before the 8-point algorithm?
+
+→ Answer: raw coordinate products span 3–4 orders of magnitude, making $A$ ill-conditioned and $F$ inaccurate
+
+4. You estimated $\tilde F$ on normalized points $\mathbf y=T\mathbf x$, $\mathbf y'=T'\mathbf x'$. How do you recover the real $F$?
+
+→ Answer: $F=T'^{T}\tilde F\,T$
+
+— end of Lecture 19 · end of Week 4 ✏️🎉

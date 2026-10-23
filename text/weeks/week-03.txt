@@ -1,0 +1,2297 @@
+Computer Vision (NPTEL 106105216, IIT Kharagpur, Prof. Jayanta Mukhopadhyay)
+WEEK 3: Camera Geometry
+Lectures:
+  - Lecture 11: Camera Geometry – Part I (transcript p.5)
+  - Lecture 12: Camera Geometry – Part II (transcript p.24)
+  - Lecture 13: Camera Geometry – Part III (transcript p.39)
+  - Lecture 14: Camera Geometry – Part IV (transcript p.56)
+  - Lecture 15: Camera Geometry – Part V (transcript p.77)
+
+This file concatenates, in order: study notes, assignment solution, slides, transcript.
+Hub: https://pml2405.github.io/computer-vision-notes/
+
+==============================================================================
+PART: STUDY NOTES
+==============================================================================
+
+# Week 3 — Camera Geometry — study notes
+(Camera Geometry — single-view; Prof. Jayanta Mukhopadhyay · Lectures 11–15. Re-taught-from-scratch notes written from the slides + transcript; math is LaTeX between $...$ / $$...$$. Pretty version: https://pml2405.github.io/computer-vision-notes/notes/week3_notes.html)
+
+COMPUTER VISION · NPTEL · IIT KHARAGPUR
+
+Week 3
+
+**Camera Geometry** — single-view
+
+Prof. Jayanta Mukhopadhyay · Lectures 11–15
+
+### 📒 what's inside this week
+
+1. Lecture 11 — Camera Geometry · Part I
+pinhole model, perspective projection, P = K[R|t]
+
+2. Lecture 12 — Camera Geometry · Part II
+the calibration matrix K, slicing P, estimating P by DLT
+
+3. Lecture 13 — Camera Geometry · Part III
+reading centre/vanishing points/principal point off P, RQ
+
+4. Lecture 14 — Camera Geometry · Part IV
+worked problems, the affine camera, imaging a plane/line, zoom
+
+5. Lecture 15 — Camera Geometry · Part V
+conjugate-rotation homography, vanishing points & lines, summary
+
+# LECTURE 11 — Camera Geometry — Part I
+
+the pinhole model · perspective projection as a matrix · building the 3×4 camera matrix P = K[R|t]
+
+🧠 the big picture, first
+
+A camera is a machine that **flattens a 3-D world onto a 2-D image**. This lecture writes that flattening as a single matrix multiply: $\mathbf x = P\mathbf X$, where $P$ is a $3\times4$ matrix built from what the camera is ($K$) and where it sits ($R,\mathbf t$).
+
+Get $P$ and you can predict exactly where any world point lands in the photo. The catch: you can't run it backwards (a pixel came from a whole ray, not one point). 📸
+
+## 1.  the pinhole camera & perspective projection
+
+Put the **camera centre** (centre of projection) at the origin. A world point $P=(X,Y,Z)$ sends a ray through the centre; where that ray hits the **image plane** (a distance $f$ = the **focal length** away) is the image point $(x,y)$. By **similar triangles**:
+
+perspective projection
+
+$$ x=f\,\frac{X}{Z},\qquad y=f\,\frac{Y}{Z} $$
+
+#### similar triangles give x = fX/Z
+
+[diagram text: centre O | Z (optical axis) | image plane (f) | P=(X,Y,Z) | p=(x,y)]
+
+Big triangle (O, P, its foot) ∼ small triangle (O, p, its foot) ⇒ $x/f = X/Z$.
+
+**💡 why is the image plane drawn in front of the centre?**
+Physically the sensor sits **behind** the lens/centre, so the true image forms **inverted** (upside-down and left-right flipped). To avoid dragging that sign flip through every formula, we place a **virtual image plane** in front of the centre at the **same distance $f$**. It carries an **upright image of exactly the same size**, and the geometry is identical (same similar triangles) — so all the equations come out clean. That convention is why every diagram here shows the plane in front. 🙃➡️🙂
+
+Names to know: the $XY$-plane of the camera frame is the **principal plane**; the $Z$-axis is the **principal (optical) axis**; the axis pierces the image plane at the **principal point**. That $\div Z$ is why far things look small — **perspective foreshortening**.
+
+## 2.  writing it as a matrix — the 3×4 projection matrix
+
+The division by $Z$ is non-linear… until we use **homogeneous coordinates**. Represent the world point as a 4-vector $(X,Y,Z,1)^{T}$ and the image point as a 3-vector; then projection is linear:
+
+$$ \begin{bmatrix}fX\\fY\\Z\end{bmatrix}=\begin{bmatrix}f&0&0&0\\0&f&0&0\\0&0&1&0\end{bmatrix}\begin{bmatrix}X\\Y\\Z\\1\end{bmatrix} $$
+
+**read it as:** the output $(fX,fY,Z)$ is a homogeneous image point — divide by the last entry $Z$ and you recover $(fX/Z,\,fY/Z)$, exactly our projection. The scale factor **is** the depth $Z$.
+
+That $3\times4$ matrix is the **projection matrix** $P$. In canonical form it splits as:
+
+$$ P=\operatorname{diag}(f,f,1)\,[\,I\mid \mathbf 0\,] $$
+
+Pulling $f$ out leaves the bare $[\,I\mid\mathbf 0\,]$ — the **minimal / canonical** camera. This is precisely the camera you get when the image plane is **normalised to unit distance** ($f=1$) from the centre. Everything else ($f$, the principal point, pixels, skew) is just extra structure layered on top of this canonical core.
+
+**dimension check:** this is a linear map from the **3-D projective space** $\mathbb P^3$ (world points $(X,Y,Z,1)^{T}$) down to the **2-D projective space** $\mathbb P^2$ (image points $(x,y,1)^{T}$) — written $\mathbb P^3\!\to\!\mathbb P^2$. Contrast a **homography**, which is $\mathbb P^2\!\to\!\mathbb P^2$ (plane→plane, square and invertible). The drop in dimension is why depth is lost.
+
+**⚠️ 3-D→2-D is NOT invertible**
+Unlike a homography (a square, invertible $3\times3$ map between two planes), $P$ is $3\times4$ — not square. A 3-D point maps to a unique pixel, but a pixel maps back to an entire **ray** of 3-D points. You cannot recover depth from one image. 🚫
+
+## 3.  shifting the origin — the principal point
+
+Real image coordinates start from a corner, not the principal point. If the principal point sits at $(p_x,p_y)$, every image coordinate is offset: $x=f\tfrac{X}{Z}+p_x$, $y=f\tfrac{Y}{Z}+p_y$. That offset moves into the **third column**, and the focal/offset part becomes the **calibration matrix** $K$:
+
+calibration matrix (so far)
+
+$$ K=\begin{bmatrix}f&0&p_x\\0&f&p_y\\0&0&1\end{bmatrix},\qquad \mathbf x=K\,[\,I\mid\mathbf 0\,]\,\mathbf X $$
+
+**check the offset by hand — where does the $+p_x$ come from?**
+
+1. The third column of $P$ changes from $(0,0,1)^{T}$ to $(p_x,p_y,1)^{T}$. Multiply out: $\begin{bmatrix}f&0&p_x&0\\0&f&p_y&0\\0&0&1&0\end{bmatrix}\begin{bmatrix}X\\Y\\Z\\1\end{bmatrix}=\begin{bmatrix}fX+p_xZ\\ fY+p_yZ\\ Z\end{bmatrix}$.
+
+2. Dehomogenise (divide by the last entry $Z$): $\ x'=\dfrac{fX+p_xZ}{Z}=f\dfrac{X}{Z}+p_x$, and likewise $\ y'=f\dfrac{Y}{Z}+p_y$. ✔️ — exactly the shifted coordinates we wanted.
+
+## 4.  the camera isn't at the origin — extrinsics R, t
+
+Usually the world has its own frame, offset and rotated from the camera's. A world point $\tilde{\mathbf X}$ converts to camera coordinates by a **rigid motion**: rotate + translate.
+
+$$ \tilde{\mathbf X}_{\text{cam}}=R\big(\tilde{\mathbf X}-\tilde{\mathbf C}\big) $$
+
+$R$ = $3\times3$ **rotation** (orthonormal) matrix; $\tilde{\mathbf C}$ = the camera centre's position in world coordinates. (Tilde = ordinary non-homogeneous coordinates.)
+
+**assemble $P$ step-by-step — the $4\times4$ world→camera block**
+
+1. Write the rigid motion in homogeneous form as one $4\times4$ matrix: $\begin{bmatrix}\tilde{\mathbf X}_{\text{cam}}\\ 1\end{bmatrix}=\begin{bmatrix}R & -R\tilde{\mathbf C}\\ \mathbf 0^{T} & 1\end{bmatrix}\begin{bmatrix}\tilde{\mathbf X}\\ 1\end{bmatrix}$.
+
+2. Cascade it with the canonical camera $K[\,I\mid\mathbf 0\,]$: $\quad \mathbf x = K\,[\,I\mid\mathbf 0\,]\begin{bmatrix}R & -R\tilde{\mathbf C}\\ \mathbf 0^{T} & 1\end{bmatrix}\mathbf X$.
+
+3. Count the shapes: $\underbrace{K}_{3\times3}\cdot\underbrace{[\,I\mid\mathbf 0\,]}_{3\times4}\cdot\underbrace{\text{block}}_{4\times4}$ collapses into a single $3\times4$ matrix — and that product **is** $P$. (Multiplying the first two already gives $K[\,R\mid -R\tilde{\mathbf C}\,]$.)
+
+Fold this into the projection — the full projective camera:
+
+the full camera matrix
+
+$$ P=K\,[\,R\mid \mathbf t\,]=K\,R\,[\,I\mid -\tilde{\mathbf C}\,],\qquad \mathbf t=-R\tilde{\mathbf C} $$
+
+**read it as:** "un-rotate & un-shift the world into the camera's frame ($[R\mid\mathbf t]$), then apply the lens ($K$)." Handy consequence: the camera centre is recoverable straight from $P$, since the $-\tilde{\mathbf C}$ sits right there.
+
+## 5.  real sensors — pixels & skew
+
+A digital sensor (CCD/CMOS) has a finite pixel density. If there are $m_x$ pixels per unit length horizontally and $m_y$ vertically, the focal length in **pixels** becomes $\alpha_x=f\,m_x$ and $\alpha_y=f\,m_y$ (they differ if pixels aren't square). Add a **skew** $s$ for sensors whose axes aren't exactly perpendicular:
+
+the full calibration matrix
+
+$$ K=\begin{bmatrix}\alpha_x & s & p_x\\ 0 & \alpha_y & p_y\\ 0 & 0 & 1\end{bmatrix} $$
+
+$s\approx \alpha_x\tan\theta$ for a tiny deviation $\theta$ from 90°; on modern cameras $s\approx0$. $K$ is **upper-triangular** with 5 free numbers.
+
+## 6.  counting the parameters — 11 DOF
+
+The $3\times4$ $P$ has 12 entries, but it's defined only up to scale ⇒ 11 degrees of freedom, split into two groups:
+| group | parameters | count |
+| **Intrinsic** (inside $K$) | $\alpha_x,\ \alpha_y,\ s,\ p_x,\ p_y$ | 5 |
+| **Extrinsic** (in $[R\mid\mathbf t]$) | 3 rotation + 3 translation | 6 |
+
+**Intrinsics** describe the camera itself (lens + sensor); **extrinsics** describe its pose in the world. Together: $P=K[R\mid\mathbf t]$, $\ \mathbf x=P\mathbf X$.
+
+### a camera = one 3×4 matrix $P=K[R\,|\,\mathbf t]$: lens & sensor ($K$) times pose ($R,\mathbf t$).
+
+perspective divides by depth; projection is linear in homogeneous coords; 11 DOF = 5 intrinsic + 6 extrinsic; not invertible.
+
+### Self-check quiz
+
+1. Why does a distant object appear smaller in a photo?
+
+→ Answer: perspective projection divides by depth: $x=fX/Z$, so larger $Z$ shrinks the image coordinate
+
+2. Why can't you recover a 3-D point from its single image point?
+
+→ Answer: $P$ is $3\times4$ (not invertible); a pixel corresponds to a whole ray of 3-D points — depth is lost
+
+3. What do the 5 intrinsic parameters in $K$ represent?
+
+→ Answer: focal lengths in pixels $\alpha_x,\alpha_y$, skew $s$, and principal point $p_x,p_y$
+
+4. Write the full camera matrix in terms of $K$, $R$ and the camera centre $\tilde{\mathbf C}$.
+
+→ Answer: $P=K R\,[\,I\mid-\tilde{\mathbf C}\,]=K[\,R\mid\mathbf t\,]$ with $\mathbf t=-R\tilde{\mathbf C}$
+
+5. Why is the image plane drawn in front of the camera centre?
+
+→ Answer: it's a virtual plane at the same distance $f$; the real image behind the lens is inverted, so the front plane gives an upright, same-size image with identical geometry
+
+— end of Lecture 11 notes ✏️
+
+# LECTURE 12 — Camera Geometry — Part II
+
+intrinsic parameters · the calibration matrix K · pixels, principal point & skew
+
+🧠 the big picture, first
+
+Last lecture we said a camera is a machine that turns a **3-D world point $\mathbf X$** into a **2-D image point $\mathbf x$** by a single matrix multiply, $\mathbf x = P\mathbf X$. Today we open up that matrix $P$ and see what is inside.
+
+$P$ splits cleanly into two halves: **where the camera sits and points** (the extrinsic part, $R$ and the centre) and **how the camera turns metres on the focal plane into pixels** (the intrinsic part, the calibration matrix $K$). We will also learn how to recover $P$ from a handful of point matches, and read the camera centre and vanishing points straight off it. 📷
+
+## 1.  recap — the projective camera $P$
+
+A **projective camera** is a $3\times4$ matrix $P$ that maps a world point to an image point in **homogeneous (projective) coordinates**:
+
+$$ \mathbf x = P\,\mathbf X,\qquad \mathbf x=\begin{bmatrix}x\\y\\w\end{bmatrix}\ (3\text{-vector}),\quad \mathbf X=\begin{bmatrix}X\\Y\\Z\\1\end{bmatrix}\ (4\text{-vector}) $$
+
+**read it as:** “stick a $1$ onto the 3-D point to make it a 4-vector, hit it with $P$, and out drops a 3-vector image point.” The image point is **homogeneous**: divide by its last entry $w$ to read off the real pixel $\big(x/w,\ y/w\big)$.
+
+The professor reminds us that $P$ is not one solid block — it factors into recognisable pieces:
+
+the camera, factored
+
+$$ P = K\,[\,R \mid \mathbf t\,] = K\,R\,[\,I \mid -\tilde{\mathbf C}\,] $$
+
+**🧩 what each factor does**
+
+- **$R$** — a $3\times3$ **rotation matrix**. It rotates the world axes until they line up with the camera's own axes (a change of orientation). Extrinsic.
+
+- **$\mathbf t$ / $\tilde{\mathbf C}$** — the **translation** that moves the world origin onto the camera centre $\tilde{\mathbf C}$. Extrinsic.
+
+- **$K$** — the **calibration matrix**: it converts the tidy metric image on the focal plane into actual pixel indices. Intrinsic. This is today's star.
+
+#### the two coordinate frames: world vs camera
+
+[diagram text: world origin | Xw | Yw | Zw | camera centre C̃ | xc | yc | zc (optical axis) | translation t (+ rotation R)]
+
+Extrinsics ($R,\mathbf t$) carry you from the world frame to the camera-centred frame; intrinsics ($K$) then take over inside the camera.
+
+## 2.  the calibration matrix $K$ — intrinsic parameters
+
+**Intrinsic (internal) parameters** are the ones baked into the camera hardware itself — the lens focal length, the sensor's pixel size, where the optical axis lands on the chip. They do **not** change when you move the camera around. All of them live in one upper-triangular $3\times3$ matrix:
+
+the calibration matrix
+
+$$ K=\begin{bmatrix} f_x & s & p_x\\[2pt] 0 & f_y & p_y\\[2pt] 0 & 0 & 1 \end{bmatrix} $$
+
+**read it as:** “scale the two axes by $f_x,f_y$, shear them by the skew $s$, then shift the origin to the principal point $(p_x,p_y)$.” Three simple 2-D operations — scaling, shearing, translating — stacked into one matrix.
+
+### step 1 — from an ideal image to pixels
+
+Imagine the perfect, textbook image formed on the focal plane, measured in **millimetres** with its origin on the optical axis. A camera-frame point $(X,Y,Z)$ lands there at the ideal coordinates $\big(f\tfrac{X}{Z},\ f\tfrac{Y}{Z}\big)$, where $f$ is the **focal length** in mm. But a sensor doesn't count millimetres — it counts **pixels**. Two fixes are needed.
+
+**🔧 the two fixes that build $K$**
+
+1. **Scale mm → pixels.** Let $m_x$ = pixels per mm along the horizontal, $m_y$ = pixels per mm along the vertical. Then the focal length expressed in pixels along each axis is
+$$ f_x = f\,m_x,\qquad f_y = f\,m_y $$
+These $f_x,f_y$ are the **resolution factors** — the same $f$ measured in two different pixel rulers. (Lecture wording: the professor calls $m_x,m_y$ the “number of pixels along the horizontal / vertical direction”. Read that as the pixel density — pixels per unit length — which is the standard meaning used here, so $f\,m$ correctly comes out in pixels.)
+
+2. **Shift the origin.** Pixel indices are counted from a corner of the sensor, not from the optical axis. So we add the **principal point** $(p_x,p_y)$ — the pixel where the optical axis actually pierces the image (usually near the centre of the frame).
+
+Putting both together, the pixel coordinates $(u,v)$ of a camera-frame point are:
+
+$$ u = f_x\,\frac{X}{Z} + s\,\frac{Y}{Z} + p_x,\qquad v = f_y\,\frac{Y}{Z} + p_y $$
+
+**read it as:** “take the ideal projection, magnify it by the pixels-per-unit resolution, nudge in a pinch of skew, and slide the origin over to the principal point.” That is exactly multiplying by $K$.
+
+#### ideal metric image → pixel array (what $K$ does)
+
+[diagram text: pixel (0,0) | u | v | principal pt (pₓ,p_y) | x (mm) | y (mm) | skewed axis | skew s | s ≠ 0 ⇒ axes not perpendicular]
+
+Left: pixel indices start at a corner; the metric image sits centred on the principal point. Right: skew tilts one axis. $K$ encodes all of this.
+
+### the five knobs inside $K$
+| entry | name | what it means |
+| $f_x=f\,m_x$ | focal length in pixels (x) | how many pixels one unit of horizontal focal length spans |
+| $f_y=f\,m_y$ | focal length in pixels (y) | same, vertically; differs from $f_x$ if pixels aren't square |
+| $p_x$ | principal point (x) | column index where the optical axis hits the sensor |
+| $p_y$ | principal point (y) | row index where the optical axis hits the sensor |
+| $s$ | skew | tilt between the pixel axes; $s=0$ for an ideal rectangular grid |
+
+That is 5 intrinsic parameters — remember this count, it comes back in Section 5.
+
+### aspect ratio, the determinant & why $K$ is upper-triangular
+
+**📏 aspect ratio**
+The ratio $\dfrac{f_y}{f_x}=\dfrac{m_y}{m_x}$ is the **aspect ratio** of a pixel. Square pixels ⇒ $m_x=m_y$ ⇒ ratio $=1$ ⇒ $f_x=f_y$.
+
+**🧮 determinant of $K$**
+Because $K$ is triangular, its determinant is just the product of the diagonal:
+
+$$ \det K = f_x\,f_y $$
+
+the professor's “product of the two resolution factors”.
+
+**▲ why upper-triangular?**
+Going from the ideal image to pixels only ever **scales the axes, shears them, and offsets the origin** — none of those operations feed the last (homogeneous) coordinate back into the first two rows. Every such 2-D affine map has zeros below the diagonal, so their product $K$ is upper-triangular. (Formally, $K$ falls out of the RQ decomposition of the left $3\times3$ block of $P$, which is defined to give an upper-triangular $K$ and an orthonormal $R$.)
+
+### projection for a camera at the origin
+
+If the camera sits at the world origin looking straight down its axis (no rotation, no translation, so $R=I$ and $\tilde{\mathbf C}=\mathbf 0$), the whole camera collapses to just its intrinsics:
+
+canonical projection (camera at origin)
+
+$$ \mathbf x = K\,[\,I \mid \mathbf 0\,]\,\mathbf X $$
+
+**read it as:** “$[\,I\mid\mathbf 0\,]$ just chops the homogeneous $1$ off $\mathbf X$ to give $(X,Y,Z)$; then $K$ turns that into a pixel.” It's the simplest possible camera — pure intrinsics.
+
+**worked example — project one point through $K$ (illustrative numbers)**
+Let $f_x=f_y=800$ px, principal point $(p_x,p_y)=(320,240)$, skew $s=0$, camera at the origin. A point in front of the camera has camera-frame coordinates $(X,Y,Z)=(0.2,\,0.1,\,2)$.
+
+1. $K[I\mid\mathbf 0]\mathbf X = K\,(0.2,\ 0.1,\ 2)^{\top} = \big(800(0.2)+320(2),\ \ 800(0.1)+240(2),\ \ 2\big) = (800,\ 560,\ 2)$.
+
+2. Dehomogenise (divide by $w=2$): pixel $=(800/2,\ 560/2)=(400,\ 280)$.
+
+3. Check with the shortcut: $u=f_x\tfrac{X}{Z}+p_x=800(0.1)+320=400$; $\ v=f_y\tfrac{Y}{Z}+p_y=800(0.05)+240=280$. ✔️
+
+With a non-zero skew $s$, step 1's first entry would gain a term $s\cdot Y = s(0.1)$ — a small horizontal shear.
+
+## 3.  $K^{-1}$ and normalized (canonical) coordinates
+
+Since $K$ is upper-triangular, so is its inverse $K^{-1}$. Multiplying a pixel by $K^{-1}$ **undoes** the camera's internal calibration:
+
+$$ \hat{\mathbf x} = K^{-1}\mathbf x $$
+
+**🎯 what $K^{-1}\mathbf x$ gives you**
+It returns the point's **normalized (canonical) image coordinates**: the ideal image you'd get from a camera whose **focal plane sits at unit distance** ($f=1$) and whose **axes are parallel to the camera-centred coordinate axes**. In other words, you strip away the pixel scaling, the principal-point offset and the skew, leaving pure direction information.
+
+**intuition:** $K$ is the “make it look like this particular sensor” step; $K^{-1}$ is the “forget which sensor took it” step. Normalized coordinates let different cameras speak the same geometric language.
+
+## 4.  slicing $P$ into blocks: $M$ and $\mathbf p_4$
+
+The professor introduces the working notation. Write the $3\times4$ matrix $P$ as its left $3\times3$ block $M$ plus its last column $\mathbf p_4$:
+
+$$ P = [\,M \mid \mathbf p_4\,],\qquad M = K R \quad(\text{a }3\times3\text{ block}),\qquad \mathbf p_4 = \text{4th column}\ (3\times1) $$
+
+Factor $M$ back out and you reach the **canonical form** of the camera:
+
+$$ P = [\,M \mid \mathbf p_4\,] = M\,[\,I \mid M^{-1}\mathbf p_4\,] = M\,[\,I \mid -\tilde{\mathbf C}\,] $$
+
+**read it as:** “pull $M$ out front, and the leftover last column becomes $-\tilde{\mathbf C}$.” Matching the two forms gives a free formula for the camera centre: $\tilde{\mathbf C} = -M^{-1}\mathbf p_4$.
+
+Two useful decompositions of the same $P$: $\ [\,M\mid\mathbf p_4\,]$ (block + column) and $\ M[\,I\mid-\tilde{\mathbf C}\,]$ (canonical). $M$ itself further splits as $M=KR$ — intrinsics times rotation.
+
+## 5.  properties of the projective camera
+
+**📋 the facts to memorise**
+
+- **Size & rank.** $P$ is $3\times4$ and has **rank 3** (full row rank).
+
+- **Degrees of freedom = 11.** $P$ has $12$ entries but is defined only up to scale (multiply the whole matrix by any non-zero constant and it's the same camera), so one degree is spent — leaving $11$ independent parameters.
+
+- **$11 = 6 + 5$.** Six **extrinsic** parameters (3 for the rotation $R$ + 3 for the translation of the origin) and five **intrinsic** parameters (the $f_x,f_y,s,p_x,p_y$ inside $K$).
+
+$$ \underbrace{11}_{\text{DOF of }P} \;=\; \underbrace{6}_{\text{extrinsic }(R,\ \mathbf t)} \;+\; \underbrace{5}_{\text{intrinsic }(K)} $$
+
+## 6.  from one match to two equations (the cross-product trick)
+
+Suppose experimentally we know a 3-D scene point $\mathbf X_i$ **and** its observed image point $\mathbf x_i=(x_i,\,y_i,\,w_i)^{\top}$. We'd like to use this pair to pin down $P$. The catch: because we're in projective space, $\mathbf x_i$ and $P\mathbf X_i$ are only equal **up to an unknown scale factor** $\lambda$, so we cannot just set their entries equal:
+
+$$ \mathbf x_i \sim P\mathbf X_i \qquad(\text{equal in direction, not in length}) $$
+
+**✖️ kill the scale with a cross product**
+Two vectors that point the **same direction** (differ only by a scale) have a **zero cross product**. So the scale factor simply vanishes if we write:
+
+$$ \mathbf x_i \times (P\mathbf X_i) = \mathbf 0 $$
+
+Write $P$ as three **row** vectors $\mathbf r_1^{\top},\mathbf r_2^{\top},\mathbf r_3^{\top}$ (each $1\times4$). Then $P\mathbf X_i$ is a column of three scalars, and the cross product with $\mathbf x_i$ expands into three equations:
+
+$$ P\mathbf X_i=\begin{bmatrix}\mathbf r_1^{\top}\mathbf X_i\\ \mathbf r_2^{\top}\mathbf X_i\\ \mathbf r_3^{\top}\mathbf X_i\end{bmatrix},\qquad \mathbf x_i \times P\mathbf X_i=\begin{bmatrix} y_i\,\mathbf r_3^{\top}\mathbf X_i - w_i\,\mathbf r_2^{\top}\mathbf X_i\\[2pt] w_i\,\mathbf r_1^{\top}\mathbf X_i - x_i\,\mathbf r_3^{\top}\mathbf X_i\\[2pt] x_i\,\mathbf r_2^{\top}\mathbf X_i - y_i\,\mathbf r_1^{\top}\mathbf X_i \end{bmatrix}=\mathbf 0 $$
+
+Regrouping so the unknown rows $\mathbf r_1,\mathbf r_2,\mathbf r_3$ stand on the right gives the tidy matrix form (note each block is a $1\times4$ row, $\mathbf 0^{\top}$ is a $1\times4$ zero):
+
+$$ \begin{bmatrix} \mathbf 0^{\top} & -w_i\mathbf X_i^{\top} & \ \ y_i\mathbf X_i^{\top}\\[2pt] w_i\mathbf X_i^{\top} & \mathbf 0^{\top} & -x_i\mathbf X_i^{\top}\\[2pt] -y_i\mathbf X_i^{\top} & \ \ x_i\mathbf X_i^{\top} & \mathbf 0^{\top} \end{bmatrix} \begin{bmatrix}\mathbf r_1\\ \mathbf r_2\\ \mathbf r_3\end{bmatrix}=\mathbf 0 $$
+
+**⚠️ only two of the three are independent**
+Multiply row 1 by $x_i$, row 2 by $y_i$, add them — you recover row 3 (times $w_i$). So the third equation is **redundant**: each point correspondence supplies exactly 2 independent equations.
+
+**so, the headcount:** $P$ has 11 unknowns; each match gives 2 equations. You need at least $\lceil 11/2\rceil = 6$ point correspondences (giving $12$ equations) to solve for the camera. 🎯
+
+## 7.  estimating $P$ — the Direct Linear Transform (DLT)
+
+Collect $n$ correspondences. Each contributes $2$ rows, so stacking them gives a tall matrix $A$ of size $2n\times12$ acting on the $12$-vector $\mathbf p$ (all the entries of $P$, read out row by row):
+
+$$ A\,\mathbf p = \mathbf 0,\qquad A\in\mathbb R^{\,2n\times12},\quad \mathbf p=\big(\mathbf r_1;\,\mathbf r_2;\,\mathbf r_3\big)\in\mathbb R^{12} $$
+
+With $n\ge6$ we have more equations than unknowns (an **over-determined** homogeneous system), so we solve it in the **least-squares** sense. Since any scaled $\mathbf p$ is also a solution, we pin the scale with the constraint $\lVert\mathbf p\rVert=1$:
+
+DLT objective
+
+$$ \min_{\mathbf p}\ \lVert A\mathbf p\rVert \quad\text{subject to}\quad \lVert\mathbf p\rVert = 1 $$
+
+**🛠️ how to actually solve it**
+
+- **Eigenvector route:** the minimiser is the **eigenvector of $A^{\top}A$ with the smallest eigenvalue** (equivalently, the last right-singular vector of $A$). Reshape that 12-vector back into $P$.
+
+- **Non-homogeneous route:** fix one element of $\mathbf p$ to a value and solve the remaining ordinary least-squares system.
+
+- This is the very same **Direct Linear Transform** machinery used earlier to estimate a homography — identical recipe, bigger matrix.
+
+## 8.  reading geometry straight off $P$
+
+### the camera centre is $P$'s null-space
+
+The camera centre $\tilde{\mathbf C}$ is a **singular point**: you cannot photograph the very point light rays pass through — there is no ray joining a point to itself. In projective terms the homogeneous centre $\mathbf C=(\tilde{\mathbf C};1)$ maps to the zero vector:
+
+$$ P\,\mathbf C = \mathbf 0 $$
+
+Split $P=[\,M\mid\mathbf p_4\,]$ and multiply out: $\ M\tilde{\mathbf C}+\mathbf p_4=\mathbf 0$, which rearranges to the formula we already glimpsed:
+
+camera centre (finite camera)
+
+$$ \tilde{\mathbf C} = -\,M^{-1}\,\mathbf p_4 $$
+
+**read it as:** “grab the left $3\times3$ block $M$, invert it, and multiply the last column — negated — to get where the camera is.” Valid whenever $M$ is invertible.
+
+**🔎 finite vs. camera-at-infinity**
+For a **finite** camera $M$ is **non-singular** and the formula above works. For a camera **at infinity** the centre is itself a **point at infinity**, so its homogeneous scale factor is $0$ and $M$ turns out **singular** ($M^{-1}$ does not exist, so $-M^{-1}\mathbf p_4$ is unavailable). The professor writes the centre directly in homogeneous form as the **null-direction of $M$**:
+
+$$ \mathbf C=\begin{bmatrix}\mathbf d\\[2pt] 0\end{bmatrix},\qquad M\,\mathbf d=\mathbf 0 $$
+
+i.e. solve for the direction $\mathbf d$ that $M$ collapses to zero, and stack a $0$ underneath it (the last coordinate $0$ marks a point on the plane at infinity). This singular case is elaborated in the next lecture.
+
+**worked example — camera centre from $M,\mathbf p_4$ (illustrative)**
+Say a solved camera has left block $M=I$ (identity, illustrative) and last column $\mathbf p_4=(2,-3,5)^{\top}$.
+
+1. $M^{-1}=I$, so $M^{-1}\mathbf p_4=(2,-3,5)^{\top}$.
+
+2. $\tilde{\mathbf C}=-M^{-1}\mathbf p_4=(-2,\ 3,\ -5)^{\top}$ — the camera sits at that world location.
+
+### the columns of $P$ are vanishing points
+
+Write $P$ as four columns $[\,\mathbf p_1\ \mathbf p_2\ \mathbf p_3\ \mathbf p_4\,]$. A **vanishing point** is the image of a **point at infinity** along some direction $\mathbf d$ — all world lines parallel to $\mathbf d$ appear to converge there. A point at infinity is written $(\mathbf d;\,0)$ (last coordinate $0$). Feed the axis directions in:
+
+$$ P\begin{bmatrix}1\\0\\0\\0\end{bmatrix}=\mathbf p_1,\quad P\begin{bmatrix}0\\1\\0\\0\end{bmatrix}=\mathbf p_2,\quad P\begin{bmatrix}0\\0\\1\\0\end{bmatrix}=\mathbf p_3,\quad P\begin{bmatrix}0\\0\\0\\1\end{bmatrix}=\mathbf p_4 $$
+
+**🧭 the four columns, decoded**
+
+- $\mathbf p_1$ = vanishing point of the **world X-axis**
+
+- $\mathbf p_2$ = vanishing point of the **world Y-axis**
+
+- $\mathbf p_3$ = vanishing point of the **world Z-axis**
+
+- $\mathbf p_4$ = image of the **world origin** $(0,0,0)$ — since $(0,0,0,1)^{\top}$ picks out the last column
+
+#### a vanishing point: parallel rails meet at the image of infinity
+
+[diagram text: horizon | vanishing point = image of the point at infinity | parallel world lines (same direction d)]
+
+All lines sharing a direction $\mathbf d$ project to lines meeting at one image point — the vanishing point $P\,(\mathbf d;0)$. The three axis directions give the columns $\mathbf p_1,\mathbf p_2,\mathbf p_3$.
+
+### $P = K[R\mid\mathbf t]$: intrinsics $K$ turn metres into pixels, extrinsics $R,\mathbf t$ place the camera.
+
+$K$ = upper-triangular ($f_x,f_y,s,p_x,p_y$) · 11 DOF = 6 + 5 · 6 matches → DLT recovers $P$ · centre $=-M^{-1}\mathbf p_4$, columns = vanishing points.
+
+### Self-check quiz
+
+1. Write the calibration matrix $K$ and name what $f_x$ and $p_x$ mean.
+
+→ Answer: $K=\begin{bmatrix}f_x&s&p_x\\0&f_y&p_y\\0&0&1\end{bmatrix}$; $f_x=f\,m_x$ is the focal length in pixels along x, $p_x$ is the principal-point column (where the optical axis meets the sensor)
+
+2. A projective camera $P$ has how many degrees of freedom, and how do they split?
+
+→ Answer: 11 total = 6 extrinsic (3 rotation + 3 translation) + 5 intrinsic ($f_x,f_y,s,p_x,p_y$)
+
+3. One point correspondence gives how many independent equations, and why not three?
+
+→ Answer: 2 — the cross-product $\mathbf x_i\times P\mathbf X_i=\mathbf 0$ yields 3 rows, but one is a linear combination of the other two, so it's redundant; hence you need ≥ 6 matches
+
+4. Given $P=[\,M\mid\mathbf p_4\,]$ with $M$ non-singular, where is the camera centre?
+
+→ Answer: $\tilde{\mathbf C}=-M^{-1}\mathbf p_4$, obtained from $P\mathbf C=\mathbf 0$
+
+— end of Lecture 12 notes ✏️
+
+# LECTURE 13 — Camera Geometry — Part III
+
+reading a camera out of its matrix P — centre, vanishing points, principal point, back-projection, depth
+
+🧠 the big picture, first
+
+The $3\times4$ matrix $P$ isn't just a projector — it's a **treasure chest**. Slice it the right way and it hands you the camera's centre, its viewing directions, its principal point, and the depth of any point — all by simple linear algebra.
+
+This lecture is a toolbox of "given $P$, extract ___" recipes. Learn which slice of $P$ answers which question. 🔑
+
+## 1.  three ways to slice $P$
+
+$$ P=[\,M\mid \mathbf p_4\,]=[\,\mathbf p_1\ \mathbf p_2\ \mathbf p_3\ \mathbf p_4\,]=\begin{bmatrix}\mathbf r_1^{T}\\ \mathbf r_2^{T}\\ \mathbf r_3^{T}\end{bmatrix} $$
+
+$M$ = the left $3\times3$ block, $\mathbf p_4$ = the 4th column; $\mathbf p_i$ = columns; $\mathbf r_i^{T}$ = rows. Each slice reveals something different. 👇
+
+## 2.  the camera centre = the null-space of $P$
+
+The camera centre $C$ is the one point with **no image** — you can't draw a ray from the centre to itself. Mathematically it's killed by $P$:
+
+centre = right null vector
+
+$$ P\,\mathbf C=\mathbf 0 \quad\Rightarrow\quad \tilde{\mathbf C}=-\,M^{-1}\mathbf p_4 $$
+
+**read it as:** plug $\mathbf C=(\tilde{\mathbf C},1)$ into $[M\mid\mathbf p_4]\mathbf C=\mathbf 0$ ⇒ $M\tilde{\mathbf C}+\mathbf p_4=\mathbf 0$ ⇒ $\tilde{\mathbf C}=-M^{-1}\mathbf p_4$.
+
+If $M$ is **singular** (not invertible), the centre lies **at infinity** — a direction, written $\mathbf C=(\mathbf d,0)$ found as the null vector of $M$ ($M\mathbf d=\mathbf 0$). That's an affine camera (next lecture).
+
+**🧮 the same thing by Cramer's rule (no explicit inverse)**
+Writing $P=[\,\mathbf p_1\ \mathbf p_2\ \mathbf p_3\ \mathbf p_4\,]$ by columns, the centre's coordinates are ratios of $3\times3$ column determinants:
+
+$$ X=\det[\mathbf p_2\,\mathbf p_3\,\mathbf p_4],\ \ Y=-\det[\mathbf p_1\,\mathbf p_3\,\mathbf p_4],\ \ Z=\det[\mathbf p_1\,\mathbf p_2\,\mathbf p_4],\ \ T=-\det[\mathbf p_1\,\mathbf p_2\,\mathbf p_3] $$
+
+giving $\mathbf C=(X,Y,Z,T)^{T}$ (de-homogenise by $T$). This is just Cramer's rule applied to $M\tilde{\mathbf C}=-\mathbf p_4$, and it works even when you'd rather not invert $M$.
+
+## 3.  the columns = vanishing points
+
+Project a point at infinity along an axis (e.g. $\mathbf X=(1,0,0,0)^{T}$ for the X-direction). The result is just a column of $P$:
+
+**🧭 columns tell you where axes vanish**
+
+- $\mathbf p_1$ = vanishing point of the **X-axis** (image of its point at infinity).
+
+- $\mathbf p_2$ = vanishing point of the **Y-axis**; $\ \mathbf p_3$ = vanishing point of the **Z-axis**.
+
+- $\mathbf p_4$ = image of the **world origin** $(0,0,0,1)^{T}$ (a real, finite point — scale is 1, not 0).
+
+In general the vanishing point of any direction $\mathbf d$ is $M\mathbf d$ — **only $M$ matters** for vanishing points (the translation $\mathbf p_4$ drops out).
+
+## 4.  the rows = planes; the principal point
+
+Each row $\mathbf r_i^{T}$ defines a plane $\mathbf r_i^{T}\mathbf X=0$ of world points that image onto a special image line:
+
+- $\mathbf r_3^{T}\mathbf X=0$ — the **principal plane** (parallel to the image plane, through the centre; its points image at infinity, scale = 0).
+
+- $\mathbf r_1^{T}\mathbf X=0$ and $\mathbf r_2^{T}\mathbf X=0$ — the two **axis planes** (imaged onto the image $Y$- and $X$-axes).
+
+Let $\mathbf m_3^{T}$ be the third row of $M$ (i.e. $(p_{31},p_{32},p_{33})$) — it's the **normal direction of the principal plane**, so it points along the **principal ray**. The **principal point** is its image:
+
+$$ \mathbf x_0=M\,\mathbf m_3,\qquad \text{principal-ray direction}=\det(M)\,\mathbf m_3 $$
+
+(Multiplying by $\det(M)$ fixes the sign so the ray points the right way — towards the scene, not behind the camera.)
+
+## 5.  back-projection & depth
+
+A pixel $\mathbf x$ came from a whole **ray**. That ray passes through the centre $\tilde{\mathbf C}$ in the direction $M^{-1}\mathbf x$, so every world point on it is:
+
+back-projected ray
+
+$$ \tilde{\mathbf X}(\lambda)=\tilde{\mathbf C}+\lambda\,M^{-1}\mathbf x $$
+
+To get a single point you need one more constraint (a known plane, or a known distance). And the **depth** of a scene point $\tilde{\mathbf X}$ is its distance along the principal axis — the projection onto the unit principal-ray direction:
+
+$$ \text{depth}=\hat{\mathbf m}_3^{T}\big(\tilde{\mathbf X}-\tilde{\mathbf C}\big) $$
+
+## 6.  recovering K, R, C from P
+
+Since $M=KR$ with $K$ upper-triangular and $R$ orthogonal, this is exactly what an **RQ decomposition** produces:
+
+**🧩 the recipe**
+
+1. RQ-decompose $M \to$ upper-triangular $\times$ orthogonal $= K\,R$. Read the 5 intrinsics off $K$, the rotation off $R$.
+
+2. Camera centre $\tilde{\mathbf C}=-M^{-1}\mathbf p_4$; translation $\mathbf t=-R\tilde{\mathbf C}$.
+
+3. Fix signs so $K$ has positive focal lengths (the decomposition is unique up to that sign convention).
+
+### $P$ is a treasure chest: centre = its null-space, columns = vanishing points, rows = planes, $M=KR$.
+
+$\tilde{\mathbf C}=-M^{-1}\mathbf p_4$; $\mathbf p_{1,2,3}$ = axis vanishing points; principal point $=M\mathbf m_3$; decompose with RQ.
+
+### Self-check quiz
+
+1. How do you find the camera centre from $P=[M\mid\mathbf p_4]$?
+
+→ Answer: it's the null-space of $P$: $\tilde{\mathbf C}=-M^{-1}\mathbf p_4$
+
+2. What does the 4th column $\mathbf p_4$ of $P$ represent?
+
+→ Answer: the image of the world origin $(0,0,0,1)^{T}$
+
+3. Which row of $P$ gives the principal plane, and what's special about it?
+
+→ Answer: the third row: $\mathbf r_3^{T}\mathbf X=0$ — the plane through the centre parallel to the image plane
+
+4. How are the intrinsics $K$ and rotation $R$ recovered from $P$?
+
+→ Answer: RQ-decompose the left block $M=KR$ ($K$ upper-triangular, $R$ orthogonal)
+
+— end of Lecture 13 notes ✏️
+
+# LECTURE 14 — Camera Geometry — Part IV
+
+worked problems on P · the affine camera · imaging a plane/line · views from a fixed centre (rotation & zoom)
+
+🧠 the big picture, first
+
+Two halves today. First we **practise** the "read-off-$P$" recipes from Lecture 13 on real problems (exam style!). Then we meet two important special cases: the **affine camera** and what happens when the camera **only rotates or zooms** — which quietly brings back the homography.
+
+## 1.  worked problem — extracting geometry from $P$
+
+**given a projection matrix $P=[\,M\mid\mathbf p_4\,]$, find…**
+
+1. **Camera centre:** $\tilde{\mathbf C}=-M^{-1}\mathbf p_4$ (invert $M$ via cofactors/determinant). Leave it in world 3-D coords — don't "de-homogenise".
+
+2. **Vanishing point of the X-axis:** $P\,(1,0,0,0)^{T}=\mathbf p_1$ (the first column of $P$). To read it as an image point, **divide by its last coordinate**. (e.g. $\mathbf p_1=(a,b,c)^{T}\to(a/c,\,b/c)$ — illustrative)
+
+3. **Image of the origin:** $P\,(0,0,0,1)^{T}=\mathbf p_4$. His example gives $(1,1,1)^{T}\to(1,1)$.
+
+4. **Vanishing point of a direction with direction-cosines $(4\!:\!3\!:\!2)$:** $P\,(4,3,2,0)^{T}=M(4,3,2)^{T}$, then divide by the last coordinate to read the image point.
+
+Rule of thumb: **direction** (scale 0) ⇒ vanishing point; **finite point** (scale 1) ⇒ ordinary image point.
+
+## 2.  worked problem — back-projecting to a known distance
+
+**image point $(2,7)$ is 40 units from the centre — find the 3-D point**
+
+1. Camera centre: $\tilde{\mathbf C}=-M^{-1}\mathbf p_4$.
+
+2. Ray direction: $\mathbf d=M^{-1}(2,7,1)^{T}$ (back-project the homogeneous pixel).
+
+3. Walk 40 units along the unit direction: $\ \tilde{\mathbf X}=\tilde{\mathbf C}+40\,\dfrac{\mathbf d}{\lVert\mathbf d\rVert}$.
+
+A single image gives a ray; the extra "distance = 40" constraint picks the one point on it. 🎯
+
+**📐 bonus recipes on the same $P$**
+
+- **Principal plane** = last row: $\mathbf r_3^{T}\mathbf X=0$, e.g. $(1,-5,8,1)\Rightarrow x-5y+8z+1=0$.
+
+- **Dihedral angle** between planes $x_1Ox_2$ and $x_3Ox_4$ (through the centre $O$): each plane is $\boldsymbol\pi=P^{T}(\mathbf x_i\times\mathbf x_j)$; take unit normals, $\cos^{-1}$ of their dot product. His answer: $\approx 53.75^{\circ}$.
+
+- **Shortcut for a camera at the origin** (canonical, $f=1$, no $P$ given): a homogeneous image point $\mathbf x=(x,y,1)^{T}$ is the direction of its ray from $O$. So the plane through $O$ and two image points $\mathbf x_1,\mathbf x_2$ has **normal** $\ \mathbf n=\mathbf x_1\times\mathbf x_2$, and the **unit** normal is $\mathbf n/\lVert\mathbf n\rVert$. (This is $\boldsymbol\pi=P^{T}(\mathbf x_1\times\mathbf x_2)$ with $P^{T}\to I$, and it's what you use when only image points — not $P$ or $K$ — are given.)
+
+## 3.  the affine camera (centre at infinity)
+
+What if $M$ is **singular**? Then the centre sits at infinity and the camera projects with **parallel rays** instead of converging ones — an **affine camera**. Canonically its last row is $(0,0,0,1)$.
+
+**🧊 properties of the affine camera**
+
+- Its **principal plane is the plane at infinity**, and the centre lies on it.
+
+- **Points at infinity map to points at infinity** ⇒ parallel lines stay parallel in the image (no vanishing points).
+
+- The relation simplifies to plain Euclidean coordinates: $\ \tilde{\mathbf x}=M_{2\times3}\,\tilde{\mathbf X}+\mathbf t$ (no divide-by-$Z$!).
+
+- **8 DOF** ($M_{2\times3}$ has 6, $\mathbf t$ has 2) — so **4 point correspondences** suffice; more points ⇒ linear least-squares. ($M_{2\times3}$ must be rank 2.)
+
+A good model when the object is small & far (weak perspective) — the maths gets much friendlier.
+
+## 4.  imaging a plane = a homography
+
+Put a scene **plane** at $Z=0$ (always possible by choosing coordinates). Then a point on it is $(X,Y,0,1)^{T}$, and $P\mathbf X$ drops its 3rd column:
+
+$$ \mathbf x=[\,\mathbf p_1\ \mathbf p_2\ \mathbf p_4\,]\begin{bmatrix}X\\Y\\1\end{bmatrix}=H_{3\times3}\begin{bmatrix}X\\Y\\1\end{bmatrix} $$
+
+**key takeaway:** the perspective image of a **plane** is a $3\times3$ **homography** between the plane and the image — exactly the map from Week 2. That's why rectifying a planar signboard worked.
+
+## 5.  imaging a 3-D line
+
+A 3-D line images to a 2-D line $\mathbf l$. The camera centre and the 3-D line span a **plane**, and that plane is simply:
+
+$$ \boldsymbol\pi=P^{T}\mathbf l $$
+
+Proof in one line: image points satisfy $\mathbf l^{T}\mathbf x=0=\mathbf l^{T}P\mathbf X=(P^{T}\mathbf l)^{T}\mathbf X$ — a point-on-plane relation with plane $P^{T}\mathbf l$.
+
+## 6.  two views from the same centre — rotation & zoom
+
+If the camera stays put ($\tilde{\mathbf C}$ fixed) but **rotates** or changes intrinsics, the two images of any scene are related by a homography — regardless of depth:
+
+same-centre homography
+
+$$ \mathbf x_2=H\,\mathbf x_1,\qquad H=K_2R_2\,(K_1R_1)^{-1} $$
+
+Special case — pure **zoom** (no rotation, image planes parallel, focal-length ratio $k$): the calibration just scales,
+
+$$ K_2=K_1\,\operatorname{diag}(k,k,1),\qquad H=K_2K_1^{-1} $$
+
+so zooming multiplies displacements from the principal point by $k$ — a similarity about the principal point. This is the geometry behind panorama **stitching** (rotate-only) and digital zoom.
+
+### read $P$ for centre/vanishing-points/planes; parallel rays ⇒ affine camera; a plane images as a homography.
+
+image of a plane = 3×3 H; image of a line's plane = $P^{T}\mathbf l$; rotate/zoom about a fixed centre = homography $K_2R_2(K_1R_1)^{-1}$.
+
+### Self-check quiz
+
+1. You project the point at infinity $(4,3,2,0)^{T}$. Is the result a vanishing point or an ordinary image point, and how do you read it off?
+
+→ Answer: a vanishing point ($=M(4,3,2)^{T}$); divide by its last coordinate to get the 2-D image location
+
+2. What geometric feature makes a camera "affine", and what does it do to parallel lines?
+
+→ Answer: its centre is at infinity (M singular, last row $(0,0,0,1)$) → parallel projection → parallel lines stay parallel (no vanishing points)
+
+3. The image of a planar scene is what kind of transformation?
+
+→ Answer: a $3\times3$ homography between the scene plane and the image
+
+4. Two photos from the same centre (camera only rotates) are related how?
+
+→ Answer: by a homography $H=K_2R_2(K_1R_1)^{-1}$ — independent of scene depth (basis of panorama stitching)
+
+— end of Lecture 14 notes ✏️
+
+# LECTURE 15 — Camera Geometry — Part V
+
+conjugate-rotation homography · vanishing points & lines · panorama mosaicing · single-view wrap-up
+
+🧠 the big picture, first
+
+We close single-view geometry with the **payoffs**: rotating a camera gives a special homography that literally encodes the rotation angle; vanishing points let us recover directions and rotations; and stitching it all together builds **panoramas**.
+
+## 1.  the conjugate-rotation homography
+
+Fix the camera centre and only **rotate** it by $R$ (intrinsics $K$ unchanged). Then $P_1=K[I\mid\mathbf 0]$ and $P_2=K[R\mid\mathbf 0]$, and the two images relate by:
+
+rotation homography
+
+$$ \mathbf x'=H\mathbf x,\qquad H=K\,R\,K^{-1} $$
+
+Because $H$ is **similar** to the rotation $R$, it shares $R$'s eigenvalues:
+
+$$ \text{eig}(H)=\big\{\,\mu,\ \mu e^{\,i\theta},\ \mu e^{-i\theta}\,\big\} $$
+
+**🌀 two gifts from this "conjugate rotation"**
+
+- The complex eigenvalues give the **rotation angle $\theta$** directly — you can measure how much the camera turned between two shots.
+
+- The eigenvector of the **real** eigenvalue is the **vanishing point of the rotation axis**.
+
+## 2.  two applications: rectification & mosaicing
+
+**🖼️ synthetic fronto-parallel views**
+Photograph an oblique planar surface, pick target corners with the true aspect ratio, compute the homography, and warp → a straightened, **fronto-parallel** view (rectification, as in Week 2).
+
+**🌄 panoramic mosaicing**
+A camera with a narrow field of view **rotates** to capture a wide scene. Each view relates to a reference by a homography $H_i$; warp them all onto one reference plane and blend → a single **panorama**. (Rotation-only ⇒ depth doesn't matter.)
+
+## 3.  vanishing points, properly
+
+A **vanishing point** is the image of a **point at infinity** — geometrically, where the line through the camera centre parallel to a scene line $L$ meets the image plane. All lines in direction $\mathbf d$ share one vanishing point:
+
+vanishing point of direction d
+
+$$ \mathbf v=K\mathbf d\quad(\text{no rotation}),\qquad \mathbf v=KR\,\mathbf d\quad(\text{rotated camera}) $$
+
+**read it as:** a vanishing point depends only on **direction + $K$ (+ rotation)** — **not** on the camera's position. Translate the camera and vanishing points stay put. 🌙 That's why the **moon seems to follow you** as you walk: pure translation, so its (near-infinite) direction — and thus its image position — doesn't change.
+
+**Payoff:** if you can measure vanishing points (intersect images of parallel lines) and you know $K$, then $\mathbf d\propto K^{-1}\mathbf v$ recovers 3-D directions — and two such directions constrain the **rotation** $R$ (it's orthonormal + has one angle).
+
+## 4.  the vanishing line of a plane (the horizon)
+
+Every vanishing point of every line lying in a plane $\pi$ falls on a single image line — the **vanishing line** (the plane's **horizon**). Geometrically it's where the plane through the camera centre parallel to $\pi$ meets the image plane.
+
+The 3-D plane through the centre and an image line $\mathbf l$ is $\boldsymbol\pi=P^{T}\mathbf l$; its first three entries are the **plane normal**. For a canonical camera $K[I\mid0]$ the normal direction is simply $K^{T}\mathbf l$.
+
+**worked exercise — normal of a plane from its horizon**
+A line images as $3x+4y=5$, i.e. $\mathbf l=(3,4,-5)^{T}$, and it is the **horizon** of some plane. Find that plane's normal.
+
+1. Plane through centre & line: $\boldsymbol\pi=P^{T}\mathbf l$ → (professor's numbers) $7x+4y+8\ldots z+\ldots=0$.
+
+2. The **normal** is the first three components of $\boldsymbol\pi$; normalise to a unit vector. ✅
+
+To get a vanishing line in practice: take several sets of parallel lines in the plane, find each set's vanishing point, and join them.
+
+## 5.  single-view geometry — the whole cheat-sheet
+
+**📌 everything encoded in $P=[\,M\mid\mathbf p_4\,]$**
+| you want… | read it as |
+| camera centre | $\tilde{\mathbf C}=-M^{-1}\mathbf p_4$ (affine: null-vector of $M$) |
+| vanishing point of direction $\mathbf d$ | $M\mathbf d$ (columns $\mathbf p_1,\mathbf p_2,\mathbf p_3$ = X,Y,Z axes) |
+| image of world origin | $\mathbf p_4$ |
+| principal plane / point | $\mathbf r_3^{T}\mathbf X=0$ / $\ \mathbf x_0=M\mathbf m_3$ |
+| back-projected ray | $\tilde{\mathbf X}(\lambda)=\tilde{\mathbf C}+\lambda M^{-1}\mathbf x$ |
+| plane of an image line $\mathbf l$ | $\boldsymbol\pi=P^{T}\mathbf l$ |
+| recover $K,R$ | RQ-decompose $M=KR$ |
+
+**DOF:** full projective camera = 11 (5 intrinsic + 6 extrinsic), needs ≥ 6 point correspondences to estimate. **Affine camera** = 8 DOF, needs ≥ 4. Next up: **two-view / stereo** geometry. ➡️
+
+### rotate a camera → $H=KRK^{-1}$ (its eigenvalues give the angle); vanishing points depend on direction, not position.
+
+$\mathbf v=KR\mathbf d$; a plane's horizon = image of the parallel plane through the centre; stitch rotation-homographies → panoramas.
+
+### Self-check quiz
+
+1. Two photos from the same centre differ by a camera rotation $R$. What is the homography between them, and what can its eigenvalues tell you?
+
+→ Answer: $H=KRK^{-1}$; its complex eigenvalues $\mu e^{\pm i\theta}$ reveal the rotation angle $\theta$
+
+2. Why does a vanishing point not move when you translate (but don't rotate) the camera?
+
+→ Answer: it depends only on direction and $K$ ($\mathbf v=K\mathbf d$), not on camera position — the "moon follows you" effect
+
+3. What is the vanishing line of a plane, geometrically?
+
+→ Answer: the horizon — where the plane through the camera centre parallel to that plane meets the image; all the plane's vanishing points lie on it
+
+4. Given a known $K$ and a measured vanishing point $\mathbf v$, how do you get the 3-D direction?
+
+→ Answer: $\mathbf d \propto K^{-1}\mathbf v$ (then normalise)
+
+— end of Lecture 15 · end of Week 3 ✏️🎉
+
+==============================================================================
+PART: ASSIGNMENT SOLUTION
+==============================================================================
+
+# Week 3 — Camera Geometry — assignment solution
+(source: NPTEL, 7 PDF pages; fractions/matrices from the PDF may be flattened in this text)
+
+Nptel Online Certification Course: Computer Vision
+Week 3: Single View Camera Geometry
+Type of questions: MCQ/MSQ
+Number of questions: 10
+Total marks: 10 X 2 = 20
+QUESTION 1:
+Type:MCQ
+A camera center is at the origin and the image plane is parallel to the XY-plane at distance
+f = 0.8. The perspective projection of the world point (2, 4, 5) is:
+(a)
+
+8
+25, 16
+25
+
+(b)
+
+2
+5, 4
+5
+
+(c)
+
+5
+8, 5
+4
+
+(d)
+
+4
+5, 8
+5
+
+Correct Answer: (a)
+Solution: Using perspective projection,
+(x, y) =
+ f X
+Z , fY
+Z
+!
+QUESTION 2:
+Type:MCQ
+If the principal point is (1, 2), what are the image coordinates of the world point (4, 6, 8) for a
+pinhole camera with f = 1?
+(a) (1.25, 2.5)
+(b) (2, 2.5)
+(c) (1.5, 2.75)
+(d) (1.75, 2.75)
+Correct Answer: (c)
+Solution: With principal point (px, py),
+x = f X
+Z + px,
+y = fY
+Z + py
+QUESTION 3:
+Type:MCQ
+Given P = K[R | −RC] where f = 2, principal point (1, 3), R = I, and camera center
+C = (2, 1, 1), find the projection matrix.
+(a)
+
+2
+0
+1
+−4
+0
+2
+3
+−6
+0
+0
+1
+−1
+
+(b)
+
+2
+0
+1
+−6
+0
+2
+3
+−8
+0
+0
+1
+−1
+
+(c)
+
+2
+0
+1
+−5
+0
+2
+3
+−5
+0
+0
+1
+−1
+
+(d)
+
+2
+0
+1
+−3
+0
+2
+3
+−5
+0
+0
+1
+−1
+
+Correct Answer: (c)
+Solution: The calibration matrix is
+K =
+
+f
+0
+px
+0
+f
+py
+0
+0
+1
+=
+
+2
+0
+1
+0
+2
+3
+0
+0
+1
+
+Since R = I,
+P = K[I | −C]
+and
+−C = (−2, −1, −1)T
+K(−C) =
+
+2
+0
+1
+0
+2
+3
+0
+0
+1
+
+
+−2
+−1
+−1
+=
+
+−5
+−5
+−1
+
+P =
+
+2
+0
+1
+−5
+0
+2
+3
+−5
+0
+0
+1
+−1
+
+QUESTION 4:
+Type:MCQ
+For the projection matrix
+P =
+
+1
+0
+2
+−4
+0
+1
+1
+−2
+0
+0
+1
+−1
+,
+find the camera center in homogeneous coordinates.
+(a) (4, 2, 1, 1)
+(b) (2, 1, 1, 1)
+(c) (1, 1, 1, 1)
+(d) (2, 2, 1, 1)
+Correct Answer: (b)
+Solution: Let M be the left 3 × 3 block and p4 be the last column. Then
+C = (−M−1p4, 1)
+Here,
+M =
+
+1
+0
+2
+0
+1
+1
+0
+0
+1
+,
+p4 =
+
+−4
+−2
+−1
+
+QUESTION 5:
+Type:MCQ
+If the principal point (px, py), focal length f, orientation R, and camera center C of a pinhole
+camera are given by (2, 1), 1,
+R =
+
+1
+0
+0
+0
+0.8
+0.6
+0
+−0.6
+0.8
+
+and (1, 2, 3), respectively, compute the 3 × 4 projection matrix P.
+(a)
+
+1
+−1.2
+1.6
+−3.4
+0
+0.2
+1.4
+−4.6
+0
+−0.6
+0.8
+−1.2
+
+(b)
+
+1
+−1.2
+1.6
+−2.4
+0
+0.2
+1.4
+−3.6
+0
+−0.6
+0.8
+−1.2
+
+(c)
+
+1
+−1.2
+1.6
+−3.4
+0
+0.2
+1.4
+−3.6
+0
+−0.6
+0.8
+−2.4
+
+(d)
+
+1
+−1.2
+1.6
+−1.4
+0
+0.2
+1.4
+−4.6
+0
+−0.6
+0.8
+−1.2
+
+Correct Answer: (a)
+Detailed Solution: The projection matrix is
+P = KR[I | −C]
+where the calibration matrix is
+K =
+
+f
+0
+px
+0
+f
+py
+0
+0
+1
+=
+
+1
+0
+2
+0
+1
+1
+0
+0
+1
+.
+First compute
+KR =
+
+1
+0
+2
+0
+1
+1
+0
+0
+1
+
+
+1
+0
+0
+0
+0.8
+0.6
+0
+−0.6
+0.8
+=
+
+1
+−1.2
+1.6
+0
+0.2
+1.4
+0
+−0.6
+0.8
+.
+Now,
+−C = (−1, −2, −3)T.
+So the last column is
+KR(−C) =
+
+1
+−1.2
+1.6
+0
+0.2
+1.4
+0
+−0.6
+0.8
+
+
+−1
+−2
+−3
+=
+
+−3.4
+−4.6
+−1.2
+.
+QUESTION 6:
+Type:MCQ
+Given the projection matrix
+P =
+
+1
+0
+1
+0
+0
+2
+1
+0
+0
+0
+1
+0
+,
+find the vanishing point of a line with direction ratio 2 : 3 : 4.
+(a) (1.5, 2.5)
+(b) (1, 2)
+(c) (2, 3)
+(d) (0.25, 0.75)
+Correct Answer: (a)
+Solution: The vanishing point is
+v = P(a, b, c, 0)T
+with (a, b, c) = (2, 3, 4). Thus,
+v =
+
+2 + 4
+6 + 4
+4
+=
+
+6
+10
+4
+
+In inhomogeneous coordinates,
+ 6
+4, 10
+4
+!
+= (1.5, 2.5)
+QUESTION 7:
+Type:MCQ
+For a camera center C = (1, 2, 3) and direction vector (2, 1, 2), find the scene point at distance
+6 units from the center along that ray.
+(a) (2, 3, 4)
+(b) (3, 3, 5)
+(c) (4, 3, 6)
+(d) (5, 4, 7)
+Correct Answer: (d)
+Solution: The unit direction vector is
+(2, 1, 2)
+√
+22 + 12 + 22 = (2, 1, 2)
+3
+So the point at distance 6 is
+X = C + 6 · (2, 1, 2)
+3
+X = (1, 2, 3) + 6 · (2, 1, 2)
+3
+= (5, 4, 7)
+QUESTION 8:
+Type:MCQ
+Given two image points x1 = (1, 0), x2 = (2, 2) and camera center O at the origin, find the
+unit normal to the plane Ox1x2.
+a)
+
+−2
+3, 1
+3, 2
+3
+!
+b)
+ 2
+3, −1
+3, 2
+3
+!
+c)
+
+−1
+3, 2
+3, 2
+3
+!
+d)
+ 1
+3, 1
+3, 1
+3
+!
+Correct Answer: (a)
+The plane Ox1x2 passes through the camera center O = (0, 0, 0) and x1 and x2. In
+homogeneous coordinates obtain the 3D rays:
+r1 =
+
+1
+0
+1
+,
+r2 =
+
+2
+2
+1
+.
+The normal to the plane is given by the cross product:
+n = r1 × r2 =
+
+i
+j
+k
+1
+0
+1
+2
+2
+1
+
+= i(0 · 1 −1 · 2) −j(1 · 1 −1 · 2) + k(1 · 2 −0 · 2) = (−2, 1, 2)T.
+Magnitude:
+∥n∥=
+p
+(−2)2 + 12 + 22 =
+√
+4 + 1 + 4 =
+√
+9 = 3.
+The unit normal:
+ˆn = n
+∥n∥= 1
+3
+
+−2
+1
+2
+=
+
+−2
+3, 1
+3, 2
+3
+!
+.
+QUESTION 9:
+Type:MCQ
+For a camera with f = 1, principal point (2, 1), and world point (5, 3, 5), what is the image
+point?
+(a) (3, 9
+5)
+(b) (3, 8
+5)
+(c) (7
+5, 8
+5)
+(d) (8
+5, 3)
+Correct Answer: (b)
+Solution: Using
+x = f X
+Z + px,
+y = fY
+Z + py
+QUESTION 10:
+Type:MCQ
+Consider a pinhole camera with camera center at the origin and image plane Z = f. A 3D
+point X = (2, 4, 2) is projected onto the image plane with f = 1. Which statements are
+correct?
+(a) The image point is (2, 4).
+(b) The projected point lies on the ray passing through the camera center and the 3D point.
+(c) If the focal length is doubled, the image point also doubles in magnitude.
+(d) The projection preserves straight lines in 3D not passing through the camera center as
+straight lines in the image.
+Correct options: (b), (c), (d)
+Solution: For a pinhole camera,
+(x, y) =
+ f X
+Z , fY
+Z
+!
+.
+With f = 1 and X = (2, 4, 2),
+(x, y) =
+ 2
+2, 4
+2
+!
+= (1, 2).
+So option (a) is false. The projection lies on the same ray from the camera center to the point,
+so (b) is true. Since image coordinates are proportional to f, doubling f doubles the
+projected coordinates, so (c) is true. A central projection maps 3D straight lines to 2D
+straight lines, so (d) is true.
+
+==============================================================================
+PART: LECTURE SLIDES
+==============================================================================
+
+# Week 3 — lecture slides
+(source: NPTEL, 51 slides; text layer, plus OCR on 31 image-heavy slides — OCR can contain errors and equations may be garbled; the transcript and notes are authoritative)
+
+### Slide 1
+Camera Geometry
+(Week 03 – Lectures 11 – 15)
+Jayanta Mukhopadhyay
+Dept. of Computer Science and Engg.
+
+### Slide 2
+Image formation in optical
+camera
+
+### Slide 3
+Pinhole camera
+P (X,Y,Z)
+p(x,y)
+Image plane
+Camera Center
+Image coordinate
+World coordinate
+Focal
+length
+Principal plane
+(XY-plane)
+Principal axis
+
+### Slide 4 (OCR)
+Pinhole Camera: 0 Z
+{ Mapping from P?>P2 y=
+x) TfX]) Tf 0 o<or[*
+b]=|rr|=[o f <0 ff!
+uooLz 0.0)1 01];
+XN Projection Matrix (P)
+f 0 O]71 0 0 O
+Pla f [a 1 0 0 = dagthf.0I | 0]
+0 0 1lo 0 1 0
+
+### Slide 5 (OCR)
+fX
+. . _fY
+t Offset of principal point ”~ z
+y 7 P(P, + x py + y)
+= /2 a? O(P»Py)
+O . Principal
+y|=|0 f Py ) Z
+x 1] lo 0 1 off,
+
+### Slide 6 (OCR)
+Projection Matrix under the
+{ offset
+1] lo.ow1 oJ],
+f 0 py]f1~0 0 0
+P=[o f mle 1 0 o| = Kt | 0]
+0 0 14/10 0 1 0
+7 x=K[I | O|x
+kK (Camera Calibration Matrix)
+
+### Slide 7 (OCR)
+x = Inhomogeneous Coordinate
+xX = [X] = Homogeneous Coordinate
+t Shifting of world coordinate
+ZX, = R(X-C)
+ae _{R —-RC||Y
+Z a x= KU | OX,
+SC 8 R —RCIIY
+7 He=KU 1 OS Tz
+O x Xe
+P=KR{I | —-C]=K[R | tl]
+
+### Slide 8 (OCR)
+rn CCD Camera model
+P=KR{I | -C]=K[R | ¢]
+f 0 px 0
+where K = f f Ds
+0. 0 1
+Let a, = f.nt;~__ No. of pixels s =tané
+ay =f.m,~ __ per unit eng
+ay O Dy oe Px
+k=] ay my K=|0 ay Py
+0 0 1 0 0 1
+
+### Slide 9 (OCR)
+rn General Projective Camera
+P=KR{I | -—C]=K[R | ¢]
+a 8/pgy
+where K = F Ay Dy 11 d.o.f
+0 0 1h
+Extrinsic parameters: R, tf
+Intrinsic parameters: K IKI = ax ay > 0
+P=([M | pal=MUI | Mtpyl=KRU | —C]
+where M = KR and p, is the last column of P.
+
+### Slide 10 (OCR)
+CO
++ __S_ SPy = %yPx
+Ax Ay Ay Ay Ay
+K-t= 1
+0 = _ Py
+ay ay
+0 0 1
+Upper triangular matrix.
+x=K{I | OX.
+Kx provides you the image coordinate in canonical
+form for the above.
+
+### Slide 11
+Rank of P: 3;
+Size: 3x4;
+d.o.f.=11;
+Two independent equations
+Minimum # of point correspondences between world
+and image coordinates required to estimate P: 6
+Properties of projective
+camera matrix P=[M | p4]
+# of extrinsic params: 6
+# of intrinsic params: 5
+
+### Slide 12 (OCR)
+Estimation of the camera ,_ rs
+. a 2
+{ matrix (P) rf
+XiCx= OG VN Wi) fori =1,2,....,n > 6
+PX,= X;
+= PX;X x,;=0
+OT\ wi Xi yi XT | pry
+ViXj — xiX7 om Ms
+Redundant, as x, x (1) + y, x (2)= w, x (3)
+
+### Slide 13 (OCR)
+Estimation of the camera, rs
+matrix (P) rf
+X,COxX,=(% VN Wi) fori =1,2,...,n>6
+OT  —w, Xi WX | [TM
+Y3
+For n correspondences Arnx12 r.f-0
+Minimize ||Ap|| subject to ||p||=1
+Use similar techniques, such as DLT.
+
+### Slide 14 (OCR)
+Properties of projective
+camera matrix P=[M | p,|
+rY
+P=[pP. P2 P3 Pa\= rt
+r3
+1. Camera Center (C): 1-D.right null space of P, i.e. PC=0.
+1. Finite camera: M non-singular.
+2. Camera at infinityr/singular C= A
+2. Column points: p,, pz, and pz are vanishing points of X,
+Y and Z axes. p, is the image of coordinate origin.
+1 0
+Pi =([P1 P2 P3 Pal H Pa=([P1 P2 P3 Pal H
+0 1
+
+### Slide 15
+Principal plane, axis, and point
+Xc
+Yc
+Zc
+R,t
+Principal point
+Principal plane
+Principal Axis
+
+### Slide 16 (OCR)
+Properties of projective
+poamera matrix P=[M | p,]
+rY
+P=[pP. P2 P3 Pa\= rt
+r3
+3. Principal plane: Plane parallel to image plane:
+r3; As any point belonging to this plane should be
+imaged at [x y 0]', r.X=0.
+4. Axes plane: r/X=0 > Imaged at y-axis of the image
+coordinate, i.e. plane containing camera center (r/ C=0)
+and y-axis of image plane.
+5. Similarly, r7Xx=0 > Plane defined by camera center
+(rJ C=0) and x-axis of image plane.
+6. Principal point: M@. mr3; mrsz is third row of .
+
+### Slide 17 (OCR)
+Properties of projective
+rn camera matrix P=[M|p,] yz
+P=[pP1 Pz P3 Pal = rt
+r3
+6. Principal point: 14 mr3; mrs is third row of /. A point
+at infinity along the normal of r/ X=0 plane is projected
+to the principal point (x,). P31
+P32
+=P = M.
+Xo = MP3
+7. Principal Ray: mr3; mrz3 is the third row of M. A point
+at infinity along the normal of rj X=0 plane is projected
+to the principal point (x,). det(/). mr3 directed towards
+front of camera.
+
+### Slide 18 (OCR)
+4 Projective camera on points
+Forward projection: Mapping of vanishing
+points (d, 0)’ on the planecatiinfinity (z.,,):
+x=[M | pal | | =Md
+Back Projection: v- Only affected by ©.
+[M | pal | y|=2 =|" |
+X(u) =pwD+C 0
+_ [M-1x], [é - X(W)
+a | 0. [+ Hl C= 4 _ [Mx Pa]
+_ |M-*x —M™~“p 1
+
+### Slide 19
+Depth of points
+Principal Axis
+Unit vector
+
+### Slide 20 (OCR)
+Computing camera center for
+| P=[M | p,]
+M=[Pi1 P2 P3] C=[X Y Z|!
+PC =0 = [M| “p4] |“ |=0
+= MC = —p,
+|—-Pa P2 P3] |[P1 —Pa P3|
+X¢ =O Y. =
+|P1 P2 P3| [P1 P2 P3|
+|P1 P2 —P4|
+[P1 P2 P3|
+
+### Slide 21 (OCR)
+r Camera parameters from P
+P=([M | Pa]
+=|[M | -—MC]
+= K[R | .-RC]
+1. RQO-decomposition of M s.t. M=KR, where K is an
+upper-triangular matrix and R is an orthogonal matrix.
+2. Obtain camera center using MC = —p, .
+3. From R get the orientation of camera.
+4. From K get elements of calibration matrix.
+
+### Slide 22
+Exercise -1
+Consider the following projection matrix.
+Compute the following:
+(i) Camera center
+(ii) Vanishing point of X-axis.
+(iii) Image point of origin.
+(iv)Vanishing point of the line with the
+direction cosines 2:3:4.
+
+### Slide 23 (OCR)
+-9 2 3 1
+P= | 3 —-9 6 1 |
+Solution 2 6 -10 1
+SMS \
+D4
+C = —M~*p,
+Cofactor(M) =|38 84. 58 294 26 58 75
+39 63.75
+det(M) = —9(90 — 36) + 2(12 + 30) + 3(18 + 18) = —294
+¢- 139
+294 169
+
+### Slide 24
+Solution
+(Contd.)
+p4
+p1
+Vanishing point of X-axis:
+Image point of origin:
+P [ 1 0 0 0]T=p1
+P [ 0 0 0 1]T=p4
+Vanishing point of the line with
+the direction cosines 2:3:4
+P [ 2 3 4 0]T
+= [ 0 3 -18]T
+
+### Slide 25
+Exercise-2
+n Consider the following projection matrix of
+an optical camera based imaging system.
+Answer the following with respect to P.
+(a) Given an image point (2,7) in R2, compute its
+corresponding scene point if it is known that the point
+is at a distance of 40 units from the center of camera.
+
+### Slide 26 (OCR)
+8 5 4 0
+P=|17 8 9 QO
+1 -5 8 1
+M P4
+1 | 60 13 | Camera center: “43
+M-*=-——|-47 60 —44 @ =—M-1p | 44 |
+465143 45 29 * 465] 9
+Direction ratio (/,myn); l 2 1 [-63
+m|= M117 = T55 94
+eu) = 6 ul hn n 1 86
+X(u) = C + ————~— }m _
+vie +m*+n*|,] Where p is the distance from C.
+
+### Slide 27
+Q. 2(b)
+n Compute the principal plane of the imaging
+system.
+r3
+TX=0
+The last row of P.
+Image point of a point in a principal plane: (x,y,0)
+(1,-5, 8, 1)
+
+### Slide 28
+Exercise-3
+n Consider the following camera matrix.
+Consider four image points x1=(2,5), x2=(7,9), x3=(-1,3)
+and x4=(4,-1). Let the camera center be denoted as O.
+Compute the dihedral angle between planes of Ox1x2
+and Ox3x4. A dihedral angle of two planes is the angle
+between their normals.
+
+### Slide 29 (OCR)
+x, =(2,5),
+x2=(7,9), 7 4 9 QO
+x3=(-1,3) P=|2 3 6 QO
+and 1580
+_ As. x,=(4,-1)
+35 ; 36
+T _| 86 wn =———_| 86
+=P oven} ae ee ®|
+-27 99
+24 .
+I = Pen 22 | nae | 22 |
+6 = cos” !(fi,. i) =53.752°
+
+### Slide 30 (OCR)
+in Cameras at oo
+P=[M | p,4| where W is singular.
+Affine: Last row of.P Non-affine: Otherwise
+(0 0 Od]
+Affine Camera: X x
+1. Principal plane > Plane at ©o (z,,). p|Y|=
+2. Camera center lies on 7. Z 0
+3. Points at co are mapped to points at «, ‘0
+4. Parallel lines remain parallel after projection.
+
+### Slide 31 (OCR)
+n Affine projection
+¥) M4, M2 M3 Ly xX
+| = M21 ™Mgz2,°.M23° lz
+1 1
+0 0 0 1
+~ _ [11 M2 M13] 7s
+Lx] = La, M32 mya| x] rf
+o Affine projection matrix: 8 d.o.f.
+o For estimating the matrix, it requires four point
+correspondences.
+
+### Slide 32 (OCR)
+~, _ [11 M2 M13] 7s
+Lx] = Lina, M22 mos IX] re
+in Affine Camera
+Camera Center» Direction_of parallel rays (d)
+M2x3d= 0
+o Image of the world-origin: ¢
+o Principal plane for projection matrix P, is the plane
+at oo,
+o Parallel world lines remain parallel in image.
+o M2 ,3 should be of rank 2, to ensure P, to be of
+rank 3.
+
+### Slide 33 (OCR)
+~ Ci] -~
+0 0 0 1
+Estimation of an affine camera
+Xi CO Xj=(%, Vi, 1), for i=1,2,3,...,.n
+r3;'=[0 0 0.“1]
+. T i
+Me lel = Gi
+For n points Aonxs | = Donx1
+P|=tATAl ta"
+
+### Slide 34 (OCR)
+r Projective Camera on plane
+; 7U
+co Z=0
+. Xx
+Qq=PQ=|P1 P2 P3 Pal i
+Perspective projection of 1
+scene plane is a X
+projective =[P1 P2 Pa! rn On
+transformation. 1
+
+### Slide 35 (OCR)
+a Projective camera on a line
+= (PX)'l=0
+= ”, P'™l=0
+? ma =P"
+
+### Slide 36 (OCR)
+Fixed camera center and
+| moving image plane
+xX
+P2 = K2R2[ |
+P, = K,R,[I | fF
+ST / P, = KyRo(K,R,)~*Py
+Xy = P)X = KR(K,R,)~1P,X
+= K,R2(K,R1)7*x4
+C = Hx,
+
+### Slide 37 (OCR)
+} Simple zooming (k=f,/f,, R=)
+x! = Xp + k(¥— Xp Z
+\e xd
+A I> x' = K,Ky>*x = Hx
+
+### Slide 38 (OCR)
+4 Simple Zooming
+x' = K,K, +x = Hx
+_fkl (A4—k) x] 4
+= H= =K2K
+fy 1 K °| *"* The effect of
+_fkI (425k) %1[A XX factor & is to
+— lo 1 | lo °| multiply the
+_ [KA kxo +(1 —k) %o] calibration
+0 _ 1 matrix K on
+= Ke 0 the right by
+° kl : 0 diag(k,k, 1).
+= K, lo l= K, . diag(k,k, 1)
+
+### Slide 39 (OCR)
+Rotation about an axis passing
+through the camera center
+{ (assuming at origin)
+x=K{[I | Ojx x'=K[R | Ox
+oe el - = KRK~1x
+eX =H = KRK7}
+o Hhas the same eigenevalues (upto scale) as R, namely
+u, we’, and we’, where y is the scale factor.
+o His also known as conjugate rotation homography and can
+be used to measure the angle of rotation of two views.
+o The eigen vector corresponding to the real eigen value (i.e.
+i) is the vanishing point of the rotation axis.
+From Hartley and Zisserman, “Multiple view geometry in computer vision”, Cambridge Univ. Press (2000)
+
+### Slide 40
+Application-I: Generation of
+synthetic view
+Fronto-parallel view
+Keep the same
+aspect ratio.
+1. Compute H.
+2. Warp the source image with H.
+
+### Slide 41
+Planar panoramic mosaicing
+H2
+H1
+Ref. plane
+Axis of rotation for imaging
+
+### Slide 42
+Vanishing points
+Image line
+X2
+X3
+X4
+X1
+x1
+x4
+Vanishing point
+Vanishing point of a line L is the intersecting point in
+the image plane parallel to L and passing through the
+camera center C.
+
+### Slide 43
+Vanishing points
+||l to L
+Vanishing points are independent of camera position, if
+it is not rotated.
+
+### Slide 44 (OCR)
+v =PX,=K{I | 0] lol= Kd
+n Vanishing points
+Vanishing points are independent.of camera position, if
+it is not rotated.
+With rotation R it becomes v'=KRd.
+If we know v, v’, and.Ky we can compute R.
+—1 —-1,,/ ~
+q- UU ge kv a@=Rd
+|K~*]| |K~*v']|
+Two independent constraints on R and it can be
+computed.
+
+### Slide 45 (OCR)
+Vanishing lines Parallel plane
+‘<7 through camera
+Image cee NM center(z,)
+plane ey
+—_ K'l Vanishing line
+|K7l || Line of intersection opr r
+Between I and 7, NSP l=K'l
+
+### Slide 46
+Exercise
+Given a line l in the image coordinate space by the
+following equation:
+3x+4y=5
+Compute the normal of the plane for which the line
+appears as a horizon (vanishing line).
+Suppose a camera has the following projection
+matrix P.
+
+### Slide 47 (OCR)
+; 5 4 j
+P=|7 8 9 Q
+‘ Ans. 1-5 81
+I= [34-5]!
+Plane formed by the camera ‘center and the line /: PT
+8 7 1 3 47
+5 8 —S)hy | [72
+4 9 8 5 8
+00 14° — —5
+All planes parallel to this plane have the vanishing line /.
+1 47 54
+47? + 722 + 87] 9 09
+
+### Slide 48
+Computing vanishing line
+o Identify groups of sets of parallel
+lines in a plane at different directions.
+o Obtain their vanishing points.
+o Get the line among them.
+
+### Slide 49
+Summary
+o Pinhole camera model provides the projection
+matrix which maps a 3D point to an image point.
+o Projection matrix:
+o 3x4
+o Dof: 11
+o 5 intrinsic parameters and 6 extrinsic parameters.
+o Minimum 6 point correspondences required for
+estimation
+o Affine projection matrix
+o Last row [0 0 0 1]T
+o Dof:8
+o Minimum 4 point correspondences required to estimate.
+
+### Slide 50
+Summary (contd.)
+o Geometry encoded in a projection matrix
+o P=[ M | p4] or P=[p1 p2 p3 p4] or P=[r1
+T ; r2
+T ; r3
+o Camera Center: -M-1p4
+o For affine projection matrix: Right zero of M (A direction).
+o Vanishing points
+o X-axis: p1
+o Y-axis: p2
+o Z-axis: p3
+o Image of world origin: p4
+o Special planes passing through the camera center
+o Principal plane: r3TX=0
+o Direction of optical axis: <r31, r32, r33>
+o Principal point: M [r31 r32 r33]T
+o Plane formed with x-axis of image coordinate system: r1TX=0
+o Plane formed with y-axis of image coordinate system: r2TX=0
+
+### Slide 51
+Summary (contd.)
+o Geometric derivatives from Projection Matrix:
+P= [M|p4]
+o Projection ray formed at image point x.
+o Direction ratio: M-1x
+o A point on the ray:
+Camera center (-M-1p4)
+o Plane formed with a line l in the image plane
+with the camera center: PTl
+o Vanishing point of a line with direction d
+o Md
+
+==============================================================================
+PART: LECTURE TRANSCRIPT
+==============================================================================
+
+# Week 3 — Camera Geometry — lecture transcript
+(source: NPTEL, 94 PDF pages; [p.N] marks the page in the PDF)
+
+## Lecture 11 — Camera Geometry – Part I  (transcript PDF page 5)
+
+[p.5] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture - 11 Camera Geometry Part - I
+
+(Refer Slide Time: 00:20)
+
+In this lecture we will discuss about Camera Geometry. We have already discussed how a 3 dimensional same point is mapped to a 2 dimensional image point. Here as we know that if I consider a 3 dimensional scene point P, then from there if I draw a straight line which passes through the centre of lens and which intersects image plane at another point some small p that forms the corresponding image point. Now, logically we can consider also in the same way of image has been formed, in the front of the camera where the corresponding image plane is placed at the same distance where the usually if the sensors were placed behind the lens, the distance between that plane of sensors that distance if I keep it same then you will get the images of the same size and there is a logical transformation of coordinates from this point to this point that we can consider. So, this is a convenient way of representing the coordinate system and we will use this principle while explaining the mapping of 3 dimensional scene point to 2 dimensional image point using this kind of projective geometry. 189
+[p.6]
+(Refer Slide Time: 01:40)
+
+So, let us considered the principle here, how these are related. So, this is the configuration, what is usually shown for pinhole camera mapping and here in the pinhole camera once again center of projection is taken as the point from which all the rays are emanating and which is projected on the image plane, so the point of intersection that is the image of the corresponding 3 dimensional points. So, only thing here that you should notice here, we are interested to know also the mapping of physical 3 dimensional coordinates in the scene to the corresponding 2 dimensional image point in the image plane. Though the complete ray, it is represented by this point in the sense of projective geometry, but physically images are formed by the phenomena of reflection from where energy of the reflected point those are focused at this point. So, we are interested to build up that relationship and mathematically if I know this point, then it is very easy to establish the relationship between the coordinates of the image point and also the coordinates of the 3 dimensional point where now, we have to considered some convenient representation of this coordinate system. So, let us considered the center of projection or the camera centered at the origin of this coordinate system and also the axes of the 3 dimensional coordinate system those axes, the X axis and Y axis of that 3 dimensional coordinate system that is parallel to the coordinate convention what is followed in the image plane. 190
+[p.7] The origin of the image planes coordinate that is formed by the intersection of the Z axis with that image plane and this is considered as the origin of the image plane and as I mentioned this X and Y axis they are axis parallel with respect to the 3 dimensional coordinate system. So, with this convention then it is very easy to compute the coordinate x and y from the 3 dimensional coordinate which is represented here by upper cases of X, Y, Z or capital X, Y, Z. We can apply the law of similar triangle, we assume this plane is at a distance f because f is the focal length of a camera. So, in that case by applying this law of similar triangle, we can find out that so, these are the points and this is the image coordinate and as I mentioned this is the focal length and then these are the expressions that we get the coordinate as Z fX x  Z fY y  So, you are using this coordinates of the scene point to get this competition, you can apply the law of similar triangles if you consider the triangle for finding out x coordinate. So, this is the X from the Y Z plane and so the corresponding x value at this point and this is a similar triangle so, that will be. So, this length is f and this length here in the coordinate system is called Z, so it is Z fX . Similarly, y is also considered as Z fY So, this is how we map a 3 dimensional coordinate points to its corresponding 2 dimensional image point, you see that we are using actual scene coordinates for which this image has been formed. So, if I give you X, Y, Z, it is very easy to get this point x and y, but inverse is not true. If I give you the image point, naturally it is represented by the whole ray and it is unless you specify some other constraint, you cannot say that it is image of which point. So, let us see how you are we can resolve all this things. 191
+[p.8]
+(Refer Slide Time: 06:31)
+
+And another thing I should mention another nomenclature will be as follows, we call the XY plane of the original 3 dimensional coordinate system as the principal plane and the Z axis of that coordinate system is called principal axis.
+
+(Refer Slide Time: 06:51)
+
+So, mathematically we have seen already, we have written in the form of an equation which is given by this Z fX x  and Z fY y  and so, this equation can be represented by a matrix form if I use a homogeneous coordinate system for representing the points, how 192
+[p.9] you can do it. let us see. So, this is the representation as you can see that the coordinate point x y z, it becomes in the homogenous coordinate system you have an additional dimension. So, it is a 3 dimensional homogenous coordinate system and or you can say also this is a 3 dimensional projective space that is why it is a point in the projective space 3 P or q P that is how we can you know call it and this point is mapped a point in the 2 dimensional projective space which is given by           1 y x , 1 is a scale factor. You can see that the trick here in this representation, since this fX and fY if I divided by Z then we get the actual image coordinates.                                             1 0 1 0 0 0 0 0 0 0 0 Z Y X f f z fy fx z y x So, the above matrix multiplication will provide you this representation of fX, fY, Z in the projective space in a 2 dimensional projective space which is equivalent to the image point. That is why, this mapping can be expressed as a linear mapping in the projective space and it is a mapping between a 3 dimensional projective space to a 2 dimensional projective space. So, that is the difference between homography, what we discussed in earlier lectures, where a homography was defined in our context as a mapping from a 2 dimensional projective space to another 2 dimensional projective space that is one difference, here it is from 3 dimensional projective space to a 2 dimensional projective space. The other difference was that, a homography was invertible. So, mapping was unique 1 to 1, but in this case as you know that a 3 dimensional point now, it is mapped to a unique image point, but it is not true for the image point when it is again projected back to the 3 dimensional space, then it becomes a projected ray and the any point in that ray is represent represented by this image point. That is why, this mapping is not invertible and you can see also from the dimension of this matrix, it is not square matrix that is one 193
+[p.10] of the conditions where you should have an invertible transformation for a linear transformation of course, it should be non-singular also. But in any case, since it is 4 3 matrix; so we can say that this mapping is not an invertible mapping. So, this matrix is called projection matrix and this matrix can be also represented in this form, you can see that it is formed by composition of two matrices, ] 0 | )[ 1, , ( 0 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 0 0 I f f diag f f P                       Where one is a 3 3 matrix. The other one is 4 3 matrix and the corresponding the structure of the matrix are very simple and you note the notation what you are using for representing this matrix, this particular matrix which contains information of the focal length that is represented in a short form, we will be using this notation because it is a diagonal matrix we will be simply listing its corresponding diagonal elements. Whereas, for representing the other part of this you know the right hand side matrix in this component. So, there are two sub matrixes, one sub matrix is an identity matrix. So, this is a 3 3 identity matrix which is shown here in this form and the other sub matrix is a column vector which is a 0 column vector which is also shown here in this representation. So, ] 0 | )[ 1, , ( I f f diag is a short form of representation of a projective projection matrix, there are motivations for representing in this form that would be clear when we perform the corresponding different mathematical operations on this matrices. So, let us proceed and we will understand why we are taking this kind of representations. 194
+[p.11]
+(Refer Slide Time: 11:50)
+
+So, we will try to generalize this coordinate mapping considering different other scenarios. So, in the canonical form as we discussed earlier, we have considered the projection plane or the image plane the axes in the image plane they should be parallel to the axes what are used for the 3 dimensional coordinate systems. So, there are two coordinate systems in this configuration, one coordinate system is the 3 dimensional coordinate system which is also called world coordinate system. The other coordinate system which is called image coordinate system. So, this image coordinate system also has its own coordinate convention and that is the representation of the corresponding 2 dimensional image plane and you can also considered that is represented by a 2 dimensional projective space. So, it has its origin here and in this convention in the 2 dimensional real 2 dimensional space. So, it has its origin and this origin is formed as I mentioned as an intersection of the optical axis or principal axis which is a Z axis with the image plane. So, that is how this origin is formed and then axis are parallel I told you. So, this is the canonical configuration and in this case we are assuming of course, image plane is at a distance of focal length f in the further canonical form, even we can normalize it at a distance 1, we will discuss in the previous representation itself. We have seen that you have taken out the focal length outside of the projection matrix and the 195
+[p.12] other right hand side component which contains only identity matrix and the 0 column vector. So, if I use only that projection matrix representation, then that is the minimal representation of this minimal configuration of this imaging where projection plane is also taken as a unit distance from the center of projection. let us consider, we can have a different coordinate system in the image plane, we have origin; we can have origin at different positions say. So, in the canonical form what I discussed here when the image plane is at a distance of f from the principle plane, then we consider that x and y mapping of a 3 dimensional point X, Y, Z to a image points x, y are shown by this equation. So, that we have discussed already these are the two equations. Now, so, when you consider a coordinate axis when it is a different coordinate system; that means, origin maybe shifted at some other point, but we may consider our principal, our coordinate axis, they still remain parallel to X axis and Y axis. So, when the origin has been shifted to a different point so, the principal point will have a coordinate which is other than 0, of the image plane. Suppose, this is x p and y p so, any point in a image plane say; any point in image plane, it will be now represented as ( x px  ) and ( y py  ).So, in this case, if I consider this as the new coordinate system say this is 'x and 'y under this transformation of the origin or translation of the origin, then Z fX p x x   ' Z fY p y y   ' So, this is how this coordinates should be interpreted and in the matrix form if I transfer this relation, then we can write this relation simply in this form; that means, the projection matrix as you can see the third column of the projection matrix will have will be change from 0, 0, 1 to p x, p y. 1, you can you can verify the corresponding expressions we will see that the x prime is equal to fX. So, this these operation will give you fX plus p x so, if I simplify this matrix multiplication, we will find out these operation will give me 196
+[p.13]             Z Z p f Z p f y y x x . So, this is the 2 dimensional point of the 2 dimensional projective space and Z is the scale factor. So, finally, when I divide this by Z, it would be Z fX px  and similarly for y coordinate, Z fY py  . So, this is equivalent to this coordinate system. So, this is how the shift of the origin in the image plane affects the projection matrix.
+
+(Refer Slide Time: 18:04)
+
+So, this is the form of the projection matrix when there is an offset in the origin of the image plane and this offset is given by x p , y p and which forms the third column of this projection matrix so, this particular information is contained in the third column of the projection matrix. So, once again, you can decompose this matrix into the form ] 0 | [ 0 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 I K p f p f P y x                       197
+[p.14] what I discussed earlier, you can see that           0 1 0 0 0 0 1 0 0 0 0 1 remains the same that is canonical form of projection matrix when your image plane is at a distance of unity in front of the camera center. So, this mapping is very simple, it is an identity matrix and you know this column is this 0 vector column and once again this is represented by this particular matrix and K is representing           1 0 0 0 0 y x p f p f . So, this 3 3 matrix is represented by the symbol K here which is called incidentally calibration matrix, we can see that this is camera calibration matrix and you can find out in this matrix, we have some of the parameters which are defining the mapping of the image coordinates, canonical form of image coordinate to its corresponding coordinate what has been observed in what is given to us. So, what are the elements there? You can see that once again the diagonal elements particularly, it is found by the corresponding focal length it is diagonal [f f 1] that is these are the offset principal. So, finally, the relationship between the image point and the 3 dimensional scene point that can be summarized in the following form: X I K x ] 0 | [  as this is the image point, small this represented by this convention I will be using the small letter to denote any image point and sometimes I will be using the bold font just to denote that it is a column vector. Similarly, the upper cases, they are the world coordinate system and they are all represented in homogenous coordinate system. 198
+[p.15]
+(Refer Slide Time: 20:48)
+
+Now, let us consider that your world coordinate system also is different from the camera centric coordinate system; that means, your origin of the world coordinate system is different and also the axis of the world coordinate system there at different orientations which are not parallel to the axes of image plane. So, this is the canonical configuration what we discussed earlier so, this is the canonical form we discussed. So, this is a canonical form, but this is the actual coordinate system, world coordinate system what we will be considering. So, that first we need to consider the transformation between this coordinate system and that and the corresponding canonical coordinate system. So, there are operations like rotations of axes and translation of origin those are involved in transforming any coordinate to the corresponding canonical world canonical camera centric coordinate system. So, this could be related by ) ~ ~ ( ~ C X R X c   where R is given by a rotation matrix which is a 3 3 rotation matrix. So, first we have to shift the coordinates of the 3 dimensional point. Incidentally, you note that there are two type of representation of coordinate representations in our discussion; one is that representation in the non-homogenous coordinate space or in homogenous coordinate space. So, that is the normal 3 dimensional coordinates what we use in or analytical geometrics and the other representation of the same coordinate point in a 3 dimensional projective space or we call it homogenous coordinate system. 199
+[p.16] So, in this case this relations, it involves only the coordinates in the usual convention of non-homogenous coordinate system, even the centre is also represented. when I will be using symbol tilde over the point symbol of that point, then I will consider the coordinate representation is a non-homogeneous coordinate representation. Otherwise, if this tilde is not there at the top of that symbol then usually unless I mention that is representating homogenous coordinate system. So, you can see that the first you have to translate the point from camera center. So, translate the origin by this operation. So, this is the corresponding location of the center. So, first you translate the point to this center and then you apply the corresponding rotation at this point and then you will get the corresponding transformed camera coordinate system as in the camera coordinate system. So, this is the transformation which is well explained by any analytical geometry book .you can t refer to it. So, R is in the structure of it is a 3 3 matrix which is which is called rotation matrix and . So, any coordinate X , ' X , it can be expressed in the coordinate system camera centric coordinate system by this particular operation. So, now, what we need to do? We need to apply this transformation of X to this canonical coordinates camera centric coordinates system and then we can apply the same projection matrix.
+
+(Refer Slide Time: 24:50)
+
+So, which can be expressed in this form so, you can see that in this expression, I can express this transformation of a coordinate system in the world coordinate the camera 200
+[p.17] centric coordinate system, all are expressed in the form of a 3 dimensional or homogenous coordinate part.                     1 1 0 ~ Z Y X C R R X c You notice that this is the X~ part that is the non-homogenous coordinate representation if I add another additional dimension, then it becomes homogenous representation and this operation so, this ) ~ ~ ( C X R  which is explained by this sub matrix multiplication.              1 ~ 1 0 ~ X C R R Where            Z Y X X~
+
+(Refer Slide Time: 25:59)
+
+We can apply the relationship with the projection matrix, with the camera centric system. So, you know already that when your coordinate convention is the camera centric 201
+[p.18] coordinate convention that is a canonical form once again we discussed while deriving projection matrix. The relationship between the image point and the corresponding coordinate in the camera centric coordinate system is given by c X I K x ] 0 | [  . So, once again this K is the camera calibration matrix which is a 3 3 matrix and I is an identity matrix and 0 is a corresponding column vector and this can be further expanded. So, this c X again can be related with the 3 dimensional coordinate system which is observed 3 dimensional coordinate system in this form.                     1 1 0 ~ ] 0 | [ Z Y X C R R I K x So, finally, this is a mapping of point ,So, finally, you see that the whole expression        1 0 ~ ] 0 | [ C R R I K , it provides you a corresponding cascade of matrices and if I multiply all these matrices, this is a matrix which will be of dimension 4 3 because K is of dimension 3 3, this is of dimension 4 3 and this is of dimension 4 4 . So, if I perform matrix multiplication and this matrix, we represent by this a symbol P which is called projection matrix. So, this projection matrix of 4 3 so, if I multiply once again this projection matrix with the 3 dimensional coordinates in the projective space of a same point, then I will get its corresponding image point once again in a 2 dimensional projective space. So, that is how, we derive the relationship in a more general case. 202
+[p.19]
+(Refer Slide Time: 28:02)
+
+So, to summarize this representation once again in a brief form, we are showing here. So, as I mentioned so, this matrix is consider, this is as their projection matrix which is shown here in the symbol P and it and the whole you know composition can be shown in different way. Suppose, I am taking out the rotation matrix out of this operation so, I can also equivalently represent this matrix as ] ~ | [ C I KR P   . So, in this case, you will see K R, this is a 3 3 matrix because K is a 3 3 matrix and R is also 3 3 matrix. So, it is a 3 3 matrix and once again this is the identity matrix and here instead of a 0 column vector of this form, what we get here? We get negative of the coordinates of the camera center that is very interesting. So, we can from the projection matrix elements itself we can determine the position of the camera center in the world coordinate system there l we will come to that part in my next slides that computations will be elaborated. The other form of representations once again you see that if I only take K out of this box and put R inside the this part 4 3 matrix, then it has two components one is the rotation matrix and the other one is a translation. So, this gives you the corresponding coordinate transformation parameters of the world coordinate to the camera centric coordinate system; that means, you can get the rotation matrix, you can get the translation of the coordinate system origin translation of the 203
+[p.20] origins. If I can find out what is the matrix K so, from there we can get all this components. So, this forms are interesting because this can give you different information from the projection matrix itself.
+
+(Refer Slide Time: 30:21)
+
+So, when we observe a digital image, actually we observe the pixel coordinates and how a pixel is defined? A pixel is defined by an element by a sensor and which is usually a CCD sensor for a digital camera, it could be also CMOS sensor there are different sensors, but each pixel is information of each pixel is captured by a sensor. So, we usually called this arrangement of pixels as a CCD camera arrangement. So, in the CCD camera arrangement if I consider that configuration, then we need to also consider the parameters involved in digitization of the points in that corresponding you know sensor plane. So, there is a resolution involved there so, let us see that we have already shown that how a projection matrix is component of projection matrix we have shown without considering the parameters of a CCD camera, but let us consider that per unit length there are x m number of sensors. So, x m is the sensors number of sensors in the horizontal directions and y m is the number of sensors in the vertical directions. So, this is how a unit length has been covered by that many number of sensors. So, if I consider a length f in the calibration matrix so, because this is f is a multiplication factor of that length. So, in our case, we 204
+[p.21] will consider the f can be replaced by this transformation as x x fm   and y y fm   in their respective places. So, which means that our camera calibration matrix when we are considering this number of pixels per unit length along X and Y axis then it will look like            1 0 0 0 0 y y x x p p K   So, these are the diagonal elements instead of f, we have now y x  , which takes care of the resolutions of the pixel resolutions of the camera. And then there is also another issue that the alignent of the sensors in the horizontal direction and vertical directions may not be always rectilinear. There would be small deviations because of the manufacturing, very small though still that should be accounted for. So, let us considered that instead of the angle it forms 90 degree, there is a small deviation. So, it forms an angle θ from this perpendicular direction. So, this is providing a kind of a skewed coordinate system. So, we need to take care of that, we need to correct that skew and this is taken care of by another introducing another parameter into the calibration matrix which is shown here,            1 0 0 0 y y x x p p s K   which is given by s which can be derived from the corresponding coordinate transformation, you can also verify that. s would be  tan or even you can say  sin ;  is very small. So, you can write it as   s also in the radian unit. 205
+[p.22]
+(Refer Slide Time: 34:01)
+
+So, this is the final form of the calibration matrix and then a general projective camera matrix can be can be described when I consider all sorts of parameters, all sorts of transformation in this form that it consists of the elements these are the corresponding elements like K has 5 elements like y x  , , s , x p , y p and also the other component s which contains the other parameters rotation and translation. So, these parameters are grouped into different forms. So, there are 11 degrees of freedom in this particular projection matrix because it is associated with a scale factor and so, there are 12 elements. So, considering the scale factor so, there are 11 parameters and there are 11 independent parameters. So, 3 of them will denote a rotation matrix which is a rotations along 3 axis, then 3 will denote the translations of a 3 dimensional coordinate of the origin to the camera center and 5 parameters are related to the calibration matrix which are given by this elements y x  , s , x p , y p . So, in total there are 11 independent parameters and out of them, the extrinsic parameters which are related to the transformation of world coordinate to the camera centric coordinate system, those are given by this matrix that is the right side matrix of 4 3 matrix and the intrinsic parameters are inside the camera calibration matrix. So, these 5 parameters are called intrinsic parameters. So, with this let me stop here and we will continue our discussion in the next lecture. 206
+[p.23] Thank you for your listening. 207
+
+## Lecture 12 — Camera Geometry – Part II  (transcript PDF page 24)
+
+[p.24] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture - 12 Camera Geometry Part - II
+
+(Refer Slide Time: 00:21)
+
+We will continue our discussion on Camera Geometry. In the previous lecture, we discussed the form of a general projective camera. So, there is a projection matrix which maps a 3 dimensional coordinate point to a 2 dimensional image point and in the projective space, we can represent them as in this form. ] ~ | [ ] | [ ] | [ 4 1 4 C I KR p M I M p M P      are the different kinds of representation of the projection matrix. So, we can say that there is a 3 dimensional point X and if I multiply with the projection matrix then we will get a 2 dimensional image point PX x  and in the homogenous coordinate system x is a 3 vector and X is a 4 vector and we can see that a projection matrix has different components here it has the calibration matrix and then there are different forms of representation of this projection matrix. ] | [ ] ~ | [ t R K C I KR P    208
+[p.25] It can be shown as a combination of different types of matrices like in the above representation. it is K into R whis is the rotation matrix R which is involved coordinate transformation from all coordinate to the camera centric coordinate by rotating the coordinate access, it gets aligned with the camera centric coordinate system. And then the translation of the origin that is also represented by this parameter and in fact, this is the centre of the camera centre this is also shown here. So, these are the different kinds of information which is embedded in this particular matrix representation. You should note the feature of a camera calibration matrix, it is an upper triangular matrix and if I take the determinant of this camera calibration matrix this should be the product of those two resolution factors y x  , they are expressed in terms of number of pixels for representing the focal lengths. they are involved with the resolutions along x directions and y directions. So, y x  , are involved x x fm   where f is a focal length and x m is the number of pixels along horizontal direction and y y fm   where, my is a number of pixels along vertical directions and f is focal length. So, this is what we discussed in the previous lecture also you should note there are different ways of notations by which we will refer this projection matrix say a projection matrix is a 4 3 matrix. So, M out of them, the first 3 3 sub matrix that left side of sub matrix with 3 3 sub matrix is denoted by a symbol say M and the fourth column vector; that means, this is a 1 3 column vector that is also denoted by 4 p . ] ~ | [ ] | [ ] | [ 4 1 4 C I KR p M I M p M P      So, this representation is M and this separation just show that this is a sub matrix and this is 4 p . Another representation if I take M outside then I can consider this is an identity matrix which is a kind of canonical form of representation of projection matrix if you remember that is the identity part of the sub matrix and this is nothing, but the negation of the centre; that means, the this 4 1p M  gives you the camera centre negation of the camera centre. 209
+[p.26] So, we can also represent this element as C~  and M itself can be decomposed into 2 3 3 matrix, it has a component calibration matrix, the other component is a rotation matrix. So, these are different ways this projection matrices can be represented and it could be understood all in those forms.
+
+(Refer Slide Time: 04:49)
+
+So, this is what I mentioned M is the product of K and R and 4 p is the last column of the projection matrix P.
+
+(Refer Slide Time: 04:57)
+
+210
+[p.27] Another thing we should note about the inverse of this calibration matrix, this is also interesting to note that this calibration matrix is also an upper triangular matrix and since the relationship between the image coordinate point and the corresponding camera centric coordinate system is in this form. So, if I apply the x K 1  ; that means, if I multiply the image coordinate with this inverse of calibration matrix, it will provide you the corresponding coordinate in the canonical form which means the image coordinates in the canonical form where the focal plane is at the unit distance and its axis are parallel to the axis of the camera centric coordinate system. So, this is our interpretation.
+
+(Refer Slide Time: 05:51)
+
+So, we will summarize here. we will look at some of the properties of the projective camera matrix. So, first thing as I mentioned the interpretation of the projection matrix is that if I multiply it with the 3 dimensional coordinate point, you will get the 2 dimensional image point and the rank of this projection matrix is 3, it is a 4 3matrix, its size is 4 3 and if the number of independent parameters in the projection matrix is 11. So, degree of freedom is 11. So, out of which number of extrinsic parameters that is 6 that we have discussed, 3 rotation parameters those are involved in forming rotation matrix; that means, 3 rotations of axis and 3 parameters for translation of origin and number of intrinsic parameters that is 5 as we have already seen the in the calibration matrix it is an upper triangular matrix and there are 5 independent parameters. And when we express this 211
+[p.28] relationship when we expand this relationships in terms of coordinates individual coordinates, we will get actually two independent equations. So, we will see how those equations can be written in the next slides. So, since there are two independent equations; that means, if I give you certain point correspondences suppose, the problem here is that I give you the scene points say 1 X and also its corresponding you know image point small 1x . So, if it is given to you then I can apply this equations, I will get two equations, but how many unknowns are there as I mentioned in the projection matrix there are 11 unknowns. So, I should get at least 11 equations to solve for all the unknowns, but since 1 point correspondence gives me 2 equations. So, I require at least 6 such point correspondences, I require at least 6 such point correspondences to form you know equations and from there I can estimate the projection matrix. So, this is one technique by which we can find out the projection matrix because we can always through experimentation, we can level some of the coordinate points in the world coordinate system and we can identify their image points in your in the images and that establishes those points correspondences then by knowing their coordinates, we can form this equations and then we can derive this elements of this projection matrix.
+
+(Refer Slide Time: 08:58)
+
+212
+[p.29] So, this is how these equations are written as I mentioned in the previous slide. So, you note here that a point in the image coordinate is given in a very general form as   T i i i w y x because it is denoting a column vector. You note here that we have used the scale factor iw here. So, which means that this y x, is not exactly the observed image coordinate because there the scale factor has to be 1, but theoretically I can express an image coordinate in the using this scale factor in the projective space. So, if I multiply an image coordinate point with this projection matrix, I will get a point in the 2 dimensional projective space and that is how in this form. So, the problem here is that if I apply simple equation then because of the scale factor that equation will be difficult to write t. So, we cannot simply equate the scales of i PX and ix . So, those are equated in terms of the after the scale adjustment those coordinates are their equivalence is established. Hence, i i x PX  So, instead of that we can consider them as vectors and these vectors so, their directions are to be same because the proportionate scaling does not change the direction of a vector. So, if I consider since they are equivalent in that case the interpretation is that those vectors they are parallel vectors they should have same directions. So, if I take the cross product of these two vectors and then form the equation because we know that the cross product of 2 parallel vector is a 0 vector. So, we will perform this cross product and if we perform this cross product then we can derive these equations. So, let me find out that how this representation is possible. So, let us consider a representation of the projection matrix in this form which means I will be considering, now I will be considering the row vectors instead of column vector representations and because there are 3 rows.            T T T r r r P 3 2 1 So, we have seen first row is represented by 1r , second row is represented by 2r and third row is represented by 3r , I have used the transpose operations just to denote that in my 213
+[p.30] actual presentations these are all column vectors, but since they are rows so, I have to apply transpose to those column vectors.            i T i T i T i X r X r X r PX 3 2 1 So, now, if I perform i PX so, the operation i PX will give me the corresponding operation will give i T X r1 then i T X r2 and then i T X r3 . So, this is the column vector that we will get from this operation. So, you note that each one i T X r1 what is the dimension of 1r , our dimension of 1r is 1 4 because it is a row vector. So, each row is a 4 dimensional vector and what is the dimension of i X , dimension of i X is also 1 4. So, i T X r1 will give you a scalar value, i T X r2 will give you a scalar value and i T X r3 give you a scalar value. So, finally, you will get a in this form you will get a 1 3 column vector right. And i X is represented in this way   T i i i w y x and if I take the cross product of this two as we did earlier in our first few lectures to get the cross product, we can write it as i T X r1 , this is i T X r2 and this is i T X r3 and then x i this is small x i y, i and w i. So, if I expand in this form. So, you will get the following vector k X r x X r y j X r w X r x i X r y X r w w y x X r X r X r k j i i T i i T i i T i i T i i T i i T i i i i i T i T i T ) ( ) ( ) ( 2 1 1 3 3 2 3 2 1       r 2 transpose X I, w I into r 2 transpose X i minus y I into r 3 transpose X i this is i plus let me write from this form. 214
+[p.31] So, X i into r 3 transpose X i minus w i into r 1 transpose X i that is j plus so, from surpassing this part. So, will be getting y i r 1 transpose X i minus x i r 2 transpose capital X i k. So, you will get this vector if I write this vector, we will get these vectors as w 1 r 2 transpose X i minus y i r 3 transpose. So, I have to use the other notation, this is not giving you the space, you can start again. So, w 1 r 2 transpose X i and then y i r 3 transpose X i so, this is the first component and other components and then that is equal to 0 0 0. So,                         0 0 0 2 1 1 3 3 2 i T i i T i i T i i T i i T i i T i X r x X r y X r w X r x X r y X r w you will see that this is equated with this equation and here unknown is 2r and 3r . So, these are the unknown quantity because those are going to be estimated. Now, these equation is written in this form if you note the first row, you see it involves r 2 and r 3. So, it involves r 2 and r 3 since it does not involve r 1. So, this is multiplied by a 0 vector. So, you will see that 0 transpose here it is a 1 cross 3 0 vector. So, this is multiplied with r 1 which is 0 minus w i r 2 into X i transpose. So, now, since in my representation, I am representing the rows as a column vector, I will express all of them as a transpose operations. 0 0 0 0 3 2 1                         r r r X x X y X x X w X y X w T T i i T i i T i i T T i i T i i T i i T So, it is w 1 X i transpose. So, I will take it as a transpose operations so, it will be w 1 X i transpose r 2 minus y i X i transpose r 3 so, those equation. So, in this way the first equation is formed. Similarly, the second equation and third equation can be formed I have just shown only 1 equation just for the sake of your understanding. So, you can do it on your own and you can check how is equations are formed. So, now, you will see that there are actually three equations what you get, but out of them, there are two equations which are independent one is redundant, how it is so. So, let me show you. 215
+[p.32]
+(Refer Slide Time: 17:38)
+
+So, if I multiply the first equation with x i and then add it with and also multiply the second equation with y i. So, you multiply the first equation this equation with x i that is what is told here and these equation with y i and then if you add them you will get the third equation again which is multiplied by w i, you can check that thing. So, which means these equation can be derived from these two equations. So, which means that there are only two independent equations other equation can be derived. So, that is why in the previous case I mentioned that there are two independent equations that be that would be formed by using a one single point correspondences specification. So, in this way you require six such point correspondences and you can form twelve equations independent equations and use it to derive the estimate this parameters of the projection matrix. So, let me continue this you know operation further. 216
+[p.33]
+(Refer Slide Time: 18:47)
+
+So, this is the summary finally, as you can see I have eliminated the third row just to show that there are only two equations which are formed by using a single point correspondence. So, if I have n such points, n point correspondences each one will give me two equations. So, I will get 2n such rows for n point correspondences and what is the dimension, if I note the dimension see each one is it is a 3 1 So, each one is a 3 1 sub matrix, each one is 4 1 sub matrix because number of elements here since it is a projection matrix, number of elements is 1 12 ok. So, you will get in this case, the total dimension here number of column is equal to 12 and this was 2 rows, for n point correspondences. So, you expect it should be 12 2  n that should be the dimension of the matrix. So, you will get the equations in this form. So, we will represent the corresponding matrix as A this matrix if I stack all this rows then we call this matrix as A which is of dimension 12 2  n and each one each row is multiplied by this you know this elements of the projection matrix which are represented by their row vectors r 1, r 2, r 3 which is also of dimension 1 2  n and each one each point correspondence will give you two equations. So, finally, there would be this should be 1 2  n . So, this is a 0 column vector. So, this is a interpretation of this matrix representation of the linear equations in the matrix form. So, there are actually 2n number of linear equations when you get n point correspondences. 217
+[p.34]
+(Refer Slide Time: 20:59)
+
+So, the as you understand that you have more number of equations than the number of unknowns so, you have to apply a least square error technique what we did earlier for estimation of homography also and in this case, it is a set of homogeneous equations these linear equations they form a set of homogenous linear equations. So, the standard technique is that we need to minimize this objective function given that it is a norm of Ap, A is this corresponding matrix, A is the same matrix which is derived from the point correspondences and p is your solution; that means, the elements of the projection matrix which is represented in the form of this; that means, all row vectors are concatenated one by one from the starting from its first row to third row and that gives a 12 dimensional vector. So, we have to minimize this norm and since you know this solution is in the projective space and if I take a scaled vector also it is also the solution. So, we would put a constraint on this minimization that norm of this vector should be equal to 1. So, this is once again the corresponding problem formulation for solving this particular problem for estimation of projective matrix and we have seen the same formulation for the estimation of homography matrix. The same techniques we can use that is a direct linear transformation techniques by using either least square error estimation by considering one of the scale one of the; one of the element of the projection matrix of the vector is by setting it to some value and then we can solve it in the form of a non-homogenous equations by using least error technique or 218
+[p.35] you can consider by finding out the eigenvectors of a transpose A and taking the vector corresponding to the minimum eigen value. So, we have already discussed in the previous class.
+
+(Refer Slide Time: 23:14)
+
+So, let me now consider that, once you have this projection projective camera matrix then what are the; what are the properties and what are the information that you can get by exploiting this properties so, we will be discussing those things. So, as we have discussed that projection matrix can be represented in different ways. So, one of the representation is that it could be two sub matrices; one is of 3 3 M, the other one is a column vector 3 cross 1 and the notation we use for 3 3 sub matrix is M, the other one is 4 p or we can represent it as a set of four column vectors; that means, first column vectors, second, third, fourth that is the each one is a sub matrix of 1 3or we can considered as a stack of rows where each row is of 1 4 sub matrix. So, this is how we can represent a projection matrix with this notations and using this notations, we can relate these parameters to different types of imaging points so, different types of geometric points. So, first thing is the camera center, we have already established this relation . we know from the projection geometry that camera centre is a singular point; that means, if I would like to take the image of the camera center you will not be able to form a image, you cannot form a ray connecting to the same point itself. 219
+[p.36] So, which means that if I multiply the camera center with the projection matrix, I will get a singularity which is a 0 vector so that is the interpretation that PC should be equal to 0 and for finite camera, M is non-singular and for camera at infinity, you will find M is singular; that means, when camera is at infinity will again understand this interpretations. So, where you can see that camera center is a point at infinity means its scale factor should be equal to 0. Now, if I consider this representation PC=0, I can derive the camera center very easily. So, using the sub matrix manipulation say I will represent the projection matrix in this form ] | [ 4 p M and the center as       1 ~C where C~ is the camera center in the world coordinate system and as I mentioned that should be equal to 0. 0 1 ~ ] | [ 4       C p M Now, this if I perform the sub matrix you know operation multiplication operations, this is equal to 4 ~ p C M  that is equals 0 and which means that 4 1 ~ p M C    So, if I get the projection matrix elements, I can easily estimate the camera center by exploiting this relation where as for computing the center when M is singular then we have to use only M to find the 0 of that 0 vector of that M and to in the singular form and you can compute its center     0 d C , we will again discusses this elaborate this computation later. There are also interesting relationships with its column vectors so, you have the column vector say 3 2 1 , , p p p and they are vanishing points of X, Y and Z axes whereas, 4 p is the image of the coordinate origin. So, what is the vanishing point, suppose I consider particular direction or a particular ray. So, the point which is at infinity that would be projected that would be also projected in the image plane. Now, it can be shown that for all the points lying in this straight line, they will be converging to that point and that is called vanishing point for that direction. So, what you need to do, simply this representation this point representation would be the direction is given by the vector d. 220
+[p.37] So, we can represent this point as     0 d , you note that d is a vector, d is a vector it is a 1 3 element d is a vector. So, d is a 1 3 element and this 0 ok. So, if I multiply with respect to this projection if I multiply this vector with projection matrix, we will get the corresponding vanishing point of that direction. So, if I have the X-axis the direction of X-axis is given as           0 0 1 and if I multiply p with this vector, what you will get, you will get only 1p . 1 0 0 1 p P            So, 1p is the vanishing point of the X -axis similarly 2 p is the vanishing point of Y-axis and 3p is the vanishing point of Z-axis. So, this can be summarized very easily.
+
+(Refer Slide Time: 28:56)
+
+221
+[p.38] So, this is what I just described. So, 1p if I multiply this with this, you will get 1p and similarly 2 p 3p and the other thing is that you note if I consider this point             1 0 0 0 and if I multiplied with the projection matrix, I will get 4 p which is the column vector.                0 0 0 1 4 3 2 1 1 p p p p p So, what is the interpretation here, what is this point? Note here this point this part is the origin of the world coordinate system because this is a 0 0 0coordinate system and this is the scale factor standard representation of the of any point in the homogenous coordinate space. So,             1 0 0 0 this point is nothing, but the origin of the world coordinate system. So, if I take the image of the origin of the word coordinate system, I will get the column vector 4 p which means 4 p is the image of that coordinate origin. So, with this let me stop here for this lecture and then I will continue once again this topic in the next lecture. Thank you very much. 222
+
+## Lecture 13 — Camera Geometry – Part III  (transcript PDF page 39)
+
+[p.39] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture- 13 Camera Geometry Part- III
+
+(Refer Slide Time: 00:20)
+
+We will continue our discussion on single view Camera Geometry. And there in the last lecture we started discussing on retrieving various information from the projective camera matrix by exploiting its properties. So, we have already considered that how a projective matrix would be represented. So, there are various forms by which we represent a projective matrix. For the convenience of our discussion all these relations can be expressed in one of these forms. So, the first from ] | [ 4 p M P  which you should note that a projective matrix which is a 4 3 matrix, it is represented by its sub matrix components. So, one of the representations in this form is that it has a 3 3 sub matrix, which is denoted here by the symbol capital M and there is a column vector which is the fourth column vector. So, we use this notation 4 p , just to show that it is a column vector at the fourth position of the column vector, and it is a 1 3, its size is 1 3. 223
+[p.40]               T T T r r r p p p p P 3 2 1 4 3 2 1 We can represent also projection matrices by their column vectors only. So, since there are 4 column vectors so, these representations like first, second, third, fourth column vectors; they are denoted by these symbols. And otherwise also we can represent them as a stack of rows, or where you have the first row and since our in your convention, we are representing a vector in the column form so we use transpose operation to denote that it is a row and so, 1r , 2r an 3r d these are the three rows in this representation. So, let us see how with this representations we can express various relations, with different parameters in the camera geometry or different information related to camera geometry; we will discuss those issues. the camera center that can be obtained as we also discussed these things in the previous lecture. The camera center has a property of becoming a right 0 vector of the projection matrix, because there is a singularity at camera center in the projection. All the image points they are formed as an intersection of a ray which is connected to the center of camera and this intersection is with the image plane. But if the point itself is a camera center so, you cannot form a ray. So, that is the problem and that is why there is no such definition of image of a camera center and this expression mathematically can be translated in the following form. 0  PC So, if I multiply the camera center coordinate in the homogeneous coordinate system, with the projection matrix P in this form then I should get a 0 vector. So, you understand this 0 is not a single or scalar 0 value. It is a vector, becauseit is dimension should be           0 0 0 so, its(P) 4 3 and (C) 1 4 so, it is dimension should be           0 0 0 ok. So, that is a 0 vector. So, if I solve this problem how do you how can we express this camera center? I will consider this from suppose, the originals the center in the non- homogeneous coordinate system is denoted as C~ , as we use this convention in our earlier lectures also. So, C~ and if I use a scaling coordinate as 1 in the additional 224
+[p.41] dimension of homogeneous coordinate system so, this (       1 ~C ) is representing the camera center. So, I can write this relation as 0 1 ~ ] | [ 4       C p M . So, which will be expressed if I perform the sub matrix multiplication with respect to this and you should note that when you are doing sub matrix multiplication, the first check should be dimensionality matching between the corresponding matrix multiplication. For example, M is a sub matrix of dimension 3 3 andC~ is a column vector of dimension 1 3. So, I can multiply M C~ which will give me a column vector of 1 3. And then I will multiply 4 p and 1 so, it is the same matrix multiplication rules I am applying. So, I will be multiplying M with C~ plus multiplying with 4 p with 1. So, 4 p as you understand 4 p is a its dimension is 1 3 and 1 is a scalar value its dimension is 1 1. So, I can simply write 4 p , because see 4 p so it would be simply 1 3 matrix. So, it is a matrix multiplication is valid. So, this should be equal to 0 which is also a 1 3 column vector. So, again I can reduce this equation. So, C M ~ = 4 p  and then C~ = 4 1p M   . So, you can see that you can get the camera center very easily by using this expression from the projection camera matrix. But note that M should be invertible then only you can get this expression. So, there are camera matrices where M is a singular matrix, which is not invertible. So, in that case camera center is not lying at any no physical; you cannot capture it in physical dimension, but you can represent it mathematically which is lying at a plane at infinity. That is a concept we will discuss once again, but its representation any point in the plane at infinity is represented in this (     0 d C ) form. You see that it is a point once again in the homogeneous coordinate representation, this value of the scale dimension should be 0. So, that it is a point in the infinity. So, if I divide by 0 everything becomes infinity, but as I discussed earlier also the interpretation of any point t in this form which is at infinity 225
+[p.42] is that it is a direction. So, it is just showing a direction. So, it is the point lying in that direction at infinity. So, this is the form of the camera center in that case and this point can be computed once again by computing the right 0 of M, because M is singular there is a again a 0 vector. So, we can compute that value so, in that case we will have C M ~ should be equal to d. So, we can find out from the expression itself. So, when your center is in the form of     0 d . So, this 4 p becomes 0. So, we will find 0 ~  C M and e by finding out the 0 vector we can obtain this 0 point. So, let me rub this value because this is wrong. So, it should be 0 ~  C M that we have to solve. So, these are the things related to the camera center. Similarly, from the column vectors we can get some interesting informations. So, one of the information that we can get is the vanishing points of certain directions. As we discussed earlier also say, when we consider a point at infinity we should or you can choose you can choose any direction and a point at infinity can be represented in that directions by simply using the corresponding direction cosines as a vector and putting an additional informational dimension that homogeneous scaling dimension as 0.
+
+(Refer Slide Time: 10:09)
+
+226
+[p.43] So, if I consider for example, X axis so, X axis direction is given by say           0 0 1 and a point which is at infinity along that direction should be expressed by adding another 0, concatenating another 0 in the homogenous coordinate dimension (             0 0 0 1 ). So, if I would like to get the image of these particular point so, I should multiply with the projection matrix, then whatever value I would get in the homogenous coordinate system that is the image point to the corresponding point at infinity. So, we call this kind of points as vanishing point. So, if you move towards that direction, all the images of points all lying on this particular (Refer Time: 11:02) line or will be converging to that vanishing point. So, in this case since P can be represented in the form of column vector so, n you can check that this operation will simply give me 1p . So, that is why 1p is the vanishing point of X axis. Similarly, 2 p is also vanishing point of Y axis and 3p is vanishing point of Z axes. So, this is one relation I just have shown here. The other interesting fact here as you can see that what about 4 p . So, 4 p you can get when you consider a point say             1 0 0 0 , if you multiply with the projection matrix P then you will get 4 p . So, what is this point? This is not a point at infinity, because its scale value is 1 and this is a physical point in the space itself and what is this point in the three- dimensional space it is simply the origin. So, which means 4 p is a image coordinate of the origin. So, this is the other property so, this is about the 4 p . 227
+[p.44]
+(Refer Slide Time: 12:16)
+
+(Refer Slide Time: 12:20)
+
+So, next we will be considering some of the; some of the geometric concepts related to this projection geometry, related to this imaging. We have defined all these you know concepts earlier also. They are principal plane, principal axis and principal point. So, in our notation as you can see that this is a very simple representation of the projection in a camera centric coordinate space where; p is a image of say a point in the scene represented by P. 228
+[p.45] But no, externally you have another coordinate system, where we are observing the positions of these points and we call it world coordinate system. And the relationship between world coordinate and camera centric coordinate system can be established by applying simple rigid body transformation; where R denotes the rotation of axis which can be represented by a 3 3 rotational matrix and t denotes the translation of origin to the camera center, which is represented by a column vector or a just a 3 dimensional vector. So, this representation we have already discussed while deriving the projection matrix. Now, we will be considering how to drive the relationships or information related to principal planes, principal axis and principal points. So, let me redefine once again. So, a principal point as you can see so, a principal points principal axis and principal plane; so, here principal plane is the plane where first let me define principal axis. So, principal axis is the Z axis in the camera centric coordinate system, which is incidentally the optical axis of the lens in the optical camera. So, we have considered that is a Z axis in our coordinate convention that is a canonical form. So, in that way the Z axis is denoting the principal axis. So, intersection and principal plane is the XY plane of the camera centric coordinate system. So, XY plane is a plane parallel to image plane and that plane contains the center of the camera. So, geometrically that is the definition independent of any coordinate convention. So, it is the plane which is parallel to image plane and containing the center of projection. That is what is the principal plane. In this case incidentally in our canonical notations of coordinate system of camera centric coordinate system, principal plane is the XY plane. And principal point is the point of intersection of principal axis with the image plane. So, these are the few definitions which we discussed earlier also and that I am providing here and now let us consider what are the informations that we can get. So, related to this principal plane others, once again we will be considering the representation of the projection matrix in this form and here I have shown those relationships. 229
+[p.46]
+(Refer Slide Time: 15:36)
+
+So, one of the fact what is shown here that first how we can compute the principal plane. So, in this case you can see that since the principal plane is parallel to image plane. So, any point in the principal plane for any point you do not have any physical image point in that plane, in the image plane, because the ray forming from that point to the camera center does not intersect image plane. It intersects at infinity in that sense. So, which means that the scaling dimension in the homogenous coordinate representation for the image point should be always equal to 0. So, if I consider any point say q which lies on a principal plane, if I multiply that point with these projection matrix, you will get an image point you do not know what these two things are there, but surely in the third place in the scaling dimension you will get it 0. So, which means I can simply write in this case I have represented the point by X. So, let me use this symbol instead of q, let me use the point as X representation. So, if I consider multiplication with respect to the row vectors so, we will get X rT 3 that should be equal to 0. Now you can see that this is nothing, but the equation of a plane and that is the principal plane. You should note that this is what how do you should get a principal plane, but it is in the wall coordinate system that you should know. Similarly, if you consider this q there would be also image point where say for example; the first coordinate position would be 230
+[p.47] 0 and rest other you do not care, which means if I multiply X rT 1 that should be equal to 0 and that is a point that is a plane where all the points which are lying on that plane, they are projected in this form their image is in this form. So, what is this plane that would be interesting to understand, because in this case since your this coordinate which is X coordinate that is always equal to 0, which means you are considering only Y axis in the image plane. So, if I consider your image coordinates convention and in image coordinate convention, you have X axis and you have Y axis whereas, in your camera centric coordinate system or if I say camera centric axis representation, say this is a center; so, if I consider this three-dimensional configuration and draw planes like this; let me rub it once again just to make it clear. Say you consider the image plane and this is Y axis and this is X axis and then you have a camera centric coordinate representation where C is represented. So, it is the plane formed by this axis Y axis and the camera center, in that plane whatever points are lying so they will be projected on Y axis. So, this is the where the X coordinate will be equal to 0.
+
+(Refer Slide Time: 19:56)
+
+So, this is this plane is given by 0 1  X rT . Similarly, if I can consider the X axis, this plane should be given by 0 2  X rT . So, these planes are called axis plane as it is noted here, 0 1  X rT which is imaged at Y axis of the image coordinate and plane containing 231
+[p.48] camera centered and Y axis similarly 0 2  X rT is plane defined by camera centered and X axis of the image. What about the principal point? Now, the third row itself is showing you the principal plane. So, as we have mentioned this is a plane so, in the principal plane, so this is a principal plane; so this direction now 3r , if I consider the 3r representation in this form it is a column vector Tr3 . So, let us consider that there is the it is represented as a 1 3 column vector and some scale value. So, this 3 mr is a 1 3 column vector. So, as you understand from the equation of plane. So, if I write the equation of plane, in the form of say 0     d cz by ax . So, the normal of the direction of the normal of that plane is given by c b a : : by this vector. So, 3 mr is actually given you giving you this direction. So, what is the principal point? Principal point is the image of that point, which is lying in that direction and as I mentioned any point lying in at infinity in that direction should be represented in this form. So, in this case 3 mr is that direction and the point lying at infinity in that direction is 0 and then the image of that point is a principal point. It is nothing, but the intersection of the normal of the principal plane with the image plane. So, if I take the projection of this, if I take the image point so, this is represented as 3 .mr M That is what is shown here, then you will get the corresponding principal point. So, this is how this three important information you can get from the camera matrix. 232
+[p.49]
+(Refer Slide Time: 22:58)
+
+We have discussed this principle point and here it is just explained once again, how this computations can be no it is elaborated with respect to this projection matrix. The 3 mr is further elaborated by the elements of the projection matrix in this form. 3 33 32 31 0 . 0 mr M p p p P x                 You note that 31 p , 32 p , 33 p this these are the elements of the third row and that you need to know multiply with M, then you will get the corresponding principle point. Similarly, the principle ray it is nothing, but the direction cosine given by 3 mr that is the direction vector, so, it should be proportional to 31 p , 32 p , 33 p ; I can consider it as 31 p : 32 p : 33 p . So, this vector, this direction is providing you the corresponding direction of the principal ray and now in the projective geometry in the projective sense, it could be in the along the camera centric coordinates Z axis or it could be in the opposite direction also. So, from there we exploit a property of the transformation matrix. So, if you take the determinant of the transformation matrix and consider its sign. So, that sign will show 233
+[p.50] the actual direction of this you know this ray. So, , this vector should be represented by the sign of the determinant and then the directions are given by 3 mr . Instead of sign we can since it could be scaled, I can simply multiply the vector with determinant of the matrix M that is also possible.
+
+(Refer Slide Time: 24:56)
+
+So, let me then discuss another interesting fact that how the points which are there in the image plane, how they are back projected to form a ray. First let us understand the mapping of vanishing points on the plane at infinity. This we have discussed earlier also its respect to with respect to the vanishing points of principal axis like X axis Y axis and Z axis. So, here if I consider any particular directions d, similarly we can multiply simply projection matrix with this vector     0 d and that would give me; Md d p M x       0 ] | [ 4 that would give simply multiplication of the matrix M with d. So, that is the vanishing point of the directions are the points at infinity lying in that direction d. So, you should note that vanishing point is only affected by M. 234
+[p.51] So, the back projection can be defined as the ray formed by the camera center with the image plane and you can express that ray in the world coordinate system. That is how the back projection is expressed. So, if I consider a point say        0 1x M , which means it is a point which is lying in the direction of x M 1  . So, this is the directional component in that direction and it is a point which is lying at infinity. This 0 is showing then the image of that point is x which means this is actually the ray, projection ray, the direction of the projection ray, it is expressed in that particular fact. So, finally, we can form a ray which passes through a center, say C~ in the homogeneous coordinate system is to represented in this form and at infinity the point is expressed as        0 1x M , because the direction is x M 1  . So, this can be easily expressed by a parametric form of equation of straight line in a three-dimensional space where, x M 1  is the direction and a point on that line is defined by C~ . So, this is how the parametric form is expressed as you can see, that it is a linear combination of the point in the homogeneous coordinate system. The point at infinity in that direction D in that direction of x M 1  and C~ and following is the expanded from.                                  1 0 1 ~ 0 ) ( 4 1 1 1 p M x M C x M C D X     In fact, this (         1 ) ( 4 1 p x M  ) is the form which is more convenient to express this         1 ) ( 4 1 p x M  . So, these are the points which are lying on the projection ray connecting to the cameras center. 235
+[p.52]
+(Refer Slide Time: 28:00)
+
+How do you compute the depth of points? So, once again depth of point is nothing, but the projection of a projection ray connecting to the scene point and on the principal axis. So, you consider any particular scene point say X, X~ here in the three-dimensional space. So, its projection so, this vector its projection on the principal axis which is Z axis of the canonical form a rod in the camera centric system. So, this distance is the Z disk. This distance is the depth information. So, this is a depth so, this could be easily expressed by this form. ) ~ ~ .( 3 C X mr Depth T   So, 3 mr is the corresponding direction. So, tilde on top of 3 mr denotes that it is a unit vector along that direction. So, if you take the projection means you have to take the dot product along the unit vector of that direction. So, this vector is defined by C X ~ ~  . then you get the corresponding depth information. So, this is what its unit vector. 236
+[p.53]
+(Refer Slide Time: 29:13)
+
+There is another easier representation of camera center by solving the set of equations expressed in this form. As we discussed earlier also, you can see that in fact, there are three equations, because camera center is represented by three coordinates. So, you need to find out three coordinates. So, this could be easily expressed by using crammers’ rule and the representation of M in terms of column vectors. So, let me show you the solution. So, c X that is a X coordinate of the camera center is given in this( 3 2 1 3 2 4 p p p p p p  )form by using the Cramer’s rule. So, this is a determinant formed by the matrices of the column vectors, determinant of the column vectors similarly cY is given by this ( 3 2 1 3 4 1 p p p p p p  ) and c Z is given by this ( 3 2 1 4 2 1 p p p p p p  ). So, you apply simply Cramer's rule and then you can get this expression. 237
+[p.54]
+(Refer Slide Time: 30:15)
+
+So, next we will be discussing how you can get the camera parameters from the projection matrix P. So, here in this case we are again representing projection matrix in different form, like you have a ] | [ 4 p M P  or   C M M ~ |  , which( C M ~ 1   ) is also representing 4 p or you consider a decomposed form of M, where you have the camera calibration matrix and the rotation matrix that is M KR  then, this part is C R ~  . All these representations have been discussed in previous lectures. So, one of the easiest way to get the camera parameters is by using matrix decomposition, because you know the M in general this representation is formed by the multiplication of these two matrixes K into R. So, K is the camera calibration matrix and R is the rotation matrix of the transformation from world coordinate system to camera coordinate system and the property of K it is an upper triangular matrix and R is an orthogonal matrix. So, if I apply RQ decomposition where R is a upper triangular matrix and Q is an orthogonal matrix, if I perform this decomposition, then I will get two matrices which satisfies this property. Now this solution may not be unique in that sense, but still we considered that this is one possible solutions through matrix decomposition. So, we consider after decomposition, this R is equated with K and it is an upper triangular matrix and this Q is equated with R; note the you know notational little 238
+[p.55] ambiguity here, but in this case this is a standard term of decomposition. So, this is the form we are using. So, from there you can get the parameters of calibration matrix, from the upper triangular matrices. Similarly, from the rotation matrices you can get the parameter of rotations and by operating camera center as we discussed earlier, you can get the corresponding translation parameters also. So, this is how you get all the parameters of the camera matrix. So, here we will stop our lecture at this point and we will continue this discussion in the next lecture. Thank you very much for your listening. 239
+
+## Lecture 14 — Camera Geometry – Part IV  (transcript PDF page 56)
+
+[p.56] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture - 14 Camera Geometry Part - IV We are discussing on single view Camera Geometry and we have discussed how different information can be obtained from a projection matrix. Now, let us discuss some of the exercises for your practice, solve some of the problems related to that it will give you a better insight.
+
+(Refer Slide Time: 00:44)
+
+So, consider this problem that you know you have a projection matrix which is given in this form, and you need to compute the following, like you need to compute its camera center, vanishing point of X-axis, image point of origin, vanishing point of the line with the direction cosines say 4 : 3 : 2 Now, here I would suggest that you may give a pause to my video lecture and solve this problem and then again resume it. So, I will discuss this particular solution in the next slide. 240
+[p.57]
+(Refer Slide Time: 01:18)
+
+So, as I have shown that this is a projection matrix what you have considered. A 3 3 sub matrix M is defined in this form and then the other column vector that is a 4 p column vector. So, we can compute the camera center from this expression that we have to invert the matrix M and then compute 4 1p M   to get the camera center directly in the world coordinate system. So, in this case if you carry on computations of inversion, the steps that you need to compute the cofactor of the matrix, you need to compute the determinant of the matrix and then the inverse can be computed in this form; that means, you have to take the transpose of the co-factor and then divide it by determinant. And then finally, if you perform these computations of 4 1p M   you will get C~ in this form. So, you should note that this is just in the world coordinate system itself you need not convert, this you should not convert it into a non-homogeneous coordinate system then it will be a wrong. So, it is directly it is giving you the result in a three-dimensional coordinate system as we understand. 241
+[p.58]
+(Refer Slide Time: 02:37)
+
+Let us considered how do you compute the vanishing point of X-axis. As I discussed earlier that for vanishing point of X-axis we have to multiply the projection matrix with the directions along X-axis and the additional scale value, scale dimensional is 0 because that represents a point at infinity along X-axis. So, you have to multiply projection matrix with this vector. I am showing for the gravity in the row form. It is a column vector   T 0 0 0 1 and then you will get 1p and which means a you will get particularly you will get   T 2 3 9  . So, this is related with   T 2 3 9  that is a column vector. And you should note that this is actually in the homogeneous coordinate system in the image coordinate system. So, if I would like to get them in our two-dimensional coordinate system, non- homogeneous coordinate system I have to express the x coordinate as 2 9  and y coordinate as 2 3 . So, in a image coordinates in our understanding of normal two- dimensional coordinate system is this point is at   2 / 3 ,2 / 9  . Similarly, for image point of origin that is the 4th column vector, so you will get           1 1 1 . So, if I adjust the scale it is the coordinate 1 and 1 1. And then the vanishing point of the 242
+[p.59] line with the direction cosines 4 : 3 : 2 . Once again this shows that, what is the point at infinity along the directions which is expressed by the vector .   T 0 4 3 2 and if I multiplied with projection matrix P. So, you will get a vector   18 3 0  . Once again this is in the homogeneous coordinate system which means this is equivalent to a coordinate   18 / 3 ,0  in our two-dimensional real space.
+
+(Refer Slide Time: 04:50)
+
+So, let us considered another example; here also you considered a projection matrix given in this form and then you are asked to do this computation that if you have an image point (2, 7) in R2 or in R square that is normal to dimensional coordinate convention you have to compute its corresponding scene point if it is known that the point is at a distance of 40 units from the center of camera. So, once again I would request you to pause the video at this point, solve this problem and then again resume it. I am going to discuss this solution in the next slide. 243
+[p.60]
+(Refer Slide Time: 05:33)
+
+So, here I have shown you some of the structures of this solution. As you can see that projection matrix is represented by those sub matrixes M and 4 p , M is a 3 3 sub matrix 4 p is that column vector. So, camera center first you need to compute because once you have to compute the corresponding projection ray. What we required? We required the camera center C~ . So, require the camera center C~ and we required the direction cosine ) , , ( n m l . So, C~ is given by this ( 4 1 ~ p M C    ) relation. So, you have to compute 1  M and then 4 1p M   will give you corresponding C~ . It is again in the three-dimensional coordinate space whereas, the direction cosine should be given by            1 7 2 1 M . So, (2, 7) was the image point and along that, directions in the homogenous system coordinate system it is (2, 7, 1). So, if I perform these computations, I will be getting this particular direction ) , , ( n m l . And then any point in this ray which is lying at a distance can be expressed in this form which is               n m l n m l C X 2 2 2 ~ ) ( ~   . So, you see that this is nothing, but the unit vector along the direction (l,m,n). So, we can always express in a parametric form equation of this straight line in this form. So, that is how 244
+[p.61] you can get the corresponding projection ray. You can put 40   and that would give you the corresponding ray. So, this is the solution of this point.
+
+(Refer Slide Time: 07:23)
+
+We continue the same problem. Here you are asked to compute the principal plane of the imaging system with the projection matrix. So, if I start doing this operation how do you get the principal plane. It is as we know this is the principal plane is given by this third row. So, which is given by 0 3  X rT . So, you will find that this solution is basically it is an explanation one again. Image point of a point in a principal plane would be in this form, so it should be 0 3  X rT . So, it is a last row of P and it is given by (1,-5,8,1). If I write in our normal convention of planner equation it is 0 1 8 5     z y x . So, this is how you get the principal point. 245
+[p.62]
+(Refer Slide Time: 08:42)
+
+So, now we will continue our discussions in this topic. So, let us consider another scenario where camera center is at infinity. Now, in this case as we have discussed earlier also that M would be singular that is the first thing, because in that case the 0 of M will give you the center and the third, fourth dimension of that center that is a scale factor would be 0. Now, there are two situations in this case it could be an affine camera or it could be non-affine camera. So, we are not interested on non-affine cameras for this kind of situation we will be consider in only affine camera. So, one of the simple characteristics of affine camera is that its last row is in the form of [0 0 0 1], you can use any other scale factor instead of one non-zero value, but canonically you can put it as [0 0 0 1]. Then every other element gets fixed with respect to that scale 1. So, the property of affine camera is that first its principal plane is a plane at infinity that is a principal plane; that means, all the points which are lying at infinity in the along many directions. They are lying at in the principal plane. And it camera center also lies on the principal plane naturally. So, point set infinity are map to point set infinity. So, if you consider any points which are at infinity, its vanishing points, so called vanishing point; that means, if you take the image of that point that would be also at infinity; that means, it is scale value would be also 0 which means that as you understand that intersection of parallel lines of a non homogeneous coordinate at parallel lines in our Euclidean geometric sense can be explained as 246
+[p.63] intersection at a point at infinity which is represented in this homogeneous coordinate system where scale value is 0. So, still the lines after transformation, which means after getting imaged still they remain parallel. because images of those lines are also their intersection is also at infinity. So, that is one of you know major property of this particular things and it explains why a points at infinity, still map to a point at infinity.
+
+(Refer Slide Time: 11:28)
+
+So, the affine projection one of the simplification of the camera relationship can be done in this way as you can see that, in this form in affine camera this is the world coordinate system in the non-homogeneous coordinate system which means it is simply a three- dimensional point. You are multiplying this three-dimensional point by a matrix in the form of 3 2 and then you will get another vector three-dimensional vector and this is a parameter which we called as a translation parameter for this affine transformation and then you get the corresponding image point. So, this is a image point of X~ . So, that is also in the non homogeneous coordinate system because this will give you 1 2. So, this is actual image coordinate what will get you do not have to do any scale adjustment. So, this is a very simple relationships in affine geometry where you can express the relationships all in the sense of Euclidean space, Euclidean space this relationships in the sense of three-dimensional Euclidean space to a two-dimensional Euclidean space of the images. 247
+[p.64] Now, this can be explained how do you get this kind of structure, if I considered the canonical representation of the affine projection matrix where you can see that the last row of this projection matrix is given by [0 0 0 1] vector. So, if I do the matrix multiplication and consider the corresponding sub matrix multiplication then it is equivalently coming in to this point. So, this simplifies the relations between the projection, the image point with the world coordinate point and it simplifies also to the computation of finding out this affine matrix. So, let us see how you can do it. So, you can express this equation in the following form t X M x    ~ ~ 3 2 3 2 M is a sub matrix that is a matrix represented above and X~ represents the same point plus t. So, affine projection, so how many independent parameters are there? As we can see that this t is 1 2 vector and this(M) is 3 2 so there are 8 parameters. So, there are 8 independent parameters or 8 degrees of freedom. So, this is the final conclusion about or this is a advantage what you have, you required less number of points to estimate this particular projection matrix because you have only 8 independent parameters it requires 4 point correspondences each point correspondence is giving you two equations, one for x coordinate another for y coordinate. So, if I have 4 point correspondences I will get 8 equations and I can solve this problem. So, that is the minimum requirement. If you have more number of point correspondences then you can perform least square estimate, where which we will discuss in the next slide. 248
+[p.65]
+(Refer Slide Time: 14:58)
+
+So, this is how will be discussing. So, first thing is that in the affine camera center it lies at infinity and it is a direction of parallel rays. So, geometric interpretation is that: in an affine camera the imaging takes place using parallel rays, instead of considering a particular center where all the rays are connecting to that center that is a perspective projection geometry. In affine geometry you considered any direction any parallel to any direction and any particular direction, let me explain. Suppose this is your image plane and suppose this is your scene point X and say the rule is that this is a direction of the vector d; so, all lines parallel to the. So, X, image of X would be that you draw a parallel line along this direction and where it intersects that becomes a image of this point. So, this is a interpretation of imaging for affine camera which is the parallel projection in the case of imaging geometry. 249
+[p.66]
+(Refer Slide Time: 16:10)
+
+So, this is the relationship with M and d, you can get d in this by exploiting this equation 0 3 2  d M . So, the interpretation of t that it is the image of the world origin and its principal plane or affine projection matrix is a plane at infinity that you can see that [0 0 0 1]. So, that is the form. So, in a in A P the last row is [0 0 0 1], in the last row of the affine matrix. So, this denotes the principal plane and that is the plane at infinity that is a interpretation in the projective space and 3 2 M should be of rank 2, to ensure that A P to be of rank 3. So, these are certain interpretations. 250
+[p.67]
+(Refer Slide Time: 17:11)
+
+So, let us considered estimation of an affine camera when you have more number of points; you require minimum 4 points, but if you have more number of point correspondences. So, you can minimum 4 point correspondences and if you have more number of point correspondences then your estimation would be robust. So, this equation so, this is one example has been shown specifications that capital i X and ix they are the point correspondences i X is the scene point and corresponding image point is ix shown in bold font. So, in the non-bold font its coordinates are expressed; so, these equations if you form this equation. So, once again I will be considering the concatenation of row vectors as the parameters of my projection matrix. So, this could be represented by these two equations. So, you can see that in this case 1r X i is giving you ix , ix coordinate and 2r X i is giving in the iy coordinate. So, ix should be represented in the form of a transpose here which is not shown here, mathematically it should be T i X transpose and there should be also T i X transpose because you know they are row vector and then you can form this equations. So, for n points, this matrix I can consider this matrix (       T i T T T i X X 0 0 ) as matrix A and this could be considered a matrix say A. And if there are n points so, each one will give me two equations. So, there will be 2n equations. And the dimensions as you can see this is 251
+[p.68] this is 4 1 and this is 4 1 , so it will make it 8. So, it is 8 2  n and this dimension is also this is 1 8. So, you get 1 2  n . And this matrix this column vector is found by the coordinates respective coordinates. So, this is the set of equations which you need to solve and this is a non-homogenous set of equations because you do not expect that every coordinate would be 0. So, this vector is not going to be a 0 in your experimentations or observations. b A A A r r T T 1 2 1 ] [       So, you can solve it by using standard least square error method for non-homogeneous set of equation. And the solution is given in this form I discussed the nature of solution, so I can use a b A A A T T 1 ] [  that would give me in the solution.
+
+(Refer Slide Time: 20:04)
+
+So, we will discuss this particular thing that how the points which are lying on a plane form images using projective camera. Without loss of generality let us consider that plane is the say XY plane where Z is equal to 0. You can always make coordinate transformation to make any plane as XY plane and apply this principal that is why I said it is without loss of generality. And say a point is given as q that is a scene point Q and this is a camera configuration, where C is the center of projection and there is a image plane. So, a ray formed between 252
+[p.69] C and Q and the intersection of that ray with the image plane which is shown by the point l q that is image point. So, this is how the imaging takes place. So, now, I can express the coordinate q in this way.               1 0 ] [ 4 3 2 1 Y X p p p p PQ q You can see here that any point in that XY plane can be written as it is coordinate as             1 0 Y X . So, finally, this relationship in this projection geometry projection matrix and multiplication projection matrix with the three-dimensional point in the projection in the homogenous coordinate system can be reduced to a form where you require only two coordinates X Y which is a point in that plane. So, point in the coordinate convention of the plane and multiplied by 3 3 matrix. We know this form that this is nothing, but a 3 3 matrix transformation of a homogenous point in a two-dimension, projectives two-dimensional projective space to another two-dimensional projective space which is like in homographic. So, if you take the imaging of a plane it establishes homography between the image points and the scene points, that is the crux of this discussion. So, that is what? Perspective projection of same plane is a projective transformation. 253
+[p.70]
+(Refer Slide Time: 22:27)
+
+We will discuss on imaging of a three-dimensional straight line and try to see how the corresponding projected line on the image plane is related to the three-dimensional configuration. So, consider a line L that is a three-dimensional line as shown in the diagram and you have an image plane and its camera center at C. So, if you would like to project this line, I can consider any two end point and of this line any two points in on the line and find out its image points and connect those image points. You will get another line that is a line of that image that would be a straight line also because this property of projective transformation that is applied in this case. Now, let this line is denoted by l in my figure and as you understand this line is represented in a two-dimensional projective space. So, what kind of three-dimensional information that we can recover if I know the projection matrix, that I would like to discuss here. So, considered this that there is a point on a three-dimensional straight line and which is given in this form that this is X this straight line and it is corresponding image point is shown here by drawing the projected ray that is x . So, the relationship between x and l , that can be found from the point containment relation. And you can also see that it forms a plane, a three-dimensional plane which connects the camera center and also three- dimensional straight line. Note that the image of that straight line that also lies on that plane. So, now, as I was mentioning that a point containment relation of the image point x can be expressed here 254
+[p.71] that is 0  l xT . And if I reduce x if I express x in terms of imaging of a three- dimensional points, so that is you have to multiply the three-dimensional point in its homogeneous representation with a camera matrix P. So, you get PX equals that image point x. So, 0 ) (  l PX T and using the matrix property I can convert this expression as 0  l P X T T . So, note that this relationship is again a relationship of point containment in a plane where the plane is given by this l PT So, we can get the expression of the plane by this computation give in the projection matrix we can and also given a straight line we can find out the plane on which the straight line camera center and their image line.
+
+(Refer Slide Time: 26:03)
+
+The third exercise here you have this projection matrix and considered 4 image points 3 2 1 , , x x x and 4x given in this form and you denote the camera center as the origin as a point O, it is not origin it is a point O and you have to compute the dihedral angle between planes of 2 1x Ox and 4 3x Ox . And how a dihedral angle is defined? It is a angle of two planes, it is a angle between their normal. So, angle between the normals of those two planes. So, this problem you need to solve. Just to show you diagrammatically what I have asked you that consider an image plane and you have points say 2 1, x x and say 4 3, x x . So, and say this is the camera center; this is a camera center O. So, you can form a plane. So, 3 255
+[p.72] points can define a plane. Similarly, you can form another plane, now what is the angle between these two plane; that is the problem what you need to solve.
+
+(Refer Slide Time: 27:37)
+
+So, this is how the solution we will get that once again this is summary that those are the points shown and also the projection matrix shown here. So, first you have to form the first dihedral plane. So, you can see that by performing the cross product of 1x and 2x you are getting the line found by 1x and 2x , and we know that given a line in the image plane how the three-dimensional plane can be obtained. It is P transpose in to the line in its corresponding image coordinate system itself, in the image representation itself. ( ) ( 2 1 x x PT  ) So, if I perform this operation then I would get the first plane as given here             0 142 86 35 . So, this is a first plane. Similarly, for the second plane which is found by the images image point 4 3, x x and the center of camera O that is also given similarly in this form. So, now, these are the two planes. If you take its corresponding normal vectors unit normal vectors you can compute in this form for the first plane, for the second plane. Now, to compute the angle between this two you can take the dot product of this unit vector and applied 256
+[p.73] that cosine law. So, cos inverse of this will give you that angle; so, this is the answer. It is coming around 53.752 degree in this case.
+
+(Refer Slide Time: 29:09)
+
+Next will discuss about the relationship between the image points when your camera center is fixed and its image plane is changing. So, you consider this two scenarios that there are two image shorts, one of them is taken in this configuration when this is the image plane and this 1x is the image of the scene point x. As you can see camera center is still remaining at this position. So, the camera projection matrix is given by 1P in this case and which is represented in the general form in this form( ] ~ | [ 1 1 1 C I R K P   ) using this camera center, where 1 K is a calibration matrix and 1 R is a rotation matrix and the other for the other imaging system. So, this is the image plane and its corresponding projection matrix is 2P which is given in this form( ] ~ | [ 2 2 2 C I R K P   ). We can relate 2P and 1P in this way, we can see that this 1P if I apply 1 1 1 1 ) ( P R K  , this is giving you this ] ~ | [ C I  . So, this is giving you this particular expression. So, finally, if I multiplied with 2 2R K then it becomes 2P that is how this relationship is established. So, if I apply this relationship then we can find out that this two image point they form a homography that we discussed already in our two-dimensional, discussion on two- 257
+[p.74] dimensional projective geometry and projective transformation in particular. So, I can express this homography in this form. I will follow this. So, I will start from 2x which is given by the image of X in the camera 2P . So, X P2 . 1 1 1 1 1 2 2 1 1 1 1 2 2 2 2 ) ( ) ( Hx x R K R K X P R K R K X P x       Now, 2P can be related with 1P in this form and then as you can see this X P1 can be reduced to the scene point of the other camera 1x for the same corresponding scene point. And then the relationship between 2x and 1x can be given as 1 Hx , where H is equal to this ( 1 1 1 2 2 ) (  R K R K ) matrix and it should be invertible. So, this is also expressing the projective transformation between the corresponding image points. So, from the camera geometry itself we can explain this relation.
+
+(Refer Slide Time: 32:05)
+
+And when we considered the image planes their parallel then the phenomena can be expressed like a zooming of images. So, image planes they are parallel, as if you are changing the focal length; that means, the direct that is a distance from the camera center to the image plane. So, you are changing the focal length. And let us consider the ratios of this focal length is k, and we know that under this situation the homography is established because there is no rotation in between these two cameras. 258
+[p.75] So, if the rotation is identity matrix then in a simpler form this relationship can be expressed as x K K 1 1 2  . 1 1 2  K K will give you the corresponding homography matrix. So, this is the 2f that is the distance from center and this is 1f and K is a ratio. Now, this can be explained in a further. we can elaborate this relationship like if I considered the deviation from any point from a particular, no. So, x naught is a principal point. So, if I consider deviation this vector from the principle point now this deviations or this distances or this vectors it should be also scaled in the same amount. So, it is a vector direction remains same, but it is scaled by this factor k. x k x k x x k x x ~ ~ ) 1( ) ~ ~ ( ~ ~ 0 0 0 ' 0       So, any point can be expressed in this form given in this equation. So, 0~x and it is called in its normal two-dimensional coordinate system, k in to this vector that would give you corresponding from here, from this position the from the geometry itself you can use this relation and this is a expression. Now, this expression can show the structure of this homography matrix. How it is so?
+
+(Refer Slide Time: 34:23)
+
+So, let me show you in the next slide. So, this is the structure as we have mentioned that if you note that your homography structure is 1 1 2  K K and finally, using that relationship 259
+[p.76] using that deviations I can relate H with this elements      1 0 ~ ) 1( 0x k kI . So, this is equal to 1 1 2  K K . And from using this relationship I can relate the calibration matrices between the two configurations 2 K and 1 K . So, what we will observed that actually the calibration matrix is nothing, but 2 K calibration matrix is nothing but related with 1 K by simply multiplying by a diagonal matrix k k 1 (diag(k,k,1)). I already explain how this diagonal notation should be interpreted. You should have a diagonal elements as k k 1, these are the 0s (           1 0 0 0 0 0 0 k k ). So, if I multiply 1 K with this matrix then I will get 2 K . So, this is the relationships when you have zooming.
+
+(Refer Slide Time: 35:35)
+
+So, the effect of zooming is that you had simply multiplying the calibration matrix on the right by diagonal. With this let me stop here for this lecture. We will continue in the next part. We will still continue this topic where in our next lecture. Thank you very much for listening. 260
+
+## Lecture 15 — Camera Geometry – Part V  (transcript PDF page 77)
+
+[p.77] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture – 15 Camera Geometry Part – V So, we will continue our lecture on single view camera geometry. We are discussing about different kinds of homography that exists in a single view camera, when you have multiple view images of the same scene by single camera.
+
+(Refer Slide Time: 00:39)
+
+So, right now, what we are going to discuss suppose, the camera center is fixed, but you have rotated the image plane about its vertical axis. So, you consider this scenario that you have an image plane and you consider a center C and there is an image formed in this plane which is given by x. Now, if I rotate this image plane say by an angle about an axis. So, in that case you can consider another image plane due to this rotation and you will get an intersection with that image plane with a point 'x in that image plane of that rotated camera. So, now, we will see that there exist a homography between this two points. Already, we discussed this particular feature, when we discussed about the projective transformation. In terms of camera matrix parameters or camera matrices, we can relate this homography. 261
+[p.78] So, consider in this case, the first position as a reference position of the camera and its projection matrix is given in this ( ] 0 | [I K ) form. So, we can note that this is almost a camera centric coordinate system. This is a camera centric coordinate system, but you have a calibration matrix. so, you have a calibration matrix’s involved in this case. So, in that way I mean you can consider that ; it has those parameters of calibration matrix involved in this case. X R K x ] 0 | [ ' So, this is the projection matrix that we get and when you rotate this camera everything remains the same, so there is translation parameter; translation of origin, it is 0, because there is no translation of origin in that case and that is reflected by this, values 0 column vector, but it has the rotation matrix. This R is a matrix, l which denotes a transformation due to the rotation about this vertical axis or. So, I can write this projection matrix of the second position as ] 0 | [R K . So, this is the projection matrix. So, if I consider that I can simplify this by considering this so, you know that here I can equivalently right it as K KRK 1  , because K K 1  is nothing, but it will give you the identity matrix. So, I can write this also and as we know that ] 0 | [I K , this is the projection matrix of the first camera. So, this is what is giving you the image point of the first camera. So, finally, 'x is related with x with this kind of relation. So, it is a matrix multiplication 1  KRK that you need to multiply with x and that matrix itself is the homography. So, this is how the homography is established between these two views and with their corresponding image points of the same scene point. And there are certain interesting properties of this homography matrix, because this rotation matrix has a interesting property like first thing is that it has a same eigenvalue of this rotation matrix and rotation matrix eigenvalues are well defined. Because of this property of particular structure of the rotation matrix which rotates at an angle about an axis. So, it should be ,   ie and   i e . So, it is a complex quantity as we can see and is a scale factor. So, it is in eigenvalue or even I can write it as  ie 1 and  i e . So, it is a scale value. 262
+[p.79] Now, H is also known as conjugate rotation homography and can be used to measure the angle of rotation of two views. And the eigenvector corresponding to the real eigenvalue, which is it is shown here as a , which is a scalar, which is also indicating scale value on this set of eigenvalues. So, that eigenvector is the vanishing point of the rotation axis. So, that is another interesting information. So, we will let us see that how this homography could be used in relating different imaging.
+
+(Refer Slide Time: 06:01)
+
+Some of the applications that we would like to discuss of projective transformation associated with this single view camera geometry, what we are discussing earlier. So, already we have considered the corresponding, affine rectification or stratification tasks that is involved using the homography with the images. Now, we can point out those applications once again here. So, we can generate synthetic views given a view. So, as we did in the previous example of my lectures. So, you have an oblique plane where with respect to your reference view, if there is any oblique plane; that means, it is you consider our natural tendency is to look at fronto-parallel planes. And any oblique sensation of that kind of sensations will be coming with respect to that oblique fronto-parallel plane. So, if you have a plane which makes an angle with respect to fronto-parallel plane and there is some object planner object or image on that plane. So, we can apply this homography to straighten out it, to make it on the fronto-parallel plane. So, you consider 263
+[p.80] this particular example so in a fronto-parallel view we by keeping the same aspect ratio, we can redefine the image points and then we can compute the homograpghy. This example we have already discussed. So, we can compute and we can wrap the source image with H.
+
+(Refer Slide Time: 07:51)
+
+Another kind of application could be panoramic mosaicking of images. So, consider you have a wide view, but at a particular time you have only a limited view of taking images. So, you have a wide panoramic scene and with the single camera, you want to capture the whole scene, but your camera is restricted by only a small viewing angle. So, you have an image plane, where only those points, which are intersecting with respect to the image plane, which is been sensed by the sensors of your camera those are only captured. So, you may in that case capture a series of images by rotating the camera. So, getting view, getting images from different views and then again perform the homography transformation with respect to a reference plane and put them under the same reference plane. So, all those images; so they would look like as if images on the simple planar plane. So, that would that is the task of mosaicking. So, we discussed in my previous slide that how rotation of an axis lead to the homography. So, you consider here that this is your reference plane and these are the other views from where , you are looking at from your camera. 264
+[p.81] So, you apply homography from points on this view to this view say suppose, this homography is 1 H and again apply homography from point from this view to this view and then all the points are registered on the same coordinate system and you can get the larger image. So, that is how you can get a panoramic mosaicking, using this kind of computation.
+
+(Refer Slide Time: 09:47)
+
+So, let us discuss the concepts of vanishing points in imaging also, I have referred to vanishing points in my lecture previously also. Vanishing points with respect to homography, vanishing points; that means, with respect to projective transformation, even for vanishing point with respect to the imaging from the camera transformation that also have the similar kind of features. So, vanishing points are nothing, but images of points which are at infinity. You consider so, let me give you an analogy with respect to an one dimensional scene. So, an one dimensional scene can be thought about as an infinite line, any points on an infinite line. So, you are considering this as an infinite line and points are lying on it and we are projecting any point with the projection rule is that there is a center and take any point in this line and then you draw a ray from that line to that center and that would intersect on your image plane. So, in this case it is also image line. So, the point of intersection of this ray is giving you the image of this particular scene point. So, scene point as I mentioned is one dimensional space. 265
+[p.82] So, if I go on drawing this kind of imaging for all the points in this line. So, we will see its effect. Suppose, you take another point, once again this is a new image point then another point. So, these are images corresponding images that you are observing and if you go on doing these things. Finally, as you understand there is a limiting point beyond, which you will not get any intersection point, because once your projection ray becomes almost parallel then two parallel lines, they only intersect at point at the infinity. So, what we can observe here that if you go on doing this finally, there exists a limiting point V which is defined geometrically in this way. Consider a line which is parallel to L and passing through that center C and then that line when it intersects image line at point V that is the vanishing point, because any other point you choose from this line, it will still intersect at a point which is not going beyond V in upwards in this case. So, this is the interpretation of a vanishing point, when we restrict our scene as a one dimensional straight line and also our imaging plane imaging structure is also a line. So, we extend this idea for imaging of a three dimensional scene on a two dimensional plane and we will see that what kind of conditions we get as I mentioned this is the vanishing point and this is the summary that vanishing point of a line L is the intersecting point in the image plane parallel to L and passing through the camera center C.
+
+(Refer Slide Time: 13:21)
+
+(Refer Slide Time: 13:39)
+
+266
+[p.83] So, if I extend this concept as I was mentioning consider a three dimensional line in a three dimensional space this line is defined. Once again, your imaging geometry is defined by a center of camera or center of projection C and there is an imaging plane. And if I apply the similar projection constructs, so you will find all the projected point on the image plane, they also lie on the line. And finally, when the ray projected ray connecting through the camera center C, it becomes again parallel to the direction of line L then I mean there is that their intersection point would be a point at infinity, which means it that is the point at infinity in that direction L. And that is the, and their point of intersection and the point of intersection of that ray with the image plane acts like a vanishing point. So, let me see the construct here in the similar fashion will go on constructing and finally, as I mentioned that the line parallel to L which is intersecting at the point V that becomes the vanishing point. You note v, r, q they all lie on a straight line, because it is an image of a straight line and that would be also a straight line. Kd d I K PX v         0 ] 0 | [ And so, even you can move as you go further and further still you will never cross v in that directions, in this particular line L in that direction. So, that is the vanishing point of the straight line L; so, this line is parallel to L. And as we already discussed that how a 267
+[p.84] point at infinity in a particular direction d is denoted, it is     0 d . So, d is the direction of line L and if I apply the projection of that point, if I apply that mathematical model, where I am assuming that the camera model as a simple canonical form like ] 0 | [I K then into     0 d that is a column vector, we will get Kd , that is the vanishing point. So, in this case you know you note that the vanishing point is independent of the, translation of this particular or independent of the center or the position of the camera center. So, that is the camera position. So, if it is not rotated as you can see from the transformation matrix that here, we have taken only identity matrix, which means there is no rotation. It is a orientations of the axis remains the same, only you may translate the camera, but still if I apply that also.     0 ] | [ d t I K So, if I considered in that transformation, the new camera matrix after translation would be something like this K I say translation. So, we may have a vector t and then, if I consider the projection of vanishing point     0 d , so you understand d is a column vector and then what happens. So, t is also a column vector in my representation. So, this is also K into d. So, this how a vanishing point you know is computed and you could see that is the same point. So, this is an important mathematical explanation that why we see the points at distance and there is almost they are always at the same position, because if you also move in with respect to our frame of reference they do not move, they also move along us. Like if you consider when you are moving and watching the moon at a distance, you will find in your frame of reference, the moon always remains at the same point, because you know if your motion does not involve any rotation, it is a simple translatory motion. So, it will look, it will be dimmed like it is not. It is also, as if it is also moving with you, which means it remains at the same location with respect to you. So, this is one you know nice explanation of those phenomenas. 268
+[p.85]
+(Refer Slide Time: 18:07)
+
+So, this is the follow up of that discussion that it is independent of camera position vanishing points if they are not. if the camera is not rotated. But you know when you have a rotated camera and then also you can get this expression, very simple expression by applying the same mathematical logic that if I rotate the camera center so your projection matrix can be written as say KR and then so, I think this was our C R ~  that is the affect of moving the camera center at position C~ . So, suppose this is the corresponding projection matrix after the rotation R and moving it at a camera center C~ then if I apply the projection of vanishing points then I can simply write it as KRd. So, that is what is shown here, you can see this is the expression here. So, the implication is that if I know the vanishing points, there are ways by which you can compute the vanishing points you may take straight lines, in parallel straight lines and take that images and find out their point of intersection, that would give you the vanishing points. And then if you know those vanishing points and also if you know the camera parameters like calibration matrix K then we can compute rotation. So, this is one of the interesting implication of this result. v K v K d 1 1 ˆ    269
+[p.86] So, this is how even the direction of the corresponding line also can be computed from this relationship that is you can apply K inverse v normal to this. So, you can apply this particular relationship you can translate them in this form. You can also get the direction of the straight line in a three dimension, if you can get it is vanishing point knowing it is corresponding calibration parameter. And also similarly, you can get the in the reference frame you can get another direction of the straight line with respect to the reference frame. So, from there you can get the rotation matrix. So, if the relationship between these two directions again, if they are related with the same transformation R and there are two independent constraints on R and it can be computed using this relationship. So, this constraint let me explain that it is an orthonormal matrix that is the first constraint and there is a angle of rotation which is involved. So, you need to determine that. So, with this you can find out.
+
+(Refer Slide Time: 21:23)
+
+So, now let us consider another kind of geometric information or interpretations with respect to imaging. You considered a plane and which is specified by its unit normal there is a direction that normal is known to us and of course, to specify a particular plane you need to know its point. So, in this case let us consider, we know a set of straight lines in this plane , those are also specified. So, if I take the images of these straight lines, what will get. 270
+[p.87] So, if you consider a plane which is parallel to this plane; that means, whose normal of the plane is also the same in nˆ as it is shown and so, that is the construct. it is a parallel plane through camera center and we can denote this plane as you know ll  as it shown here. So, what you are getting here, you are getting the vanishing points of the directions of M; that means, all parallel lines or parallel to that direction it has a vanishing point say at M V and similarly L V is the vanishing point related to the direction specified by L which is lying on this plane . So, any line parallel to that it has its direction L V . So, if I connect these two points you will get a line on the image plane and infact that is the vanishing line the interpretation is that all the vanishing points of the lines lying on that plane that would lie on that line. So, even any line or any parallel for any plane parallel to it, all those lines in those directions they have the same vanishing line. So, that is the interpretation. So, we can define then the vanishing line L in this way that it is a intersection of these two planes; that means, a plane ll  , which is parallel plane through camera center, parallel to the plane which we are mentioning here. So, it is a plane which is parallel to this and which is passing through camera center and when it intersects with the image plane, then the intersecting line two planes they intersect at a line. So that intersecting line is a vanishing line that is the geometric interpretation of vanishing line and it is related with the plane. So, it is the vanishing line with respect to this plane. So, this is the interpretation. So, from this we can compute also the normal of the plane because if you know the vanishing line, then I can compute the corresponding plane itself by using that same transformation l PT and would give me the normal to the direction of the plane for which this line is the vanishing line. And if it is a reference camera; that means, if the camera is represented by this projection matrix ] 0 | [I K , that is the projection matrix of this camera. So, if I multiply with l , it would be simply l K T . So, for unidirectional you need to do the normalization of that vector. 271
+[p.88]
+(Refer Slide Time: 25:09)
+
+So, let us again workout an exercise for involving this particular computation. Suppose, you have a camera which has this following projection matrix that is P which is given here as you can see, and suppose you have a line in the image coordinates space by the equation 5 4 3   y x . So, we have to compute the normal of the plane for which the line appears as a horizon. So, you understand your horizon should be the vanishing line of that plane which is the parallel to our particular view. I mean where this w which is having this particular vanishing line. So, you would like to get that plane and that is intersecting with the image plane with respect to this line. So, that is what we would like to find out. 272
+[p.89]
+(Refer Slide Time: 26:19)
+
+So, let us see the corresponding solution you have this projection matrix. So, the line is denoted by this column vector           5 4 3 and plane formed by the camera center and this line as you know it is l PT . So, if I perform this computation you have to transpose the camera matrix and you know you should multiply with this l then you will get this kind of this is the equation. This is equation of the plane and if I would like to get the normal of this plane. So, I should restrict myself to the first three elements of that column vector, as you know that this equation of the plane is represented as 0 5 8 72 47     z y x . So, this particular vector will provide you the normal. So, you have to normalize it and then you can get that unit vector. So, that is what will be doing. 273
+[p.90]
+(Refer Slide Time: 27:23)
+
+So, all planes parallel to this plane have the vanishing line l . So, that is the interpretation and the normal can be computed in this fashion. So, we can finally, we can compute the normal as we can see into this computation.
+
+(Refer Slide Time: 27:37)
+
+So, how do you compute a vanishing line in that case? You have to identify groups of sets of parallel lines in a plane at different directions. We can obtain their vanishing points and get the line among them. So, in this way you can get the vanishing line. 274
+[p.91]
+(Refer Slide Time: 27:49)
+
+So, now I will be summarizing the content, summarizing those particular highlights which we discussed in this topic of single view camera geometry. First thing as you can see that pinhole camera model, it provides a projection matrix which maps a 3 dimensional point to an image point and projection matrix has some interest. I mean some known structure that is it is 4 3 matrix. It is a mapping from 3 dimensional world to a 2 dimensional plane and it has a degree of freedom 11; that means, there are 11 independent parameters. So, as you can understand 4 3 means there at 12 elements in that matrix. So, since you can scale those elements still you get the same mapping. So, one of the element is a scale factor. So, rest of elements is the independent of that scale factor. Then out of this 11, there are 5 intrinsic parameters and 6 extrinsic parameters and you require minimum 6 point correspondences to estimate this projection matrix. There is another kind of projection matrix which we call affine projection matrix. So, in this case instead of instead of a converging projection rays on a center of projection or camera center, we consider the images are formed by parallel rays and your center of camera lies at an infinity. So, the structure of the projection matrix for this kind of affine projection has a unique distinction. It should have a colour it should have a row with [0 0 0 1] or any scale value in the place of 1 and then its degree of freedom is, because if I picks a scale value at 1, 275
+[p.92] rest others are the independent parameters. So, if I take out these four elements from 12 it remains 8. So, it is degree of freedom is 8 or independent parameter is 8 and each point correspondence provides me 2 equations. So, , we require minimum 4 point correspondences to estimate this affine projection matrix.
+
+(Refer Slide Time: 30:13)
+
+Then we discussed about the geometry which is encoded in a projection matrix like projection matrices can be represented in different forms to express these relations. As we can see that we can have a form of ] | [ 4 p M these are the notations we have used M is a 3 3 sub matrix 4 p is a column vector. It is a 4th column vector or projection matrix can be considered as a set of 4 column vectors p first second third fourth, they are denoted by 4 3 2 1 , , , p p p p or it can be considered as a stack of rows. Those are row vectors. So, in this way projection matrix could be represented and some of the interesting information about the geometry, which are encoded, which can be retrieved from this values of projection matrix itself. Like camera center is given by 4 1p M   in its world coordinate itself and for affine projection matrix you have to take the right 0 vector of M and which is you know interpreted as a direction. So, it would give you the direction of that parallel rays which is forming the images. Then we discussed about vanishing points in this case in the imaging. For example, X 276
+[p.93] axis vanishing point of X axis is given by the first column vector 1p , then Y axis by 2 p and Z for Z axis it is vanishing point image of that vanishing point is at 3p and image of world origin is at 4 p . And there are so special planes, which we can recover from the projection matrices elements particularly from its rows. So, some of the special planes like principal plane is given by this relation 0 3  X rT , then from there since, it is a principal plane its normal will give you the principal axis. So, the first three elements of the vector 3r , it would give you the directions of the normal and then principal point is the intersection of the principal axis with image plane which is expressed by this relationship. M is a corresponding you know sub matrix or projection matrix 3 3 sub matrix. We need to multiply the directions of the optical axis with M and you will get the principal point. The plane formed with the x axis of image coordinate system and also the center of projection. So, with the centre of projection and x axis this will make a plane 3 dimensional, in the 3 dimensional space and given by this relation 0 1  X rT . And similarly, a plane formed by y axis of image coordinate system with again with the center of camera it is 0 2  X rT .
+
+(Refer Slide Time: 33:21)
+
+So, there are different other geometric derivatives from projection matrix. First thing is that you can form a projection ray at an image point, you can from its three dimensional 277
+[p.94] equations of that particular line, it is direction ratio is given by this expression x M 1  . You note that x is a image which is expressed in the homogenous coordinate system of a 2 dimensional projective space. So, this would give you a direction ratio in a 3 dimensional structure, 3 dimensional space and any point on the ray will define a line incidentally that one has to pass to the camera center, and you know that the camera center can be computed in this form you have 4 1p M   , that would give you the camera center and this is how the projection ray is formed. Similarly, you can also compute the plane formed with a line in the image plane with the camera center, it is given by l PT and vanishing point of a line with direction d is given by Md . So, with this you know let me conclude this particular topic here. I hope you have learnt some features of single view geometry; next, will be discussing about stereo geometry or two views camera geometry. Thank you very much for your listening. 278

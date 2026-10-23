@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pml2405.github.io/computer-vision-notes/sitemap.xml

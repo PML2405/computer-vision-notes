@@ -1,0 +1,234 @@
+# Week 7 — Feature Matching and Model Fitting — assignment solution
+(source: NPTEL, 6 PDF pages; fractions/matrices from the PDF may be flattened in this text)
+
+Nptel Online Certification Course: Computer Vision
+Week 7: Feature matching and model fitting
+Type of questions: MCQ/MSQ
+Number of questions: 10
+Total marks: 10 X 2 = 20
+QUESTION 1:
+Type: MCQ
+Using the method of least squares, find an equation of the form y = ax + b that fits the data
+given as (x, y) coordinates. [(0, 2), (1, 5), (2, 8)]
+a) y = 3x −2
+b) y = 2x + 3
+c) y = 3x + 2
+d) y = 3.1x + 1.9
+Correct Answer: c
+Detailed Solution: For the least squares fit, y = ax + b
+The normal equations are:
+a
+X
+x2
+i + b
+X
+xi =
+X
+xiyi
+a
+X
+xi + nb =
+X
+yi
+Compute the required sums:
+xi
+yi
+x2
+i
+xiyi
+0
+2
+0
+0
+1
+5
+1
+5
+2
+8
+4
+16
+X
+xi = 3
+X
+yi = 15
+X
+x2
+i = 5
+X
+xiyi = 21
+n = 3
+Substituting, 5a + 3b = 21 and 3a + 3b = 15
+Solving, a = 3 and b = 2.
+QUESTION 2:
+Type: MCQ
+Consider two points a = (2, 5) and b = (4, 1) in image space, compute two straight lines
+corresponding to them in parameter space using Hough transform.
+a) c = −2m + 5 and c = −4m + 1
+b) c = −2m + 1 and c = −4m + 5
+c) c = −5m + 2 and c = −m + 4
+d) c = 2m −5 and c = 4m −1
+Correct Answer: a
+Detailed Solution: From the line equation y = mx + c, c = −mx + y is used with given image
+points to transform them from image space to parameter space.
+QUESTION 3:
+Type: MSQ
+Which of the following are examples of model fitting given some data points?
+a) Estimating an affine transformation matrix between two keypoint sets
+b) Image histogram equalized profile optimization matching maps
+c) Finding an optimal 3D plane mapping model out of scattered point cloud data arrays
+d) Robustly localized circle estimation from noisy boundary point edges
+Correct Answer: a, c and d
+Detailed Solution: Model fitting identifies optimal parametric descriptions from noisy
+observed geometric point distributions.
+QUESTION 4:
+Type: MCQ
+Given two features each of size 4 as f = [1, 3, 2, 6] and g = [2, 2, 4, 4]. Compute normalized
+cross correlation and cosine similarity, respectively.
+a) NCC = 0.8944 and Cosine = 0.5345
+b) NCC = 0.5345 and Cosine = 0.8944
+c) NCC = 0.6000 and Cosine = 0.7500
+d) NCC = 0.4444 and Cosine = 0.7071
+Correct Answer: b
+Detailed Solution: Normalized cross correlation is cov( f,g)
+σf σg , and cosine similarity is
+f·g
+∥f∥∥g∥.
+QUESTION 5:
+Type: MCQ
+Let d1 (3), d2 (9) be the distances to the nearest and the next nearest neighbors from a query
+feature, respectively for a threshold limit of 0.4 for the method of finding nearest neighbor
+using nearest neighbor distance ratio (NNDR). Choose the correct option:
+a) Nearest neighbor distance ratio d1/d2 accepts nearest neighbor as a match
+b) Nearest neighbor distance ratio d1/d2 rejects nearest neighbor as a match
+c) Nearest neighbor distance ratio d2/d1 accepts nearest neighbor as a match
+d) Nearest neighbor distance ratio d1/d2 accepts nearest neighbor only if the ratio is
+greater than 0.4
+Correct Answer: a
+Detailed Solution: Nearest neighbor distance ratio d1/d2 does not exceed the distance
+threshold 0.4.
+QUESTION 6:
+Type: MCQ
+Two probability distributions for 4 discrete values are given as P =
+
+1
+2, 1
+4, 1
+8, 1
+8
+
+and
+Q =
+
+1
+4, 1
+4, 1
+4, 1
+4
+
+. Compute the KL divergence DKL(P∥Q).
+a) 0.3466
+b) 0.2500
+c) 0.1733
+d) 0.3122
+Correct Answer: c
+Detailed Solution:
+The KL divergence is defined as:
+DKL(P∥Q) =
+X
+i
+p(i) ln
+ p(i)
+q(i)
+!
+QUESTION 7:
+Type: MCQ
+Which of the following statements about a KD-tree is correct?
+a) A KD-tree always splits the data using the same coordinate axis at every level.
+b) In a KD-tree, each internal node partitions the space into two regions using one
+coordinate axis.
+c) A KD-tree guarantees perfectly balanced partitions irrespective of insertion order.
+d) KD-trees can only store 2-dimensional points.
+Correct Answer: b)
+Detailed Solution:
+A K-dimensional tree is a binary search tree used for organizing points in a
+multi-dimensional space. Each node divides the space into two half-spaces:
+Left subtree: points smaller along the active axis
+Right subtree: points greater along the active axis
+Therefore, option b) is correct.
+a) Incorrect: KD-trees alternate splitting axes rather than always using the same axis.
+c) Incorrect: The balance of a KD-tree depends on insertion order and construction
+method.
+d) Incorrect: KD-trees work for any dimension k, not only 2D.
+QUESTION 8:
+Type: MCQ
+Using Random Sample Consensus (RANSAC), compute the number of samples N required
+to achieve a 99% probability (p) of obtaining at least one pure inlier set, given an outlier ratio
+of 20% (e) and a minimal sample size of s = 2. Round to the nearest integer.
+a) N = 5
+b) N = 7
+c) N = 9
+d) None of the above
+Correct Answer: a
+Detailed Solution:
+N =
+ln(1 −p)
+ln(1 −(1 −e)s)
+p = 0.99, e = 0.20, s = 2
+QUESTION 9:
+Type: MCQ
+Consider points in 2D plane (5,5), (12, 10), (8, 1), (2, 8), (10, 14). After building a 2D binary
+search tree following the given order starting with an X-split, which point becomes the left
+child of the root node?
+a) (12,10)
+b) (2,8)
+c) (8,1)
+d) (10,14)
+Correct Answer: b
+Detailed Solution: A 2D KD-tree is constructed by alternating split axes:
+X →Y →X →Y →· · ·
+Root node uses an X-split. Step 1: Insert (5,5). This becomes the root.
+Step 2: Insert (12,10). Compare x-coordinate with root. Hence, it goes to the right of (5, 5).
+Step 3: Insert (8,1). Compare with root using x-split. Move right to (12, 10). Now compare
+using y-split. Hence, (8, 1) becomes the left child of (12, 10).
+Step 4: Insert (2,8). Compare with root using x-split. Hence, (2, 8) becomes the left child of
+the root.
+Step 5: Insert (10,14). Compare with root using x-split. Move right to (12, 10). Now compare
+using y-split. (10, 14) becomes the right child of (12, 10).
+Final KD-tree:
+(5,5) [X]
+/
+\
+(2,8) [Y]
+(12,10) [Y]
+/
+\
+(8,1) [X]
+(10,14) [X]
+Therefore, the left child of the root node is (2, 8).
+QUESTION 10:
+Type: MCQ
+A computer vision researcher uses the method of least squares to fit a straight line y = ax + b
+to a set of n keypoint tracking coordinates (xi, yi). The resulting optimal parameters are found
+to be a = 2.5 and b = −1.0.
+If the entire image coordinate system is shifted such that every y-coordinate is increased by
+exactly 3 units (i.e., y′
+i = yi + 3), what will be the new slope (a′) and intercept (b′) for the
+optimal least squares line fitting the updated coordinates?
+a) a′ = 5.5 and b′ = −1.0
+b) a′ = 2.5 and b′ = 2.0
+c) a′ = 7.5 and b′ = −3.0
+d) a′ = 2.5 and b′ = −1.0
+Correct Answer: b
+Detailed Solution: Normal equations of least square fit of straight line is
+a Pn
+i=1 x2
+i + b Pn
+i=1 xi = Pn
+i=1 xiyi and a Pn
+i=1 xi + nb = Pn
+i=1 yi. Substituting y′
+i = yi + 3 changes
+the right side of the second normal equation to P(yi + 3) = P yi + 3n. This systematically
+increases the intercept parameter by 3 units while leaving the geometric slope unaltered.
+Thus, a′ = a = 2.5 and b′ = b + 3 = −1.0 + 3 = 2.0.

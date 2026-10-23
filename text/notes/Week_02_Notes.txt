@@ -1,0 +1,1412 @@
+# Week 2 — Projective Geometry — study notes
+(Projective Geometry & Homography; Prof. Jayanta Mukhopadhyay · Lectures 5–10. Re-taught-from-scratch notes written from the slides + transcript; math is LaTeX between $...$ / $$...$$. Pretty version: https://pml2405.github.io/computer-vision-notes/notes/week2_notes.html)
+
+COMPUTER VISION · NPTEL · IIT KHARAGPUR
+
+Week 2
+
+**Projective Geometry** & **Homography**
+
+Prof. Jayanta Mukhopadhyay · Lectures 5–10
+
+### 📒 what's inside this week
+
+1. Lecture 5 — Projective Geometry · Part I
+homogeneous coordinates, the projective plane, points at infinity
+
+2. Lecture 6 — Projective Geometry · Part II
+lines as 3-vectors, point–line duality, cross-product join & meet, conics
+
+3. Lecture 7 — Projective Transformation
+the 3×3 homography H, 8 DOF, computing it (DLT + pseudo-inverse)
+
+4. Lecture 8 — Homography: Properties · Part I
+when a homography relates two images, invariants, rectification
+
+5. Lecture 9 — Homography: Properties · Part II
+the transformation hierarchy, cross-ratio, affine rectification
+
+6. Lecture 10 — Homography: Properties · Part III
+further properties & applications
+
+# LECTURE 05 — Projective Geometry — Part I
+
+why images need projective (not just Euclidean) geometry · homogeneous coordinates · the projective plane
+
+🧠 the big picture, first
+
+In school we do geometry on the flat **real plane** $\mathbb{R}^2$: a point is a pair $(x,y)$, full stop. But a camera does not photograph the plane — it projects a 3-D world through a lens. Under that projection, every image point secretly stands for a whole ray of 3-D points.
+
+To describe images honestly we upgrade to the **projective plane** $\mathbb{P}^2$, where a point is written with three numbers $(x,y,1)$ and any scalar multiple $(kx,ky,k)$ means the same thing. This lecture builds that language — points, the scale trick, and the neat cross-product formulas for lines. ✏️
+
+## 1.  why images need projective geometry
+
+Recall image formation from Week 1. A 3-D **scene point** $P$ sends a ray through the centre of the lens $O$; where that ray pierces the **image plane** is the image point $p$. Do this for every scene point and you get the whole picture. This is **perspective projection**.
+
+#### recap — how a camera makes an image (perspective projection)
+
+[diagram text: image plane | O = lens centre | P₁ | p₁ | P₂ | p₂]
+
+Each scene point → a ray through $O$ → an image point. The image looks 2-D, but every one of its points is really the shadow of an entire 3-D ray.
+
+So an image is best modelled as a **2-D projective space with an implicit 3-D space behind it**. That “ray behind every point” is the whole reason ordinary Euclidean $(x,y)$ is not enough — and it is exactly what homogeneous coordinates will capture.
+
+**🛣️ the tell-tale sign of perspective**
+Under perspective, parallel lines in the world appear to meet — the two edges of a straight road converge to a single point on the horizon. Plain Euclidean geometry has no way to say “these parallels meet”; projective geometry does, and cleanly. Keep this picture in mind — it is the everyday face of $\mathbb{P}^2$.
+
+The road's two edges are parallel in the real world, yet in the image they converge to one point. Perspective projection makes “parallel” a projective, not a Euclidean, question.
+
+## 2.  two geometries: the real plane $\mathbb{R}^2$ vs the projective plane $\mathbb{P}^2$
+
+In the geometry we grew up with, the 2-D **real space** is the Cartesian product $\mathbb{R}\times\mathbb{R}=\mathbb{R}^2$: pick an origin and two axes, and every point is one coordinate pair.
+
+$$ \mathbf{x}=\begin{pmatrix}x\\ y\end{pmatrix}\in\mathbb{R}^2 $$
+
+(Throughout this lecture a bold letter like $\mathbf{x}$ means a **column vector** of coordinates — a tuple, not a single number.)
+
+The **projective plane** $\mathbb{P}^2$ is also “two-dimensional”, but **implicitly it lives inside a 3-D coordinate system**. Think of the image again: its points sit on a plane, yet each one is tied to a 3-D scene point. We formalise that by putting the plane **at distance $1$ along the $z$-axis** of a hidden 3-D frame, with its two axes parallel to the 3-D $x$ and $y$ axes.
+
+**📐 the key mental switch**
+A point of $\mathbb{R}^2$ is **a dot**. A point of $\mathbb{P}^2$ is **a ray through the origin** of the hidden 3-D space. We just name that ray by where it crosses the plane $z=1$.
+
+## 3.  homogeneous coordinates — a point is a ray through the origin
+
+Take the 3-D frame with origin $O$. A ray shooting out of $O$ hits the plane $z=1$ at exactly one spot, say $(x,y,1)$. We declare that **the whole ray is represented by that one point**. Slide along the ray and you meet $(kx,ky,k)$ for every scalar $k$ — all of them the same projective point.
+
+#### a point of $\mathbb{P}^2$ = a whole ray through the origin
+
+[diagram text: O (0,0,0) | excluded! | z (scale) | plane z = 1 | (x, y, 1) | (½x,½y,½) | (kx,ky,k)]
+
+Every dot on the coral ray is the SAME projective point. Its **canonical** name is where the ray meets $z=1$, namely $(x,y,1)$.
+
+So the real point $(x,y)$ becomes, in $\mathbb{P}^2$, the **entire set** $\{(kx,ky,k):k\neq0\}$. These three-number names are called **homogeneous coordinates**, and the two descriptions are equivalent — same point, two languages.
+
+homogeneous representation of a point
+
+$$ (x,y)\ \longleftrightarrow\ \tilde{\mathbf{x}}=\begin{pmatrix}x\\ y\\ 1\end{pmatrix}\ \sim\ \begin{pmatrix}kx\\ ky\\ k\end{pmatrix},\quad k\neq0 $$
+
+**read it as:** “$(x,y,1)$ and any scaled copy $(kx,ky,k)$ are one and the same projective point.” The symbol $\sim$ means **equal up to a nonzero scale**; the extra 3rd coordinate is a **scale/weight**, which is why these are called homogeneous — nothing changes if you scale all three together.
+
+**🏷️ vocabulary, pinned down**
+
+- **Homogeneous coordinate** = the ordinary coordinates plus one extra dimension that records scale. Here $\mathbb{R}^2$'s two numbers become $\mathbb{P}^2$'s three.
+
+- The **canonical form** $(x,y,1)$ is just the scaled copy whose last entry is $1$.
+
+- The elements of $\mathbb{P}^2$ are literally **rays** through $O$; naming them by the plane $z=1$ is a convenience, not the definition.
+
+## 4.  going back to the real plane — divide by the scale
+
+Given a projective point $(X,Y,W)$, how do we read off its ordinary $(x,y)$? Since the last coordinate is the scale, we simply **divide every coordinate by it** to land back on the plane $z=1$:
+
+$$ (X,Y,W)\ \longmapsto\ \left(\frac{X}{W},\ \frac{Y}{W}\right) $$
+
+**read it as:** “normalise the scale to $1$.” Dividing $(X,Y,W)$ by $W$ gives $(X/W,\,Y/W,\,1)$ — the canonical name — and the first two numbers are the real-plane point.
+
+**worked example — projective → real**
+Convert the projective point $(25,\ 30,\ 5)$ to the real plane.
+
+1. The scale (last coordinate) is $W=5$.
+
+2. Divide each coordinate by it: $\dfrac{25}{5}=5,\qquad \dfrac{30}{5}=6.$
+
+3. So $(25,30,5)\ \sim\ (5,6,1)$, i.e. the real point is $\boxed{(5,\,6)}$.
+
+Sanity check: $(25,30,5)=5\cdot(5,6,1)$ — it is the “$k=5$” copy of $(5,6,1)$, so of course it names the same point.
+
+### the one point that is not allowed: the origin
+
+What about $(0,0,0)$? It is deliberately **excluded** from $\mathbb{P}^2$. Geometrically it is the origin $O$ itself — and you cannot draw a ray “through $O$ from $O$”, so it defines no direction and names no point. It is a **singular point**.
+
+**⚠️ why $(0,0,0)$ has no real counterpart**
+Try the conversion rule on it: you would compute $\dfrac{0}{0}$, which is **undefined**. The maths refuses it, exactly as the geometry does. So the question “what real point is $(0,0,0)$?” is simply **invalid** — it is not a member of the projective space.
+
+In one line: $\mathbb{P}^2$ = all rays through the origin of 3-D space, **minus the origin** $(0,0,0)$ itself.
+
+## 5.  lines in the projective plane
+
+Points are not the only things with a homogeneous form — so do **lines**. A line in $\mathbb{R}^2$ is the familiar equation
+
+$$ ax+by+c=0, $$
+
+which is completely pinned down by its three parameters $(a,b,c)$. We collect them into a 3-vector and call that the line:
+
+homogeneous representation of a line
+
+$$ \mathbf{l}=\begin{pmatrix}a\\ b\\ c\end{pmatrix}\ \sim\ \begin{pmatrix}ka\\ kb\\ kc\end{pmatrix},\quad k\neq0 $$
+
+Just like points, a line has a **scale ambiguity**: multiply $ax+by+c=0$ through by any $k$ and it is the same line. So $(a,b,c)$, $(ka,kb,kc)$ all denote one line — and dividing out $c$ shows only two parameters are really free $\big(\tfrac{a}{c},\tfrac{b}{c},1\big)$. Lines, too, are rays through the origin of a hidden 3-D space.
+
+## 6.  when does a point lie on a line? the incidence relation
+
+Write the point as $\tilde{\mathbf{x}}=(x,y,1)^T$ and the line as $\mathbf{l}=(a,b,c)^T$. The point lies on the line precisely when $ax+by+c=0$ — and that sum is nothing but a **dot product**:
+
+point-on-line (incidence)
+
+$$ \tilde{\mathbf{x}}^{\,T}\mathbf{l}=ax+by+c=0 $$
+
+**read it as:** “point $\tilde{\mathbf{x}}$ is **contained in** line $\mathbf{l}$ exactly when their dot product is zero.” Because a dot product is symmetric, $\tilde{\mathbf{x}}^{\,T}\mathbf{l}=\mathbf{l}^{\,T}\tilde{\mathbf{x}}$ — the same test written either way. Hold onto that symmetry; it is about to become a whole principle.
+
+## 7.  two cross-product tricks: join and meet
+
+Here is where projective coordinates pay off spectacularly. Two facts from school:
+
+- Two distinct **points** determine exactly one **line** (the line through them — the **join**).
+
+- Two distinct **lines** determine exactly one **point** (where they cross — the **meet**).
+
+In $\mathbb{P}^2$ both are computed by the same operation — the **cross product** of 3-vectors:
+
+line through two points
+
+$$ \mathbf{l}=\mathbf{x}_1\times\mathbf{x}_2 $$
+
+intersection of two lines
+
+$$ \mathbf{x}=\mathbf{l}_1\times\mathbf{l}_2 $$
+
+**read it as:** “to **join** two points, cross-product them; to find where two lines **meet**, cross-product them.” The cross product $\mathbf{a}\times\mathbf{b}$ returns a vector **perpendicular to both** — and being perpendicular is exactly the dot-product-zero incidence condition, so the result automatically lies on / contains both inputs.
+
+#### two points → one line
+
+[diagram text: x₁ | x₂ | l = x₁ × x₂]
+
+the **join**
+
+#### two lines → one point
+
+[diagram text: l₁ | l₂ | x = l₁ × l₂]
+
+the **meet**
+
+### the cross product as a determinant
+
+Recall the school-book cross product, laid out as a determinant with the unit vectors $\mathbf{i},\mathbf{j},\mathbf{k}$ on top:
+
+$$ \mathbf{x}_1\times\mathbf{x}_2=\begin{vmatrix}\mathbf{i}&\mathbf{j}&\mathbf{k}\\ x_1&y_1&1\\ x_2&y_2&1\end{vmatrix} =\big(y_1-y_2,\ \ x_2-x_1,\ \ x_1y_2-x_2y_1\big) $$
+
+Each component is a $2\times2$ sub-determinant (expand along the top row, remembering the middle term gets a minus sign).
+
+**worked example — line through two points**
+Find the line through $(3,5)$ and $(5,0)$. Lift both to homogeneous form and cross-product them.
+
+1. $\mathbf{x}_1=(3,5,1),\quad \mathbf{x}_2=(5,0,1).$
+
+2. $\mathbf{l}=\mathbf{x}_1\times\mathbf{x}_2=\begin{vmatrix}\mathbf{i}&\mathbf{j}&\mathbf{k}\\ 3&5&1\\ 5&0&1\end{vmatrix}$
+
+3. $\mathbf{i}$-part: $(5\cdot1-1\cdot0)=5$;   $\mathbf{j}$-part: $-(3\cdot1-1\cdot5)=-(-2)=2$;   $\mathbf{k}$-part: $(3\cdot0-5\cdot5)=-25$.
+
+4. So $\mathbf{l}=(5,\ 2,\ -25)$, giving the line $\ \mathbf{5x+2y-25=0}.$
+
+Check both points: $(3,5)\Rightarrow15+10-25=0$ ✔   $(5,0)\Rightarrow25+0-25=0$ ✔. The same answer coordinate geometry gives — but in one cross product.
+
+**worked example — intersection of two lines**
+Find where $\ \ell_1:5x+2y+4=0$ and $\ \ell_2:6x+7y+3=0$ cross. Read off the line vectors and cross-product them.
+
+1. $\mathbf{l}_1=(5,2,4),\quad \mathbf{l}_2=(6,7,3).$
+
+2. $\mathbf{x}=\mathbf{l}_1\times\mathbf{l}_2=\begin{vmatrix}\mathbf{i}&\mathbf{j}&\mathbf{k}\\ 5&2&4\\ 6&7&3\end{vmatrix}$
+
+3. $\mathbf{i}$-part: $(2\cdot3-4\cdot7)=6-28=-22$;   $\mathbf{j}$-part: $-(5\cdot3-4\cdot6)=-(15-24)=9$;   $\mathbf{k}$-part: $(5\cdot7-2\cdot6)=35-12=23$.
+
+4. So $\mathbf{x}=(-22,\ 9,\ 23)$ — a homogeneous point. Divide by the scale $23$: $\left(\dfrac{-22}{23},\ \dfrac{9}{23}\right)\approx(-0.96,\ 0.39).$
+
+Check: $\ell_1:5(-\tfrac{22}{23})+2(\tfrac{9}{23})+4=\tfrac{-110+18}{23}+4=-4+4=0$ ✔, and $\ell_2:\tfrac{-132+63}{23}+3=-3+3=0$ ✔. Both lines pass through it, so the intersection is correct.
+
+**⚠️ don't be thrown by an overall sign**
+On the board the lecturer's live arithmetic slipped — he ended with a scale of $-23$ and some garbled numerators, and openly warned “there could be some error there.” Don't let that confuse you when you compare against the video. A projective point is defined **only up to scale**, so multiplying all three coordinates by $-1$ gives the very same point: $(-22,\,9,\,23)\ \sim\ (22,\,-9,\,-23)$. Divide either one by its own last entry and you land on the identical real point $\left(-\tfrac{22}{23},\ \tfrac{9}{23}\right)$. So a “$-23$” scale is not wrong by itself — it just means the numerators carry the matching signs. The clean cross product above, $(-22,9,23)$, is the value to trust.
+
+## 8.  the duality principle
+
+Look back at what we collected. Every rule came in a **point ↔ line mirror pair**:
+| role in the statement | swap point ⇄ line |
+| incidence: $\ \tilde{\mathbf{x}}^{\,T}\mathbf{l}=0$ | $\ \mathbf{l}^{\,T}\tilde{\mathbf{x}}=0$ (same test) |
+| join: line through 2 points $\ \mathbf{l}=\mathbf{x}_1\times\mathbf{x}_2$ | meet: point of 2 lines $\ \mathbf{x}=\mathbf{l}_1\times\mathbf{l}_2$ |
+
+**🔁 duality, stated**
+In the projective plane, **points and lines are interchangeable**. Take any true theorem of 2-D projective geometry, swap the words “point” and “line” (and “join”↔“meet”, “collinear”↔“concurrent”), and you get another true theorem — its **dual**. You prove one, you get the other for free.
+
+This is possible only because both objects wear the same clothing — a 3-vector defined up to scale — and the same two operations (dot product for incidence, cross product for join/meet) serve them both.
+
+### a projective point is a whole ray through the origin — three numbers, defined up to scale.
+
+write $(x,y)\to(x,y,1)$; divide by the last coordinate to come back; drop $(0,0,0)$; then “join” and “meet” are both just a cross product — and points ↔ lines are dual.
+
+### Self-check quiz
+
+1. Convert the projective point $(25,30,5)$ to the real plane. What do you get, and what operation did you use?
+
+→ Answer: divide by the scale $W=5$: $(25/5,\,30/5)=(5,6)$
+
+2. Why is $(0,0,0)$ excluded from $\mathbb{P}^2$?
+
+→ Answer: it is the origin itself — no ray passes “through $O$ from $O$”, so it names no point; converting gives $0/0$, which is undefined
+
+3. Using the cross product, find the line through $(3,5)$ and $(5,0)$.
+
+→ Answer: $(3,5,1)\times(5,0,1)=(5,2,-25)$, i.e. $5x+2y-25=0$
+
+4. State the duality principle in one sentence.
+
+→ Answer: swap “point” and “line” in any $\mathbb{P}^2$ theorem and it stays true — incidence is symmetric ($\tilde{\mathbf{x}}^T\mathbf{l}=\mathbf{l}^T\tilde{\mathbf{x}}$), and join ($\mathbf{x}_1\times\mathbf{x}_2$) mirrors meet ($\mathbf{l}_1\times\mathbf{l}_2$)
+
+— end of Lecture 5 notes ✏️
+
+# LECTURE 06 — Projective Geometry — Part II
+
+lines as homogeneous 3-vectors · point–line duality · cross-product for join & intersection · points/line at infinity · vanishing points · conics
+
+🧠 the big picture, first
+
+Last lecture we learned a magic trick: add one extra coordinate and every 2-D point becomes a **ray through the origin** of a 3-D space. Today we play the same trick on **lines**, and something beautiful falls out.
+
+Points and lines become the same kind of object — a 3-vector — so the algebra for "the line joining two points" and "the point where two lines cross" turn out to be **the identical operation** (a cross product). Parallel lines finally get a place to meet: a real, nameable **point at infinity**. 🌅
+
+## 1.  recap — points and lines are both 3-vectors
+
+A point $(x,y)$ of the ordinary plane is written in **homogeneous coordinates** as a 3-vector $\mathbf{x}=(x_1,x_2,x_3)^{\!\top}$, and you recover the real point by dividing out the last coordinate:
+
+$$ x=\frac{x_1}{x_3},\qquad y=\frac{x_2}{x_3}. $$
+
+Because that division kills any overall scale, $\mathbf{x}$ and $\lambda\mathbf{x}$ are the **same point** for any $\lambda\neq0$. Geometrically the whole **ray through the origin** in the direction of $\mathbf{x}$ represents one 2-D point.
+
+A **line** in the plane is the set of points obeying
+
+$$ ax+by+c=0. $$
+
+Its three coefficients $(a,b,c)$ are also just a 3-vector — an element of a projective space of its own (a "space of lines"). So we represent the line by
+
+a line as a homogeneous 3-vector
+
+$$ \mathbf{l}=(a,\,b,\,c)^{\!\top} $$
+
+**📏 a line is scale-invariant too**
+Multiply the equation by $\lambda$: $\;\lambda(ax+by+c)=0$ describes the **exact same line**. So $\mathbf{l}\sim\lambda\mathbf{l}$ — just like points. A line, in the 3-D picture, is a **plane through the origin**; the vector $(a,b,c)$ is its normal.
+
+## 2.  incidence & the duality principle
+
+When does a point **lie on** a line? Plug the homogeneous point into the line equation. Writing $x=x_1/x_3,\;y=x_2/x_3$ into $ax+by+c=0$ and clearing $x_3$ gives $a x_1+b x_2+c x_3=0$ — which is exactly a **dot product**:
+
+point-on-line (incidence)
+
+$$ \mathbf{l}^{\!\top}\mathbf{x}=0 \quad\Longleftrightarrow\quad \mathbf{x}^{\!\top}\mathbf{l}=0 $$
+
+**read it as:** "the point $\mathbf{x}$ sits on the line $\mathbf{l}$ exactly when their dot product is zero." Since a dot product is symmetric, $\mathbf{l}^{\!\top}\mathbf{x}$ and $\mathbf{x}^{\!\top}\mathbf{l}$ are the same number — swap the roles of point and line and the statement still reads true.
+
+**♻️ the duality principle**
+In the projective plane $\mathbb{P}^2$, **points and lines are interchangeable**. Any true statement stays true if you swap the words "point" ↔ "line" and swap "lies on" ↔ "passes through". We are about to see this pay off twice in a row.
+
+## 3.  join & meet — one cross product does both
+
+Two questions that sound different in school geometry:
+
+- **Join:** given two points, what is the line through them?
+
+- **Meet:** given two lines, what is their point of intersection?
+
+In $\mathbb{P}^2$ they have the same answer — the **cross product**. The line through points $\mathbf{x}_1,\mathbf{x}_2$ is
+
+line joining two points
+
+$$ \mathbf{l}=\mathbf{x}_1\times\mathbf{x}_2 $$
+
+point where two lines meet
+
+$$ \mathbf{x}=\mathbf{l}_1\times\mathbf{l}_2 $$
+
+**why it works:** a cross product $\mathbf{a}\times\mathbf{b}$ is perpendicular to both inputs, so $\mathbf{a}^{\!\top}(\mathbf{a}\times\mathbf{b})=0$ and $\mathbf{b}^{\!\top}(\mathbf{a}\times\mathbf{b})=0$. For the join, that means both points satisfy $\mathbf{x}_i^{\!\top}\mathbf{l}=0$ — they lie on $\mathbf{l}$. For the meet, both lines satisfy $\mathbf{l}_i^{\!\top}\mathbf{x}=0$ — the point lies on both. Same incidence test, roles swapped: pure duality.
+
+$$ \mathbf{l}=\mathbf{x}_1\times\mathbf{x}_2=\begin{vmatrix}\mathbf{i}&\mathbf{j}&\mathbf{k}\\ x_1&y_1&w_1\\ x_2&y_2&w_2\end{vmatrix} $$
+
+Expand the determinant along the top row; the $\mathbf{i},\mathbf{j},\mathbf{k}$ coefficients are the three entries of the answer vector. (Here $w_i$ is the third/scale coordinate of each point.)
+
+#### join vs. meet — mirror images of each other
+
+[diagram text: x₁ | x₂ | l = x₁ × x₂]
+
+[diagram text: l₁ | l₂ | x = l₁ × l₂]
+
+left: two points determine one line. right: two lines determine one point. Identical algebra.
+
+**worked example — line through two points (illustrative numbers)**
+Take the points $(1,2)$ and $(3,5)$, homogenised as $\mathbf{x}_1=(1,2,1)$ and $\mathbf{x}_2=(3,5,1)$.
+
+1. $\mathbf{i}$ term: $\;y_1 w_2 - w_1 y_2 = (2)(1)-(1)(5)=-3$
+
+2. $\mathbf{j}$ term: $\;-(x_1 w_2 - w_1 x_2) = -\big((1)(1)-(1)(3)\big)=+2$
+
+3. $\mathbf{k}$ term: $\;x_1 y_2 - y_1 x_2 = (1)(5)-(2)(3)=-1$
+
+4. So $\mathbf{l}=(-3,\,2,\,-1)$, i.e. the line $-3x+2y-1=0$, or $\;3x-2y+1=0$.
+
+5. Check: at $(1,2)$, $\;3-4+1=0$ ✓; at $(3,5)$, $\;9-10+1=0$ ✓.
+
+**worked example — meet of two general lines (illustrative numbers)**
+Now the dual computation: two lines that are **not** parallel, so they cross at an ordinary finite point. Take $\mathbf{l}_1:\;x+y-3=0\Rightarrow(1,1,-3)$ and $\mathbf{l}_2:\;x-y-1=0\Rightarrow(1,-1,-1)$, and form $\mathbf{x}=\mathbf{l}_1\times\mathbf{l}_2$.
+
+1. $\mathbf{i}$ term: $\;(1)(-1)-(-3)(-1)=-1-3=-4$
+
+2. $\mathbf{j}$ term: $\;-\big((1)(-1)-(-3)(1)\big)=-(-1+3)=-2$
+
+3. $\mathbf{k}$ term: $\;(1)(-1)-(1)(1)=-1-1=-2$
+
+4. $\mathbf{x}=(-4,-2,-2)\sim(2,1,1)$ (divide by $-2$) → last coordinate $\mathbf{1\neq0}$, so divide it out → the finite point $(2,1)$.
+
+5. Check: $\mathbf{l}_1$ at $(2,1)$: $2+1-3=0$ ✓; $\mathbf{l}_2$ at $(2,1)$: $2-1-1=0$ ✓. Contrast with the parallel case below, where the third coordinate came out $0$ (a point at infinity) instead.
+
+## 4.  where do parallel lines meet?
+
+In school geometry we mutter "parallel lines meet at infinity" but can never point to that meeting place. In $\mathbb{P}^2$ we can compute it. Two lines are parallel when they share the same $a,b$ (same slope) but differ in $c$:
+
+$$ \mathbf{l}_1=(a,\,b,\,c_1),\qquad \mathbf{l}_2=(a,\,b,\,c_2),\qquad c_1\neq c_2. $$
+
+Their intersection is the cross product $\mathbf{l}_1\times\mathbf{l}_2$:
+
+$$ \mathbf{l}_1\times\mathbf{l}_2=\begin{vmatrix}\mathbf{i}&\mathbf{j}&\mathbf{k}\\ a&b&c_1\\ a&b&c_2\end{vmatrix} =\big(\,b(c_2-c_1),\;\; a(c_1-c_2),\;\; \underbrace{ab-ba}_{=\,0}\,\big). $$
+
+Factor out the shared scalar $(c_2-c_1)$ (allowed — points are scale-free):
+
+intersection of two parallel lines
+
+$$ \mathbf{x}_\infty=(\,b,\;-a,\;0\,)^{\!\top} $$
+
+**read the "0" out loud:** the third coordinate is **zero**. If you tried to divide by it to get a real $(x,y)$, both coordinates blow up to infinity — so this is a **point at infinity**. But it is not a shapeless "∞": the first two entries $(b,-a)$ pin down which infinity — the shared direction of the two lines.
+
+**worked example — two parallels landing at infinity (illustrative)**
+$\mathbf{l}_1:\;2x+3y-6=0\Rightarrow(2,3,-6)$ and $\mathbf{l}_2:\;2x+3y-12=0\Rightarrow(2,3,-12)$.
+
+1. $\mathbf{i}$ term: $\;(3)(-12)-(-6)(3)=-36+18=-18$
+
+2. $\mathbf{j}$ term: $\;-\big((2)(-12)-(-6)(2)\big)=-(-24+12)=+12$
+
+3. $\mathbf{k}$ term: $\;(2)(3)-(3)(2)=0$
+
+4. $\mathbf{x}_\infty=(-18,12,0)=-6\,(3,-2,0)\sim(3,-2,0)$.
+
+5. Matches the formula $(b,-a,0)=(3,-2,0)$ with $a=2,\,b=3$. Last coordinate $0$ → they meet at infinity, in the direction of slope $-a/b=-\tfrac23$. ✓
+
+## 5.  ideal points = pure directions
+
+That special point $(x,y,0)$ has its own name.
+
+**📖 definition — ideal point (point at infinity)**
+An **ideal point** is a point of $\mathbb{P}^2$ whose last (scale) coordinate is $0$: in canonical form $\;\mathbf{x}=(x,y,0)^{\!\top}$. It has no finite location — instead it denotes a **direction toward infinity**. In the 3-D ray picture these points live in the plane $x_3=0$, called the **principal plane** (a.k.a. **ideal plane**) because it holds the $x$- and $y$-axes and lies parallel to the projection plane.
+
+Why is $(b,-a,0)$ a direction? Rewrite the line $ax+by+c=0$ in slope–intercept form:
+
+$$ y=-\frac{a}{b}\,x-\frac{c}{b},\qquad \text{slope}=-\frac{a}{b}=\tan\theta. $$
+
+The direction vector of a line with slope $-a/b$ is $(b,-a)$ — exactly the first two coordinates of the ideal point. So the ideal point stores the line's tilt angle $\theta$. Every line parallel to it (any $c$) shares that same ideal point, which is why all members of a parallel family "meet" there.
+
+#### an ideal point captures the angle θ, not a location
+
+[diagram text: x | y | ax+by+c₁=0 | ax+by+c₂=0 | θ | → ideal point (b,−a,0) | = the shared direction]
+
+Both lines are genuinely parallel (they never touch on the page) — yet they share one ideal point, the direction they both point in.
+
+## 6.  the line at infinity
+
+All those ideal points — one for every possible direction — turn out to lie on a single line. Consider the special line vector $\mathbf{l}_\infty=(0,0,1)^{\!\top}$ and test any ideal point $(x,y,0)$ against it:
+
+$$ \mathbf{l}_\infty^{\!\top}\mathbf{x}=(0)(x)+(0)(y)+(1)(0)=0. $$
+
+the line at infinity
+
+$$ \mathbf{l}_\infty=(0,\,0,\,1)^{\!\top} $$
+
+**read it as:** "$\mathbf{l}_\infty$ is the one line that **every** ideal point lies on." The incidence test $\mathbf{l}_\infty^{\!\top}\mathbf{x}=0$ passes for any $(x,y,0)$ and fails for any finite point (whose $x_3\neq0$). So a single 3-vector $(0,0,1)$ stands in for the entire "plane of all directions".
+
+Notice the elegance: the whole ideal plane (a 2-D sheet of points at infinity) collapses to just **one line** in $\mathbb{P}^2$. That is the projective plane's tidy bookkeeping for infinity.
+
+## 7.  a geometric model of the projective plane
+
+Time to see the whole construction in one 3-D picture. Sit an origin $O$ at the centre of a 3-D space and place a flat **projection plane** $\pi$ (think $x_3=1$) off to one side.
+
+**🗺️ the dictionary between $\mathbb{P}^2$ and 3-D space**
+
+- A **2-D point** ⇒ a **ray from $O$**; where the ray pierces $\pi$ is the ordinary point.
+
+- A **2-D line** ⇒ a **plane through $O$**; where that plane cuts $\pi$ is the ordinary line.
+
+- An **ideal point** ⇒ a ray from $O$ that is **parallel to $\pi$** (it never pierces $\pi$) — it lives in the principal plane $x_3=0$.
+
+- The **line at infinity** ⇒ the principal plane $x_3=0$ itself.
+
+- The set of all projective points $\;=\;$ all of $\mathbb{R}^3$ **except the origin** (the origin is the one singular point — a ray of length zero has no direction).
+
+#### points are rays through O · lines are planes through O
+
+[diagram text: π = projection plane (x₃=1) | principal / ideal plane (x₃=0) = l∞ | O | ordinary point (ray ∩ π) | ray ∥ π → ideal point]
+
+The solid coral ray pierces π at a finite point. The dashed ray runs parallel to π — it never lands, so it is a point at infinity, living in the pink principal plane.
+
+## 8.  projecting parallel lines → the vanishing point
+
+Now the payoff for photography. Take two truly parallel lines lying on some scene plane $\pi'$ and project them (through the camera centre $O$) onto the image plane. Each scene line projects to an image line — and although the originals are parallel, their images converge to a single point.
+
+**📖 definition — vanishing point**
+The **vanishing point** is the point where the projected images of a family of parallel lines meet. It is precisely the image of that family's **ideal point** (their point at infinity). Every line parallel to that direction projects through the same vanishing point.
+
+A road shot from a moving car: the two parallel edges appear to meet at a point on the horizon — the vanishing point. We sense it, drive toward it, yet can never reach it. That is a point at infinity made visible.
+
+#### parallel rails → one vanishing point
+
+[diagram text: horizon | vanishing point]
+
+Parallel in the world, convergent in the image.
+
+## 9.  many directions → the vanishing line
+
+A scene plane has infinitely many directions of parallel lines. Pick direction #1 → its lines converge to vanishing point $V_1$. Pick a different direction #2 → they converge to a different vanishing point $V_2$. Do this for every direction and all the vanishing points line up.
+
+**📖 definition — vanishing line (horizon)**
+The vanishing points of **all** directions of parallel lines lying in one scene plane fall on a single straight line, the **vanishing line** of that plane. It is the image of the plane's line at infinity — for the ground plane, this is exactly the **horizon**.
+
+#### two directions, two vanishing points, one vanishing line
+
+[diagram text: vanishing line (horizon) | V₁ | direction 1 | V₂ | direction 2]
+
+Each colour is one family of parallels meeting at its own vanishing point; join the points and you get the vanishing line.
+
+A real notice board shot at an angle. Its horizontal edges (and the rows of text, all parallel) march toward one vanishing point; its vertical edges toward another. Connect the two and you have this plane's vanishing line.
+
+## 10.  conics in the projective plane
+
+Straight lines are degree-1 curves. The next family up is degree-2 — **conics** (ellipse, parabola, hyperbola, circle). A conic is any curve satisfying a general second-degree equation:
+
+$$ a x^2 + b xy + c y^2 + d x + e y + f = 0. $$
+
+Homogenise with $x=x_1/x_3,\;y=x_2/x_3$ and clear $x_3^2$:
+
+$$ a x_1^2 + b x_1x_2 + c x_2^2 + d x_1x_3 + e x_2x_3 + f x_3^2 = 0. $$
+
+Every term is now quadratic in the coordinates, so it packs into a neat matrix sandwich:
+
+a conic in $\mathbb{P}^2$
+
+$$ \mathbf{x}^{\!\top} C\,\mathbf{x}=0,\quad C=\begin{bmatrix}a&\tfrac{b}{2}&\tfrac{d}{2}\\[2pt]\tfrac{b}{2}&c&\tfrac{e}{2}\\[2pt]\tfrac{d}{2}&\tfrac{e}{2}&f\end{bmatrix} $$
+
+**read it as:** "a point $\mathbf{x}$ is on the conic when $\mathbf{x}^{\!\top}C\mathbf{x}=0$." $C$ is a **symmetric $3\times3$ matrix** — multiply out the sandwich and you recover the six-term equation exactly. Symmetry is why the off-diagonals carry the halves $b/2,\,d/2,\,e/2$.
+
+**🔢 degrees of freedom**
+$C$ holds six numbers $a,b,c,d,e,f$. But $C$ and $kC$ describe the **same** conic (scale-free, like every projective object), so one number is just scale. That leaves 5 degrees of freedom — which is why you need **5 points** to pin a conic down uniquely. Each point gives one linear equation $\mathbf{x}_i^{\!\top}C\mathbf{x}_i=0$; five equations fix the five free ratios.
+
+## 11.  the dual (line) conic
+
+Duality strikes again. A conic can be described two ways: as the set of **points** on it, or as the set of **tangent lines** that wrap around it (its envelope). For a point $\mathbf{x}$ on the conic, the tangent line there is a strikingly simple product:
+
+$$ \mathbf{l}=C\,\mathbf{x}. $$
+
+Where does $\mathbf{l}=C\mathbf{x}$ come from? In general $C\mathbf{x}$ is the **polar line** of the point $\mathbf{x}$ with respect to the conic $C$. When $\mathbf{x}$ actually lies on the conic (so $\mathbf{x}^{\!\top}C\mathbf{x}=0$), its polar collapses onto the curve and becomes the single **tangent line** touching the conic exactly at $\mathbf{x}$ — which is the case we use here. (Sanity check: the point is on its own polar, since $\mathbf{x}^{\!\top}\mathbf{l}=\mathbf{x}^{\!\top}C\mathbf{x}=0$.)
+
+Turn that around to describe the conic by its tangents. From $\mathbf{l}=C\mathbf{x}$ we get $\mathbf{x}=C^{-1}\mathbf{l}$; substitute into $\mathbf{x}^{\!\top}C\mathbf{x}=0$:
+
+$$ (C^{-1}\mathbf{l})^{\!\top} C\,(C^{-1}\mathbf{l}) = \mathbf{l}^{\!\top} C^{-\top} C\, C^{-1}\mathbf{l} = \mathbf{l}^{\!\top} C^{-\top}\mathbf{l}=0. $$
+
+Because $C$ is symmetric, $C^{-\top}=C^{-1}$, giving the **dual conic**:
+
+dual (line) conic
+
+$$ \mathbf{l}^{\!\top} C^{*}\,\mathbf{l}=0,\qquad C^{*}=C^{-1} $$
+
+**read it as:** "a line $\mathbf{l}$ is tangent to the conic when $\mathbf{l}^{\!\top}C^{*}\mathbf{l}=0$." The point conic $C$ collects the points on the curve; its inverse $C^{*}=C^{-1}$ collects the lines touching the curve. Same conic, dual bookkeeping — one built from points, one from tangents.
+
+#### a conic two ways — points lying on it (left) vs. tangent lines wrapping it (right)
+
+[diagram text: x | l = C x | x⊤C x = 0 | point conic C]
+
+[diagram text: line conic C* = C⁻¹ | l⊤C*l = 0]
+
+Left: the conic as the set of points $\mathbf{x}$ with $\mathbf{x}^{\!\top}C\mathbf{x}=0$; the coral line is the tangent $\mathbf{l}=C\mathbf{x}$ at the yellow point. Right: the same conic seen as the envelope of all its tangent lines — each satisfies $\mathbf{l}^{\!\top}C^{*}\mathbf{l}=0$ with $C^{*}=C^{-1}$. (After Hartley & Zisserman.)
+
+## 12.  degenerate conics
+
+A "proper" conic has $C$ of full rank (rank 3). When $C$ drops rank, the curve degenerates into simpler pieces:
+| rank of $C$ | what the conic collapses to |
+| 3 | a proper conic (ellipse / parabola / hyperbola) |
+| 2 | two straight lines |
+| 1 | a single repeated (doubled) line |
+
+You can even build a degenerate conic on purpose. Given two lines $\mathbf{l}$ and $\mathbf{m}$, the (point) conic that is those two lines is the symmetric outer-product sum:
+
+$$ C=\mathbf{l}\,\mathbf{m}^{\!\top}+\mathbf{m}\,\mathbf{l}^{\!\top}\qquad(\text{rank }2). $$
+
+Each term is a $3\times1$ times $1\times3$ = a $3\times3$ matrix; adding the two symmetrises it. It has rank 2 because only two directions $\mathbf{l},\mathbf{m}$ are involved — the "conic" is literally the pair of lines (they cross at one point that lies on both).
+
+**🔎 recovering the pieces — the singular point of a rank-2 conic**
+A full-rank conic has no null vector, but a rank-2 conic $C=\mathbf{l}\,\mathbf{m}^{\!\top}+\mathbf{m}\,\mathbf{l}^{\!\top}$ has exactly one: the point $\mathbf{x}$ with $C\mathbf{x}=\mathbf{0}$. It is the crossing point of the two constituent lines, $\;\mathbf{x}=\mathbf{l}\times\mathbf{m}$. Substituting confirms it:
+
+$$ C\mathbf{x}=\mathbf{l}\,(\mathbf{m}^{\!\top}\mathbf{x})+\mathbf{m}\,(\mathbf{l}^{\!\top}\mathbf{x})=\mathbf{0}, \quad\text{since}\;\; \mathbf{m}^{\!\top}(\mathbf{l}\times\mathbf{m})=\mathbf{l}^{\!\top}(\mathbf{l}\times\mathbf{m})=0. $$
+
+So the two lines $\mathbf{l},\mathbf{m}$ are the conic's factors and their intersection $\mathbf{l}\times\mathbf{m}$ is its **singular point** — that null direction is precisely how the rank drop $3\!\to\!2$ shows itself. (Dually, the rank-2 line conic $C^{*}=\mathbf{x}\,\mathbf{y}^{\!\top}+\mathbf{y}\,\mathbf{x}^{\!\top}$ has null line $\mathbf{x}\times\mathbf{y}$, the line through the two points.)
+
+Dually, the degenerate **dual** conic built from two points $\mathbf{x},\mathbf{y}$ is
+
+$$ C^{*}=\mathbf{x}\,\mathbf{y}^{\!\top}+\mathbf{y}\,\mathbf{x}^{\!\top}. $$
+
+Same recipe with points swapped in for lines — one more echo of the point–line duality that has run through this entire lecture.
+
+### points and lines are the same stuff — 3-vectors — so join and meet are one cross product, and "infinity" gets real coordinates.
+
+incidence $\mathbf{l}^{\!\top}\mathbf{x}=0$ · join $\mathbf{l}=\mathbf{x}_1\times\mathbf{x}_2$ · meet $\mathbf{x}=\mathbf{l}_1\times\mathbf{l}_2$ · parallels meet at $(b,-a,0)$ on $\mathbf{l}_\infty=(0,0,1)$ · conics $\mathbf{x}^{\!\top}C\mathbf{x}=0$ with dual $C^{*}=C^{-1}$.
+
+### Self-check quiz
+
+1. How is the line $ax+by+c=0$ represented in $\mathbb{P}^2$, and why do $(a,b,c)$ and $(2a,2b,2c)$ describe the same line?
+
+→ Answer: by the 3-vector $\mathbf{l}=(a,b,c)^{\top}$; scaling the equation by any $\lambda\neq0$ leaves the same solution set, so $\mathbf{l}\sim\lambda\mathbf{l}$
+
+2. State the two dual cross-product rules (join and meet).
+
+→ Answer: line through two points: $\mathbf{l}=\mathbf{x}_1\times\mathbf{x}_2$; intersection of two lines: $\mathbf{x}=\mathbf{l}_1\times\mathbf{l}_2$
+
+3. Two parallel lines $(a,b,c_1)$ and $(a,b,c_2)$ intersect where, and what does the zero third coordinate mean?
+
+→ Answer: at the ideal point $(b,-a,0)$; the $0$ means it is a point at infinity — a pure direction of slope $-a/b$, not a finite location
+
+4. What is the line at infinity, and what is the dual conic of $C$?
+
+→ Answer: $\mathbf{l}_\infty=(0,0,1)^{\top}$, the line containing every ideal point; the dual (line) conic is $C^{*}=C^{-1}$
+
+— end of Lecture 6 notes ✏️
+
+# LECTURE 07 — Projective Transformation
+
+the 3×3 homography H · why it preserves straight lines · computing it from point correspondences (DLT)
+
+🧠 the big picture, first
+
+A **projective transformation** is the one and only way to map one projective plane to another while keeping straight lines straight. Astonishingly, it always has a single simple form: multiply the homogeneous point by a 3×3 matrix $H$.
+
+Once we know $H$ is just a matrix, "undo the perspective in this photo" becomes "solve a small linear system." That's this whole lecture. 📐
+
+## 1.  what makes a map "projective"
+
+A map from one 2-D projective space to another is a **projective transformation** if it satisfies two conditions:
+
+**📐 the two defining properties**
+
+1. **Invertible** — a one-to-one mapping (every point goes to exactly one point, and back).
+
+2. **Preserves collinearity** — if three points $\mathbf x_1,\mathbf x_2,\mathbf x_3$ lie on a line, their images also lie on a (single) line. This must hold for every triple of points.
+
+Loads of everyday operations are projective transformations: a **change of coordinate convention**, **rotation of axes**, **change of scale**, **translation of the origin**, **re-photographing a plane from a different viewpoint** (two centres of projection), even a **shadow** cast on the ground. All of them keep straight lines straight → all are projective.
+
+#### the picture behind it — mapping by rays through a centre of projection
+
+[diagram text: C | centre of proj. | π | π′ | x₁,x₂,x₃ | x′₁,x′₂,x′₃]
+
+Every point maps along a ray through the centre of projection $C$ — a one-to-one map that carries the three collinear points on $\pi$ to three collinear points on $\pi'$. The same construction explains re-photographing a plane, two centres of projection, and shadows.
+
+## 2.  the form: $\mathbf{x}' = H\mathbf{x}$
+
+Remarkably, only one functional form can satisfy those properties — a **linear** map of homogeneous coordinates by an invertible $3\times3$ matrix $H$ (also called the **homography**):
+
+the homography
+
+$$ \begin{bmatrix}x_1'\\x_2'\\x_3'\end{bmatrix}=\begin{bmatrix}h_{11}&h_{12}&h_{13}\\h_{21}&h_{22}&h_{23}\\h_{31}&h_{32}&h_{33}\end{bmatrix}\begin{bmatrix}x_1\\x_2\\x_3\end{bmatrix} $$
+
+shortly, $\ \mathbf x' = H\mathbf x$
+
+**🔢 why $H$ has 8 degrees of freedom (not 9)**
+In the projective world a point $\mathbf x'$ and $k\mathbf x'$ are the **same point**. So $H$ and $kH$ give the same transformation — $H$ is itself an element of a projective space. The $3\times3$ matrix has 9 numbers, but **one is just overall scale**, leaving 8 independent parameters. That's why we can fix one entry (say $h_{33}=1$) when solving.
+
+## 3.  proof it keeps lines straight (and how lines transform)
+
+Recall a point on a line satisfies $\mathbf l^{T}\mathbf x=0$. Insert the identity $H^{-1}H$ cleverly:
+
+$$ \mathbf l^{T}\mathbf x=\mathbf l^{T}\,(H^{-1}H)\,\mathbf x=\big(\underbrace{H^{-T}\mathbf l}_{\text{new line }\mathbf l'}\big)^{T}\,\big(\underbrace{H\mathbf x}_{\mathbf x'}\big)=0 $$
+
+**read it as:** after transforming, all the points $\mathbf x'=H\mathbf x$ still satisfy $\mathbf l'^{T}\mathbf x'=0$ — i.e. they still lie on a line. So collinearity is preserved, and the **line itself transforms as** $\ \mathbf l' = H^{-T}\mathbf l$ (inverse-transpose, not $H$).
+
+(That $H$ is the only possible form takes a longer proof, which the course skips — we just use the fact.)
+
+## 4.  computing $H$ from point correspondences
+
+Give me pairs of matching points $\mathbf x_i \leftrightarrow \mathbf x_i'$ (a point and where it lands). Since $x' = \tfrac{x_1'}{x_3'}$ and $y'=\tfrac{x_2'}{x_3'}$, writing out $\mathbf x'=H\mathbf x$ and clearing denominators gives, per correspondence, **two** linear equations in the entries of $H$:
+
+$$ x'=\frac{h_{11}x+h_{12}y+h_{13}}{h_{31}x+h_{32}y+h_{33}},\qquad y'=\frac{h_{21}x+h_{22}y+h_{23}}{h_{31}x+h_{32}y+h_{33}} $$
+
+**🧮 the counting argument**
+$H$ has **8** unknowns; each correspondence gives **2** equations ⇒ you need a minimum of 4 point correspondences (no 3 collinear). Fix $h_{33}=1$, move constants to the right, and solve the resulting $8\times8$ linear system by inversion.
+
+⚠️ **Caution:** this only works if $h_{33}\neq0$. If $h_{33}=0$ it can't be the scale — you'd have to fix a different entry (or use the homogeneous method in §7).
+
+### worked application — removing perspective distortion (rectification)
+
+Under perspective the originally-**horizontal** lines of a planar scene no longer stay horizontal — they turn oblique and **meet at a finite vanishing point**. That convergence is the projective distortion, and a single homography $H$ undoes it, sending those lines back to parallel.
+
+a planar signboard shot at an angle — the once-horizontal edges go oblique and converge to a finite vanishing point, so the text is hard to read
+after applying $H$: a fronto-parallel view — edges square, parallel again, text readable
+
+Pick 4 corner points of the distorted quadrilateral, map them to the 4 corners of a nice **rectangle** (coordinates you choose), form the 8 equations, solve for $H$, warp. No camera calibration needed — your chosen target coordinates do the trick. 🎯
+
+## 5.  using many points — the DLT
+
+Real correspondences are noisy, so 4 points is fragile. The **Direct Linear Transform (DLT)** uses many points for robustness. The trick: $\mathbf x_i'$ and $H\mathbf x_i$ point the **same direction** (they differ only by scale), so their **cross product is zero**:
+
+the DLT constraint
+
+$$ \mathbf x_i' \times (H\mathbf x_i)=\mathbf 0 $$
+
+Expanding the cross product gives 3 equations per point, of which only **2 are independent** (the third is a linear combination of the other two). Stacking $H$'s 9 entries into a vector $\mathbf h=(h_{11},h_{12},\dots,h_{33})^{T}$, each correspondence contributes a $2\times9$ block $A_i$:
+
+$$ A_i\,\mathbf h=\mathbf 0,\qquad A_i=\begin{bmatrix}\mathbf 0^{T} & -x_{3i}'\,\mathbf x_i^{T} & \ \ y_{i}'\,\mathbf x_i^{T}\\[2pt] x_{3i}'\,\mathbf x_i^{T} & \mathbf 0^{T} & -x_{i}'\,\mathbf x_i^{T}\end{bmatrix} $$
+
+Stack all $n$ points → a $2n\times9$ matrix $A$ with $A\mathbf h=\mathbf 0$. More points = more rows = more robust. From here there are **two distinct ways** to solve — a non-homogeneous one (§6) and a homogeneous one (§7).
+
+## 6.  method A — non-homogeneous least squares (the pseudo-inverse)
+
+The first road keeps the old trick of fixing $h_{33}=1$. In each $2\times9$ block $A_i$ the last column multiplies $h_{33}$; setting $h_{33}=1$ moves that column to the **right-hand side as a constant**. What remains is a $2\times8$ block $\tilde A_i$ acting on the reduced 8-vector $\tilde{\mathbf h}=(h_{11},h_{12},h_{13},h_{21},h_{22},h_{23},h_{31},h_{32})^{T}$:
+
+$$ \tilde A_i\,\tilde{\mathbf h}=\mathbf b_i,\qquad \tilde A_i\ \text{is}\ 2\times8,\quad \tilde{\mathbf h}\ \text{is}\ 8\times1 $$
+
+Stack all $n$ correspondences → a **non-homogeneous** system $\tilde A\,\tilde{\mathbf h}=\mathbf b$ with $\tilde A$ of size $2n\times8$ and $\mathbf b$ of size $2n\times1$ (contrast the homogeneous form's $2n\times9$ and its right-hand side of $\mathbf 0$). With $2n>8$ this is over-determined, so we solve it in the least-squares sense.
+
+**🧮 deriving the pseudo-inverse solution**
+We want $\tilde A\,\tilde{\mathbf h}\approx\mathbf b$, but $\tilde A$ is tall, not square, so it has no ordinary inverse. Multiply **both sides on the left by $\tilde A^{T}$** to make a **square, invertible** $8\times8$ matrix $\tilde A^{T}\tilde A$ appear (these are the normal equations):
+
+$$ \tilde A^{T}\tilde A\,\tilde{\mathbf h}=\tilde A^{T}\mathbf b\ \Longrightarrow\ \boxed{\ \tilde{\mathbf h}=(\tilde A^{T}\tilde A)^{-1}\tilde A^{T}\,\mathbf b\ } $$
+
+The operator $\tilde A^{+}=(\tilde A^{T}\tilde A)^{-1}\tilde A^{T}$ is the **(Moore–Penrose) pseudo-inverse** of $\tilde A$. Reshape $\tilde{\mathbf h}$, append $h_{33}=1$, and you have $H$.
+
+⚠️ Same caveat as §4: this assumes $h_{33}\neq0$. If the true $h_{33}=0$ you cannot normalise by it — use **method B**, which fixes no entry at all.
+
+## 7.  method B — homogeneous least squares ($\min\lVert A\mathbf h\rVert$)
+
+The second, more general road makes **no** assumption about any entry: keep the full 9-vector $\mathbf h$ and the $2n\times9$ matrix $A$, and solve $A\mathbf h=\mathbf 0$ directly. We can't take $\mathbf h=\mathbf 0$ (useless), and since $H$ is only defined up to scale we add the constraint $\lVert\mathbf h\rVert=1$ and **minimise**:
+
+homogeneous least-squares
+
+$$ \min_{\mathbf h}\ \lVert A\mathbf h\rVert \quad\text{subject to}\quad \lVert\mathbf h\rVert=1 $$
+
+**the standard result:** the minimiser $\mathbf h$ is the **unit eigenvector of the smallest eigenvalue of $A^{T}A$** (equivalently, the right-singular vector of $A$'s smallest singular value — an **SVD**). Reshape $\mathbf h$ back into the $3\times3$ $H$. Because nothing is fixed, this works even when $h_{33}=0$.
+
+## 8.  getting it accurate — error criteria, invariance & normalization
+
+**📏 three error criteria**
+
+- **Algebraic error** — the sum-of-squares quantity the DLT actually minimises, $\lVert A\mathbf h\rVert^{2}$. Cheap and linear, but not geometrically meaningful.
+
+- **Geometric error (forward only)** — the Euclidean distance in the transformed space between the observed point $\mathbf x'$ and the estimate $H\mathbf x$: $\ \sum_i d(\mathbf x_i',H\mathbf x_i)^2$.
+
+- **Geometric error with re-projection** — also map the observed transformed points **back** with $H^{-1}$ to get an estimate $H^{-1}\mathbf x'$ in the original space, and add that distance too. A symmetric, two-way cost: $\ \sum_i\big[d(\mathbf x_i',H\mathbf x_i)^2+d(\mathbf x_i,H^{-1}\mathbf x_i')^2\big]$.
+
+The geometric criteria are non-linear → minimised by iterative methods: **Newton iteration**, **Levenberg–Marquardt**.
+
+**🔄 you may estimate $H$ after transforming both point sets**
+Pre-transform each side by its own map, $\tilde{\mathbf x}=T\mathbf x$ and $\tilde{\mathbf x}'=T'\mathbf x'$, then estimate a homography $G$ directly between the transformed sets ($\tilde{\mathbf x}'=G\tilde{\mathbf x}$). Substituting $\mathbf x'=H\mathbf x$ gives the recovery relation:
+
+$$ G=T'\,H\,T^{-1}\qquad\Longleftrightarrow\qquad H=T'^{-1}\,G\,T $$
+
+⚠️ **Caveat:** under least squares the $H$ recovered with a transformation is **not equivalent** to the one estimated without. The constraint $\lVert\mathbf h\rVert=1$ makes this a constrained optimisation, so pre-transforming quietly changes what "smallest" means.
+
+**⭐ normalization (a practical use of that transformation — do it first!)**
+Choose $T,T'$ to **translate** each point set so its centroid sits at the origin and **scale** so the average distance from the centroid is $\sqrt2$: $\ \tilde{\mathbf x}=\dfrac{\mathbf x-\bar{\mathbf x}}{\sigma_x}$. Run the DLT on the normalised points, then recover $H=T'^{-1}GT$. This keeps the entries of $A$ well-conditioned (no huge numbers) and makes the estimate far more robust.
+
+### every straight-line-preserving map of a plane is one 3×3 matrix $H$ — and 4+ point pairs pin it down.
+
+lines transform by $H^{-T}$; noisy data → cross-product DLT → pseudo-inverse (fix $h_{33}=1$) or smallest-eigenvector of $A^{T}A$; normalize first.
+
+### Self-check quiz
+
+1. How many point correspondences are the minimum needed to compute a homography, and why?
+
+→ Answer: 4 — $H$ has 8 DOF and each correspondence gives 2 equations ($4\times2=8$)
+
+2. A point transforms as $\mathbf x'=H\mathbf x$. How does a line transform?
+
+→ Answer: $\mathbf l'=H^{-T}\mathbf l$ (inverse-transpose of $H$)
+
+3. The stacked DLT equations can be solved two different ways — name them.
+
+→ Answer: (A) **non-homogeneous**: fix $h_{33}=1$ → a $2n\times8$ system $\tilde A\tilde{\mathbf h}=\mathbf b$, solved by the pseudo-inverse $\tilde{\mathbf h}=(\tilde A^{T}\tilde A)^{-1}\tilde A^{T}\mathbf b$. (B) **homogeneous**: keep the full $2n\times9$ $A$, minimise $\lVert A\mathbf h\rVert$ s.t. $\lVert\mathbf h\rVert=1$ → unit eigenvector of the smallest eigenvalue of $A^{T}A$
+
+4. In the homogeneous DLT, what do we actually minimise, and what's the solution?
+
+→ Answer: $\lVert A\mathbf h\rVert$ subject to $\lVert\mathbf h\rVert=1$; solution = unit eigenvector of the smallest eigenvalue of $A^{T}A$ (smallest right-singular vector)
+
+5. Difference between plain geometric error and geometric error with re-projection?
+
+→ Answer: Plain = forward distance $d(\mathbf x',H\mathbf x)$ only; with re-projection also adds the back-mapped distance $d(\mathbf x,H^{-1}\mathbf x')$ — a symmetric, two-way error
+
+6. You estimate a homography $G$ between pre-transformed sets $\tilde{\mathbf x}=T\mathbf x,\ \tilde{\mathbf x}'=T'\mathbf x'$. How do you recover $H$?
+
+→ Answer: $G=T'HT^{-1}$, so $H=T'^{-1}GT$ — but under least squares this is not equivalent to estimating $H$ directly (a constrained-optimization effect)
+
+7. Why normalize the points before running the DLT?
+
+→ Answer: for numerical stability — centring at the origin and scaling to average distance $\sqrt2$ avoids huge, ill-conditioned numbers
+
+— end of Lecture 7 notes ✏️
+
+# LECTURE 08 — Homography: Properties — Part I
+
+when a homography relates two images · plane-to-plane & pure-rotation mappings · the cross-ratio invariant
+
+🧠 the big picture, first
+
+A **homography** (= projective transformation) is a single $3\times3$ non-singular matrix $\mathbf{H}$ that maps one 2-D projective space onto another. Last lecture we built it. This lecture we ask: **what does it preserve, and what does it distort?**
+
+Two everyday situations produce a homography between two photos: (1) both photos look at the **same flat surface** (a wall, a signboard, a floor), and (2) the camera only **spins in place**. In both, one image is $\mathbf{H}$ times the other. Understanding $\mathbf{H}$'s properties lets us undo the distortion — that's rectification. 🪄
+
+## 1.  when are two images related by a homography?
+
+Before the abstract properties, the concrete why. A homography shows up whenever the geometry guarantees that a point in image A maps to **exactly one** point in image B by a projective rule. Two clean cases:
+
+**🧱 case A — a single planar surface (plane-to-plane)**
+If every scene point you photograph lies on **one flat plane** (a poster, a table top, the ground), then any two images of that plane are related by a homography. The plane collapses the 3-D scene to 2-D, and projecting a 2-D plane into two cameras is a $3\times3$ projective map — no matter the viewing angles.
+
+**🔄 case B — a camera that only rotates about its centre**
+If the camera **spins about its own optical centre** (pan/tilt) but never moves, the two views are related by a homography regardless of scene depth — near and far objects obey the same $\mathbf{H}$. There is no translation, so there is no **parallax** to reveal depth.
+
+$$ \mathbf{H}=\mathbf{K}\,\mathbf{R}\,\mathbf{K}^{-1} $$
+
+($\mathbf{K}$ = camera's internal calibration, $\mathbf{R}$ = the rotation between the two shots.) Depth $Z$ never appears — that's why panorama stitching works from hand-held rotated photos.
+
+### rectification — using $\mathbf{H}^{-1}$ to undo the distortion
+
+Photograph a rectangular signboard from an **oblique angle** and the rectangle looks like a squashed trapezium — that warp is a homography $\mathbf{H}$. Because $\mathbf{H}$ is invertible, we can apply $\mathbf{H}^{-1}$ to warp it straight again, recovering a clean frontal (metric) view. This is **rectification**.
+
+before — flat signboard shot at an angle; the rectangle is projectively distorted (not rectangular in the image).
+after — apply $\mathbf{H}^{-1}$ → a frontal, undistorted rectangle. Same board, distortion removed.
+
+Everything below tells you which features survive this warp (straightness, cross-ratios, incidence) and which change (angles, lengths, parallelism), so you know what you can trust in a rectified image.
+
+## 2.  what makes a transformation projective (recap)
+
+The professor first re-summarises the defining **features** of a projective transformation from the previous lectures. A map is projective if and only if:
+
+**📋 the four defining features**
+
+- It is a mapping **from a 2-D projective space to another 2-D projective space**.
+
+- It is **invertible** (one-to-one and onto — every point has a unique image and unique pre-image).
+
+- It **preserves collinearity of any three points**: if three points lie on a straight line, their images also lie on a straight line.
+
+- There is **only one form** of such a map — multiplication by a non-singular $3\times3$ matrix $\mathbf{H}$.
+
+#### the schematic — one projective space mapped into another
+
+[diagram text: O | centre of proj. | plane z = 1 | p | point = ray thru O | × H | O′ | plane z′ = 1 (tilted) | p′]
+
+Left space has centre of projection $O$ and its canonical plane at $z=1$; the right space has a **different** centre $O'$, a different axis orientation, and its own tilted plane. A point is a ray through the centre; $\mathbf{H}$ sends every $p$ to a unique $p'$.
+
+Recall the canonical model from earlier lectures: a point in a 2-D projective space is a **ray through the centre of projection**, and its image is where that ray pierces the plane placed at unit distance ($z=1$) along the axis. $\mathbf{H}$ re-expresses each such ray of the first space as a ray of the second.
+
+## 3.  how points and lines transform
+
+Everything is in **homogeneous coordinates**: a 2-D point is a 3-vector $\mathbf{x}=(x_1,x_2,x_3)^\top$, a line is a 3-vector $\mathbf{l}=(a,b,c)^\top$ (standing for $ax+by+c=0$), and a scale factor never matters.
+
+point transformation
+
+$$ \mathbf{x}' = \mathbf{H}\,\mathbf{x} $$
+
+line transformation
+
+$$ \mathbf{l}' = \mathbf{H}^{-\top}\,\mathbf{l} $$
+
+**read them as:** to move a **point**, multiply by $\mathbf{H}$. To move a **line**, multiply by $\mathbf{H}^{-\top}$ — the **transpose of the inverse** of $\mathbf{H}$. Points and lines transform by different matrices.
+
+**🧩 why lines use $\mathbf{H}^{-\top}$ (one-line derivation)**
+A point $\mathbf{x}$ lies on line $\mathbf{l}$ exactly when $\mathbf{l}^\top\mathbf{x}=0$ (their dot product is zero — the **incidence** relation). After mapping, $\mathbf{x}'=\mathbf{H}\mathbf{x}$ must still lie on the new line $\mathbf{l}'$, so we need $\mathbf{l}'^\top\mathbf{x}'=0$ for every such point:
+
+$$ \mathbf{l}'^\top(\mathbf{H}\mathbf{x})=0 \;\;\Rightarrow\;\; (\mathbf{H}^\top\mathbf{l}')^\top\mathbf{x}=0 \;\;\Rightarrow\;\; \mathbf{H}^\top\mathbf{l}'=\mathbf{l} \;\;\Rightarrow\;\; \mathbf{l}'=\mathbf{H}^{-\top}\mathbf{l} $$
+
+Because incidence is preserved, **points on a line map to points on the image line** — this is exactly the collinearity/"straight lines stay straight" property, written algebraically.
+
+So a straight line $\mathbf{l}$ maps to a straight line $\mathbf{l}'$; all points that were on $\mathbf{l}$ land on $\mathbf{l}'$. Straightness is a projective invariant — it is the one property you can always trust after any $\mathbf{H}$.
+
+## 4.  the cross-ratio — the invariant that survives
+
+Straight lines stay straight, but a homography **ruins ordinary ratios**: equal spacings on the real signboard become unequal in the photo, so you cannot read off lengths or midpoints. Remarkably, one carefully-built ratio does survive. For any **four collinear points** $A,B,C,D$, define the **cross-ratio**:
+
+cross-ratio of 4 collinear points
+
+$$ \mathrm{Cr}(A,B;C,D)=\frac{\overline{AC}\,\cdot\,\overline{BD}}{\overline{BC}\,\cdot\,\overline{AD}} $$
+
+**read it as:** "a ratio of ratios of signed distances along the line." Because a projective map scales those distances consistently, the extra scalings cancel top-and-bottom, so $\mathrm{Cr}$ comes out **identical** in both images: $\mathrm{Cr}=\mathrm{Cr}'$.
+
+#### four points on a line, seen from two viewpoints → same cross-ratio
+
+[diagram text: A | B | C | D | world line | camera centre | image line]
+
+The four spacings look totally different on the tilted image line, yet $\mathrm{Cr}(A',B';C',D')=\mathrm{Cr}(A,B;C,D)$. This is the tool that lets you measure real-world ratios from a single photo.
+
+## 5.  vanishing points = images of points at infinity
+
+Take a pair of **parallel lines** in the original space — say one of them is $\mathbf{l}$. Transform each by the line rule ($\mathbf{l}'=\mathbf{H}^{-\top}\mathbf{l}$). Even though they were parallel, in the transformed image they converge and meet at a point. That meeting point is the **vanishing point**.
+
+the road's edges are parallel in the world, yet in the image they meet at one vanishing point on the horizon.
+
+#### parallels meet at a point at infinity
+
+[diagram text: vanishing pt | vanishing line (horizon) | parallel in the world]
+
+Image of the ideal point where the parallels "meet at infinity".
+
+**🧭 where does the vanishing point come from? the ideal point**
+Two parallel lines in a projective space already "meet" — at a **point at infinity** (the **ideal point**), which has a perfectly finite homogeneous representation. For the family of lines parallel to $ax+by+c=0$ (i.e. line $\mathbf{l}=(a,b,c)^\top$), that shared ideal point is:
+
+$$ \mathbf{x}_\infty=\begin{bmatrix} b\\ -a\\ 0\end{bmatrix} $$
+
+Check: $\mathbf{l}^\top\mathbf{x}_\infty=ab-ba+0=0$, so it lies on the line; its **third coordinate is $0$**, the signature of a point at infinity (a pure direction). Any line with the same $(a,b)$ but a different $c$ passes through it too — that is why all parallels share it.
+
+vanishing point = image of the ideal point
+
+$$ \mathbf{v}=\mathbf{H}\,\mathbf{x}_\infty=\mathbf{H}\begin{bmatrix} b\\ -a\\ 0\end{bmatrix} $$
+
+**read it as:** the vanishing point is simply the **point-transform of the parallels' ideal point**. Feed the direction $(b,-a,0)^\top$ through $\mathbf{H}$ and you get the finite screen pixel where those parallel lines appear to converge.
+
+## 6.  the vanishing line (horizon)
+
+Now take **every** set of parallel lines in the plane; each set gives its own vanishing point. Amazingly, all those vanishing points fall on a single line — the **vanishing line** (the horizon in the road photo).
+
+Why? In the original space, all ideal points $(x,y,0)^\top$ themselves lie on one special line, the **line at infinity**:
+
+$$ \mathbf{l}_\infty=\begin{bmatrix} 0\\ 0\\ 1\end{bmatrix}\qquad\text{(it contains exactly the points with third coord }0\text{)} $$
+
+So the vanishing line is just the **line-transform of the line at infinity**:
+
+vanishing line = image of line at infinity
+
+$$ \mathbf{l}'_\infty=\mathbf{H}^{-\top}\,\mathbf{l}_\infty=\mathbf{H}^{-\top}\begin{bmatrix} 0\\ 0\\ 1\end{bmatrix} $$
+
+**read it as:** apply the **line** rule ($\mathbf{H}^{-\top}$) to $(0,0,1)^\top$ and out pops the horizon line on which every vanishing point sits.
+
+## 7.  the four transformation rules on one card
+| object in original space | how to transform it | result |
+| **point** $\mathbf{x}$ | multiply by $\mathbf{H}$ | $\mathbf{x}'=\mathbf{H}\mathbf{x}$ |
+| **line** $\mathbf{l}$ | multiply by $\mathbf{H}^{-\top}$ | $\mathbf{l}'=\mathbf{H}^{-\top}\mathbf{l}$ |
+| **vanishing point** of lines $\parallel(a,b,c)^\top$ | $\mathbf{H}\times$ ideal point $(b,-a,0)^\top$ | $\mathbf{v}=\mathbf{H}(b,-a,0)^\top$ |
+| **vanishing line** (horizon) | $\mathbf{H}^{-\top}\times$ line at infinity $(0,0,1)^\top$ | $\mathbf{l}'_\infty=\mathbf{H}^{-\top}(0,0,1)^\top$ |
+
+All vectors are homogeneous, so any overall scale factor may be dropped freely.
+
+## 8.  worked example — transforming a line, two ways
+
+Given a non-singular homography $\mathbf{H}$ (a $3\times3$ matrix), compute the image of the line through the two projective points $(2,4,2)^\top$ and $(6,9,3)^\top$.
+
+**worked example — line through two points (numbers from the lecture slide)Simplify the points first** (drop common scale factors — homogeneous coords allow it):
+
+1. $(2,4,2)\div 2=(1,2,1)$, and $(6,9,3)\div 3=(2,3,1)$. Call them $p=(1,2,1)^\top,\;q=(2,3,1)^\top$.
+
+**Method 1 — transform the points, then join them.**
+
+1. Push both points through $\mathbf{H}$: $\;\mathbf{H}p=(5,-1,11)^\top$ and $\;\mathbf{H}q=(12,3,16)^\top$ (the two transformed points $p',q'$).
+
+2. The line through two points is their **cross product** $\;\mathbf{l}'=p'\times q'$:
+$$ \begin{aligned} \mathbf{l}'_1&=(-1)(16)-(11)(3)=-16-33=-49\\ \mathbf{l}'_2&=(11)(12)-(5)(16)=132-80=52\\ \mathbf{l}'_3&=(5)(3)-(-1)(12)=15+12=27 \end{aligned} $$
+
+3. So $\;\mathbf{l}'=(-49,\,52,\,27)^\top$, i.e. the transformed line is $\;-49x+52y+27=0$.
+
+**Method 2 — join first, then transform the line.**
+
+1. Line through $p,q$ in the original space: $\;\mathbf{l}=p\times q=(1,2,1)^\top\times(2,3,1)^\top=(-1,\,1,\,-1)^\top$.
+
+2. Transform the line with the line rule: $\;\mathbf{l}'=\mathbf{H}^{-\top}\mathbf{l}$. Compute $\mathbf{H}^{-1}$ (determinant → cofactors → transpose → divide by determinant), transpose it, and multiply.
+
+3. Dropping the scale factor, this gives the **same** answer $\;\mathbf{l}'\propto(-49,\,52,\,27)^\top$. ✔️ Two routes, one line.
+
+Method 1 needs only $\mathbf{H}$; Method 2 needs $\mathbf{H}^{-\top}$ but transforms just one 3-vector instead of two — pick whichever is cheaper for your problem.
+
+**worked example — vanishing line of the same $\mathbf{H}$ (from the slide)**
+
+1. Line at infinity $=\mathbf{l}_\infty=(0,0,1)^\top$.
+
+2. Vanishing line $=\mathbf{H}^{-\top}(0,0,1)^\top=(5,\,15,\,5)^\top$.
+
+3. In ordinary coordinates: $\;5x+15y+5=0$, i.e. after dividing by 5, $\;x+3y+1=0$.
+
+## 9.  homographies form a group — the projective linear group
+
+Projective transformations (all these $\mathbf{H}$'s) form a **group** under matrix multiplication, called the **projective linear group**. Two practical consequences:
+
+**⛓️ 1 — a cascade collapses into a single matrix**
+Map space 1→2 by $\mathbf{H}_1$, then 2→3 by $\mathbf{H}_2$. Going straight from 1→3 is one homography — just the product:
+
+$$ \mathbf{H}=\mathbf{H}_2\,\mathbf{H}_1 $$
+
+(Apply $\mathbf{H}_1$ first, so it sits on the right.) A whole chain of warps can be pre-multiplied into **one** matrix and applied in a single pass.
+
+**🔀 2 — the composition is associative**
+For a longer chain $\mathbf{H}_3\mathbf{H}_2\mathbf{H}_1$ (spaces 1→2→3→4), matrix multiplication is associative, so the grouping order does not matter:
+
+$$ (\mathbf{H}_3\mathbf{H}_2)\,\mathbf{H}_1=\mathbf{H}_3\,(\mathbf{H}_2\mathbf{H}_1) $$
+
+You may pre-combine whichever pair is convenient; the final composite $\mathbf{H}$ is the same either way.
+
+## 10.  the subgroup hierarchy inside $\mathbf{H}$
+
+Special constraints on $\mathbf{H}$ carve out **nested subgroups**, each preserving more structure than its parent:
+| group | constraint on $\mathbf{H}$ | what it extra-preserves |
+| **projective linear** (parent) | any non-singular $3\times3$ | straightness, incidence, cross-ratio |
+| **affine** | last row $=(0,0,1)$ (or a scalar multiple) | + parallelism, ratios of lengths |
+| **Euclidean** | affine & upper-left $2\times2$ is **orthogonal** | + lengths & angles (rotation/reflection + translation) |
+| **oriented Euclidean** | Euclidean & $\det(\text{upper-left }2\times2)=1$ | + orientation (pure rotation, no flips) |
+
+#### the matrix shapes
+
+$$ \underbrace{\begin{bmatrix} a&b&t_x\\ c&d&t_y\\ 0&0&1\end{bmatrix}}_{\text{affine}}\quad \underbrace{\begin{bmatrix} \mathbf{R}&\mathbf{t}\\ \mathbf{0}^\top&1\end{bmatrix}}_{\substack{\text{Euclidean}\\ \mathbf{R}^\top\mathbf{R}=\mathbf{I}}} $$
+
+Affine locks the bottom row to $(0,0,1)$; Euclidean additionally forces the $2\times2$ block to be orthogonal; oriented Euclidean adds $\det\mathbf{R}=+1$.
+
+#### nested subgroups
+
+[diagram text: projective | affine | Euclidean | oriented | Euclidean]
+
+oriented Euclidean ⊂ Euclidean ⊂ affine ⊂ projective linear group.
+
+### a homography is one $3\times3$ matrix: points go through $\mathbf{H}$, lines through $\mathbf{H}^{-\top}$ — and straightness & cross-ratio always survive.
+
+parallels meet at vanishing points (images of ideal points $(b,{-}a,0)^\top$); all of them lie on the vanishing line $\mathbf{H}^{-\top}(0,0,1)^\top$; and these maps compose into nested groups projective ⊃ affine ⊃ Euclidean ⊃ oriented Euclidean.
+
+### Self-check quiz
+
+1. Points transform as $\mathbf{x}'=\mathbf{H}\mathbf{x}$. By what matrix does a line transform, and why the difference?
+
+→ Answer: $\mathbf{l}'=\mathbf{H}^{-\top}\mathbf{l}$ — it's forced by preserving incidence $\mathbf{l}^\top\mathbf{x}=0$, giving $\mathbf{H}^\top\mathbf{l}'=\mathbf{l}$
+
+2. Which quantity of four collinear points is unchanged by any projective transformation?
+
+→ Answer: the cross-ratio $\mathrm{Cr}=\dfrac{\overline{AC}\,\overline{BD}}{\overline{BC}\,\overline{AD}}$ (ordinary lengths/ratios are not)
+
+3. How do you compute the vanishing point of all lines parallel to $ax+by+c=0$?
+
+→ Answer: transform their ideal point: $\mathbf{v}=\mathbf{H}(b,-a,0)^\top$ — the third coord $0$ marks a point at infinity
+
+4. What single constraint identifies an **affine** homography, and what further condition makes it Euclidean?
+
+→ Answer: affine: last row $=(0,0,1)$; Euclidean: additionally the upper-left $2\times2$ block is orthogonal
+
+— end of Lecture 8 notes ✏️
+
+# LECTURE 09 — Homography: Properties — Part II
+
+the family tree of 2-D transformations · what each one preserves · the cross-ratio · affine rectification
+
+🧠 the big picture, first
+
+The general projective transformation is the granddad of a whole **family**. Add restrictions to $H$ and you get progressively "nicer" transforms — affine, similarity, isometry — each preserving more structure.
+
+Knowing which properties survive which transform is the single most exam-worthy idea in this lecture. One table sums it up. 🌳
+
+## 1.  the hierarchy of transformation groups
+
+These transforms form nested **subgroups** — each is a special case of the one above it:
+
+$$ \text{Projective} \ \supset\ \text{Affine}\ \supset\ \text{Similarity (Euclidean)}\ \supset\ \text{Isometry} $$
+| transform | matrix form | DOF | invariants (what it preserves) |
+| **Isometry**
+(oriented Euclidean) | $\begin{bmatrix}R&\mathbf t\\\mathbf 0^{T}&1\end{bmatrix}$, $R$ rotation | 3 | lengths, angles, areas (rigid motion) |
+| **Similarity** | $\begin{bmatrix}sR&\mathbf t\\\mathbf 0^{T}&1\end{bmatrix}$ | 4 | angles, ratios of lengths, circular points $I,J$ |
+| **Affine** | $\begin{bmatrix}A&\mathbf t\\\mathbf 0^{T}&1\end{bmatrix}$ | 6 | parallelism, ratios of areas, midpoints/centroids, the line at infinity |
+| **Projective** | $\begin{bmatrix}A&\mathbf t\\\mathbf v^{T}&v\end{bmatrix}$ | 8 | collinearity, concurrency, order, **cross-ratio** |
+
+Tell them apart by the **last row**: affine & below have $(0,0,1)$; a true projective transform has a non-trivial $\mathbf v^{T}$. Euclidean/similarity additionally need the top-left $2\times2$ block to be (a scalar times) an **orthogonal** matrix ($R R^{T}=I$); isometry adds $\det R = +1$.
+
+## 2.  the general projective transform & the horizon
+
+Write $H=\begin{bmatrix}A&\mathbf t\\\mathbf v^{T}&v\end{bmatrix}$ with $A$ a $2\times2$ block, $\mathbf t$ a translation, $\mathbf v^{T}=(v_1,v_2)$. Its 8 DOF split as 2 scales + 2 rotations + 2 translations + **2 for the line at infinity** (that's what $\mathbf v^{T}$ controls).
+
+**🌅 why projective transforms create a horizon**
+Take an **ideal point** $(x_1,x_2,0)$ (third coord 0). Transform it: its new third coordinate is $v_1x_1+v_2x_2$, which is generally **non-zero**. So an ideal point becomes a **finite** point! The **line at infinity** therefore maps to a finite **vanishing line** (the horizon) — which is exactly why parallel railway tracks appear to meet. Affine & below have $\mathbf v=\mathbf 0$, so they leave the line at infinity where it is.
+
+Properties that survive **any** projective transform: **concurrency** (lines meeting at a point still do), **collinearity**, **order of contact**, and the star invariant — the **cross-ratio**.
+
+## 3.  the cross-ratio — the projective invariant
+
+Lengths and simple ratios are destroyed by perspective, but a **ratio of ratios** of four collinear points survives. For collinear $X_1,X_2,X_3,X_4$:
+
+cross-ratio
+
+$$ \text{Cross}=\frac{\lvert X_1X_2\rvert\,/\,\lvert X_2X_4\rvert}{\lvert X_1X_3\rvert\,/\,\lvert X_3X_4\rvert} $$
+
+**read it as:** take two length-ratios among the four points, then divide them. Apply any projective transformation and this number is **unchanged** — the points stay collinear, keep their order, and reproduce the same cross-ratio.
+
+**Cross-checking a textbook?** Hartley–Zisserman write it as $\dfrac{\lvert X_1X_3\rvert\,\lvert X_2X_4\rvert}{\lvert X_1X_4\rvert\,\lvert X_2X_3\rvert}$ — the same kind of ratio-of-ratios and equally projectively invariant, just a different pairing of the four points. Don't be thrown if its numeric value differs from the professor's definition above.
+
+## 4.  the affine group (parallels stay parallel)
+
+Fix the last row to $(0,0,1)$ → **6 DOF**. Now an ideal point stays ideal (its third coordinate stays 0), so the **line at infinity maps to itself** $\big((0,0,1)\!\to\!(0,0,1)\big)$ — meaning parallel lines remain parallel.
+
+**📐 the missing justification: lines transform by $H^{-T}$**
+Points move by $\mathbf x'=H\mathbf x$, but a **line** moves by the **inverse-transpose** of the same matrix:
+
+$$ \mathbf l' = H^{-T}\,\mathbf l $$
+
+This is forced by **incidence**: $\mathbf l'^{T}\mathbf x'=(H^{-T}\mathbf l)^{T}H\mathbf x=\mathbf l^{T}H^{-1}H\mathbf x=\mathbf l^{T}\mathbf x$, so a point on a line stays on the transformed line. Feed the line at infinity $\mathbf l_\infty=(0,0,1)^{T}$ through an affine map $H_A$: its inverse-transpose has last column $(0,0,1)^{T}$, so $H_A^{-T}(0,0,1)^{T}\propto(0,0,1)^{T}$. That single fact — not just the picture of parallelograms — is **the** reason vanishing points stay ideal and parallels stay parallel under affine transforms.
+
+The $2\times2$ block $A$ decomposes into a rotation, an anisotropic scaling along two perpendicular directions, and a rotation back:
+
+$$ A=R(\theta)\,R(-\phi)\,D\,R(\phi),\qquad D=\begin{bmatrix}\lambda_1&0\\0&\lambda_2\end{bmatrix} $$
+
+**what that really does:** rotate by $\phi$ to line the axes up with the two deformation directions, stretch each by a different unit scale $\lambda_1,\lambda_2$ (the diagonal $D$), then rotate back. Geometrically you are re-reading the same points on a pair of **oblique (non-rectilinear) axes** whose units differ, measured along parallel baselines — which is why a square skews into a parallelogram while parallelism is untouched.
+
+#### what $R(-\phi)\,D\,R(\phi)$ means geometrically
+
+[diagram text: rectilinear axes · a square | → | affine A | λ₁ | λ₂ | oblique axes · unequal units → parallelogram]
+
+Rotate to align with the deformation directions, stretch by different scales $\lambda_1,\lambda_2$, rotate back — the same points read on skewed axes with unequal units. Parallelism survives; the square becomes a parallelogram.
+
+**Affine invariants:** parallelism · ratios of areas · ratios of lengths along parallel lines (so midpoints) · linear combinations of vectors (so centroids) · the line at infinity.
+
+## 5.  the similarity group (angles & the circular points)
+
+Restrict further: $A=sR$ with $R$ orthonormal ($R R^{T}=I$) → **4 DOF** (1 scale + 1 rotation + 2 translation). It preserves **angles** and **ratios of lengths** — the shape-preserving "similar triangles" transform.
+
+**✨ the circular points $I$ and $J$**
+Work in a complex projective plane. The two special points $I=(1,i,0)^{T}$ and $J=(1,-i,0)^{T}$ (on the line at infinity) are **fixed** by every similarity transform — $H_S\,I \sim I$. They're invariants that later let us recover angles/metric structure from images.
+
+## 6.  isometry (rigid motion)
+
+The tightest group — rotation + translation only:
+
+$$ H_E=\begin{bmatrix}\cos\theta&-\sin\theta&t_x\\ \sin\theta&\cos\theta&t_y\\ 0&0&1\end{bmatrix},\qquad \det R=+1 $$
+
+**3 DOF** ($\theta,t_x,t_y$). With $\det R=+1$ it is orientation-preserving; $-1$ would be a reflection. Extra invariants on top of everything above: **lengths, angles, and areas** — nothing is distorted, the object just moves.
+
+## 7.  decomposing any $H$ = similarity ∘ affine ∘ projective
+
+Any projective transform factors into a cascade of the three "structured" pieces:
+
+$$ H=H_S\,H_A\,H_P=\begin{bmatrix}sR&\mathbf t\\\mathbf 0^{T}&1\end{bmatrix}\begin{bmatrix}K&\mathbf 0\\\mathbf 0^{T}&1\end{bmatrix}\begin{bmatrix}I&\mathbf 0\\\mathbf v^{T}&v\end{bmatrix} $$
+
+$H_P$ (last row $\mathbf v^{T}$) carries the pure-projective part; $K$ is upper-triangular with $\det K=1$ (the affine shear/scale); $sR$ the similarity. You get $R$ and $K$ from the top-left block by a **QR decomposition** ($Q$ orthogonal, $R$ upper-triangular) — unique if $s>0$.
+
+recovering $R$ and $K$ — subtract before you QR
+
+$$ A = sRK + \mathbf t\,\mathbf v^{T} $$
+
+Multiplying $H_S H_A H_P$ out shows the top-left block is **not** just $sRK$ — it also picks up $\mathbf t\mathbf v^{T}$. Since $\mathbf t$ (from $H_S$) and $\mathbf v^{T}$ (from $H_P$) are already known, first **subtract** $\mathbf t\mathbf v^{T}$, then QR-decompose the remainder $A-\mathbf t\mathbf v^{T}=sRK$ into orthogonal $sR$ times upper-triangular $K$. QR-ing $A$ itself would return the wrong $R,K$.
+
+## 8.  affine rectification — undo the perspective
+
+Perspective turns parallel edges into edges meeting at a vanishing point. To make them parallel again we only need to send the **vanishing line back to infinity**. Find the vanishing line $\mathbf l=(l_1,l_2,l_3)^{T}$ and apply:
+
+the rectifying projectivity
+
+$$ H_P'=\begin{bmatrix}1&0&0\\0&1&0\\l_1&l_2&l_3\end{bmatrix} $$
+
+This maps the vanishing line $\mathbf l$ to the true line at infinity $(0,0,1)$ — so every vanishing point becomes an ideal point again and the edges come out **parallel** (a parallelogram, not necessarily the original rectangle).
+
+a planar surface under perspective — edges oblique, meeting at a vanishing point
+after the rectifying homography — a fronto-parallel view with edges straightened
+
+**🔗 why the output is only affine (a parallelogram, not the rectangle)**
+Label three planes: the true scene $\pi_1$, the photo $\pi_2$, and the rectified result $\pi_3$. The scene-to-rectified map $\pi_1\!\to\!\pi_3$ we are chasing is only **affine**. But the camera map $H_P:\pi_1\!\to\!\pi_2$ and our rectifier $H_P':\pi_2\!\to\!\pi_3$ are each a full projective transform (non-trivial last row). Their cascade $H_P'H_P$ cancels the pure-projective parts and leaves an affine map — which restores **parallelism** but not lengths or angles. That is exactly why the edges come back parallel yet the original rectangle is **not** recovered.
+
+parallel road edges meet at a vanishing point — the horizon is the vanishing line
+
+**worked recipe — from image to parallel edges**
+
+1. Pick two pairs of imaged-parallel lines. Each pair's lines cross-product to a vanishing point: $\mathbf v_1=\mathbf l_1\times\mathbf l_2$, $\mathbf v_2=\mathbf l_3\times\mathbf l_4$.
+
+2. Vanishing line = the join of the vanishing points: $\mathbf l=\mathbf v_1\times\mathbf v_2$.
+
+3. Normalise so $l_3=1$ (e.g. $\mathbf l\approx(0,\,6\times10^{-4},\,1)$ — a nearly-horizontal horizon; $6\times10^{-4}=0.0006$, matching $H_P'$ below).
+
+4. Plug into $H_P'$ (e.g. $\begin{bmatrix}1&0&0\\0&1&0\\0&0.0006&1\end{bmatrix}$) and warp → edges become parallel. ✅
+
+**the professor's real photo — actual numbers**
+
+1. Two imaged-parallel pairs give lines $\mathbf l_1,\mathbf l_2$ (first pair) and $\mathbf l_3,\mathbf l_4$ (second pair), each line built as the cross-product of its two endpoints.
+
+2. First vanishing point $\mathbf v_1=\mathbf l_1\times\mathbf l_2=[-10556416,\ -72128,\ 64]^{T}$ — the entries are huge because the "meeting point" sits far off-frame; a second, similarly large $\mathbf v_2$ comes from $\mathbf l_3\times\mathbf l_4$.
+
+3. Vanishing line $\mathbf l=\mathbf v_1\times\mathbf v_2$; dividing through so $l_3=1$ leaves $\mathbf l\approx(0,\,6\times10^{-4},\,1)^{T}$, i.e. the horizon $6\times10^{-4}\,Y+1=0$ — a point at a huge distance, and $l_1\approx0$ makes it essentially horizontal (so the near-parallel edges also run almost parallel to it).
+
+4. Rectifier $H_P'=\begin{bmatrix}1&0&0\\0&1&0\\0&0.0006&1\end{bmatrix}$; warp the photo with it and the edges come out parallel. ✅
+
+### projective ⊃ affine ⊃ similarity ⊃ isometry — each rung freezes more structure.
+
+last row $(0,0,1)$ ⇒ parallels preserved; orthogonal $2\times2$ ⇒ angles; cross-ratio survives everything; send the vanishing line to infinity to rectify.
+
+### Self-check quiz
+
+1. Which single matrix feature tells you a transform is at most affine (not fully projective)?
+
+→ Answer: its last row is $(0,0,1)$ — so $\mathbf v=\mathbf 0$ and the line at infinity is preserved (parallels stay parallel)
+
+2. Name the invariant preserved by every projective transformation of four collinear points.
+
+→ Answer: the cross-ratio (a ratio of length-ratios)
+
+3. How many DOF does a similarity transform have, and what does it preserve that affine doesn't?
+
+→ Answer: 4 DOF; it preserves angles (and the circular points $I,J$), which general affine does not
+
+4. To rectify a perspective image so edges become parallel, what must the rectifying homography do?
+
+→ Answer: map the image's vanishing line back to the line at infinity $(0,0,1)$
+
+— end of Lecture 9 notes ✏️
+
+# LECTURE 10 — Homography: Properties — Part III
+
+more invariants & applications · rectification (affine + metric) · image mosaicing / stitching (enrichment)
+
+🧠 the big picture, first
+
+Parts I & II showed how **points** and **lines** ride a homography $H$. This final part follows two richer objects — **conics** (circles, ellipses, …) and, hidden inside every circle, two magical **circular points** $I,J$.
+
+Payoff: a conic stays a conic under $H$, and one special conic — the **dual conic at infinity** $C_\infty^{*}$ — lets us read the **true angle** between lines straight off a distorted photo. That single trick is what powers metric rectification: turning a slanted photo of a plane back into a proper fronto-parallel view. 📐→🖼️
+
+## 1.  a conic, written as a matrix
+
+A **conic** is the curve you get by slicing a cone — circles, ellipses, parabolas, hyperbolas. In ordinary (non-homogeneous) $x,y$ coordinates it is the most general second-degree equation:
+
+$$ a x^{2} + b x y + c y^{2} + d x + e y + f = 0 $$
+
+Switch to **homogeneous coordinates** $\mathbf{x}=(x_1,x_2,x_3)^{\!\top}$ (with $x=x_1/x_3,\ y=x_2/x_3$) and the whole thing collapses into one tidy **quadratic form**:
+
+a conic in homogeneous form
+
+$$ \mathbf{x}^{\!\top} C\,\mathbf{x}=0,\qquad C=\begin{bmatrix} a & \tfrac{b}{2} & \tfrac{d}{2}\\[2pt] \tfrac{b}{2} & c & \tfrac{e}{2}\\[2pt] \tfrac{d}{2} & \tfrac{e}{2} & f \end{bmatrix} $$
+
+**read it as:** “the point $\mathbf{x}$ lies on the conic exactly when the number $\mathbf{x}^{\!\top}C\mathbf{x}$ is zero.” $C$ is a **$3\times3$ symmetric matrix** that is the conic — the six numbers $a,b,c,d,e,f$ live inside it.
+
+**🔢 why 5 parameters, not 6**
+$C$ has 6 entries, but it is a **projective object**: scaling it by any $k\neq0$ gives $k\,\mathbf{x}^{\!\top}C\mathbf{x}=0$ — the same curve. Overall scale is meaningless, so a conic has 5 independent parameters (5 degrees of freedom). Five points pin a conic down.
+
+### the dual conic — a conic described by its tangent lines
+
+Instead of “which points are on the curve?”, ask “which **lines** just touch the curve?”. Every tangent line $\mathbf{l}$ obeys a twin equation, and the matrix that governs it is the **dual conic** $C^{*}$:
+
+$$ \mathbf{l}^{\!\top} C^{*}\,\mathbf{l}=0,\qquad C^{*}=C^{-1} $$
+
+**read it as:** “the line $\mathbf{l}$ is tangent to the conic when $\mathbf{l}^{\!\top}C^{*}\mathbf{l}=0$.” The tangent-line version is simply the **inverse matrix** $C^{-1}$ — same conic, told through its lines instead of its points.
+
+## 2.  how a conic rides a homography
+
+Apply a projective transform $H$: every point moves as $\mathbf{x}'=H\mathbf{x}$, so going backwards $\mathbf{x}=H^{-1}\mathbf{x}'$. Substitute that into the conic equation and watch what happens to $C$.
+
+**derivation — plug in and regroup**
+
+1. Start on the curve: $\;\mathbf{x}^{\!\top} C\,\mathbf{x}=0$.
+
+2. Replace $\mathbf{x}=H^{-1}\mathbf{x}'$: $\;(H^{-1}\mathbf{x}')^{\!\top} C\,(H^{-1}\mathbf{x}')=0$.
+
+3. Push the transpose inside — $(H^{-1}\mathbf{x}')^{\!\top}=\mathbf{x}'^{\top}H^{-\top}$ — to get $\;\mathbf{x}'^{\top}\big(H^{-\top} C\,H^{-1}\big)\mathbf{x}'=0$.
+
+4. The bracket is just another $3\times3$ symmetric matrix. Call it $C'$. Then $\;\mathbf{x}'^{\top}C'\mathbf{x}'=0$ — a conic again!
+
+conic transformation rule
+
+$$ C' = H^{-\top} C\, H^{-1} $$
+
+dual conic transformation
+
+$$ C'^{*} = H\, C^{*}\, H^{\top} $$
+
+**read it as:** “sandwich $C$ between $H^{-\top}$ and $H^{-1}$ and you get the conic in the new image.” Because the output is still of the form $\mathbf{x}'^{\top}C'\mathbf{x}'=0$, a conic stays a conic under homography — it is an invariant shape-type. (The dual $C^{*}=C^{-1}$ inverts the sandwich into $H\,C^{*}H^{\top}$.)
+
+#### a conic in → a conic out
+
+[diagram text: C | original conic xᵀC x = 0 | apply H | C′ | still a conic x′ᵀC′x′ = 0]
+
+A circle may look like a slanted ellipse afterwards, but it is never anything other than a conic. The class is preserved.
+
+## 3.  the circular points $I$ and $J$
+
+Now for the twist that makes angle-recovery possible. On the **line at infinity** live two very special **circular points**. They only make sense if we let coordinates be **complex**: picture a 2-D projective plane whose first axis is real, second axis imaginary, third axis scale. The two points are:
+
+$$ I=\begin{bmatrix}1\\ i\\ 0\end{bmatrix},\qquad J=\begin{bmatrix}1\\ -i\\ 0\end{bmatrix},\qquad i=\sqrt{-1}. $$
+
+**⭐ the defining property**
+The circular points $I,J$ are **fixed points of a projective transformation $H$ if and only if $H$ is a similarity** (rotation + uniform scale + translation). Under any looser transform they move; under a similarity they stay put. That is why they are the fingerprint of “metric” (angle-preserving) structure.
+
+Their third coordinate is $0$, so both sit on the **line at infinity** $\mathbf{l}_\infty=(0,0,1)^{\!\top}$. Check the point-on-line (containment) test $\mathbf{l}_\infty^{\!\top}I=0$:
+
+$$ \mathbf{l}_\infty^{\!\top} I=\begin{bmatrix}0&0&1\end{bmatrix}\begin{bmatrix}1\\ i\\ 0\end{bmatrix}=0 \;\;\checkmark $$
+
+Intuition for “infinity”: parallel road edges **meet at a point at infinity**. All such points fill up the line at infinity — the same line $I$ and $J$ live on.
+
+#### the complex plane at infinity
+
+[diagram text: line at infinity l∞ = (0,0,1)ᵀ | I=(1,i,0) | J=(1,−i,0) | every circle passes here ↓]
+
+$I,J$ are complex, imaginary points — you never draw them, but every circle secretly meets the line at infinity exactly here.
+
+## 4.  every circle passes through $I$ and $J$
+
+Write a general circle in homogeneous coordinates. What makes it a circle (not any ellipse) is that the $x_1^{2}$ and $x_2^{2}$ coefficients are **equal** and there is **no** $x_1x_2$ cross-term — normalize both to $1$:
+
+$$ x_1^{2}+x_2^{2}+d\,x_1 x_3+e\,x_2 x_3+f\,x_3^{2}=0 $$
+
+So a circle needs only **3 parameters** $d,e,f$ (centre $x$, centre $y$, radius) — a special, tighter case of the 5-parameter conic.
+
+To find where the circle crosses the line at infinity, set $x_3=0$ (that is what “on $\mathbf{l}_\infty$” means). The equation shrinks to:
+
+$$ x_1^{2}+x_2^{2}=0 $$
+
+**check — do $I$ and $J$ solve it?**
+
+1. For $I=(1,i,0)$: $\;x_1^{2}+x_2^{2}=1^{2}+i^{2}=1+(-1)=0\ \checkmark$
+
+2. For $J=(1,-i,0)$: $\;1^{2}+(-i)^{2}=1+(-1)=0\ \checkmark$
+
+3. So every circle meets the line at infinity at the same two points $I,J$ — regardless of its centre or radius.
+
+This is the deep fact: “being a circle” is really the property of **passing through the two circular points**. Since a similarity keeps $I,J$ fixed, it maps circles to circles — but a general homography drags $I,J$ elsewhere, which is why a photographed circle looks like an ellipse.
+
+## 5.  the conic dual to the circular points $C_\infty^{*}$
+
+Package both circular points into one degenerate dual conic. Build it symmetrically from $I$ and $J$:
+
+$$ C_\infty^{*}=I\,J^{\!\top}+J\,I^{\!\top} $$
+
+**derivation — multiply it out (exact)**
+
+1. $I\,J^{\!\top}=\begin{bmatrix}1\\ i\\ 0\end{bmatrix}\!\begin{bmatrix}1&-i&0\end{bmatrix}=\begin{bmatrix}1&-i&0\\ i&1&0\\ 0&0&0\end{bmatrix}$
+
+2. $J\,I^{\!\top}=\begin{bmatrix}1&i&0\\ -i&1&0\\ 0&0&0\end{bmatrix}$
+
+3. Add them — the imaginary parts cancel — and drop the overall factor of 2:
+
+$$ C_\infty^{*}=\begin{bmatrix}1&0&0\\ 0&1&0\\ 0&0&0\end{bmatrix} $$
+
+**🧩 properties of $C_\infty^{*}$**
+
+- **Fixed under similarity** — because $I,J$ are fixed under similarity, so is this matrix built from them. Under $H$ it moves as a dual conic: $\;C_\infty^{*\prime}=H\,C_\infty^{*}H^{\top}$.
+
+- **Rank 2, so $\det C_\infty^{*}=0$** — it is degenerate (that bottom-right $0$). This rank-deficiency is a fact we must re-impose when we estimate it (Section 7).
+
+- **4 degrees of freedom.**
+
+- **The line at infinity is its null vector:**
+
+$$ C_\infty^{*}\,\mathbf{l}_\infty=\begin{bmatrix}1&0&0\\ 0&1&0\\ 0&0&0\end{bmatrix}\begin{bmatrix}0\\0\\1\end{bmatrix}=\begin{bmatrix}0\\0\\0\end{bmatrix} $$
+
+## 6.  measuring angles through a homography
+
+Two straight lines $\mathbf{l}=(l_1,l_2,l_3)$ and $\mathbf{m}=(m_1,m_2,m_3)$ meet at an angle $\theta$. The first two components are the line’s **direction ratios**, so ordinary trig gives the cosine as a normalized dot product:
+
+$$ \cos\theta=\frac{l_1 m_1+l_2 m_2}{\sqrt{\,(l_1^{2}+l_2^{2})(m_1^{2}+m_2^{2})\,}} $$
+
+**📐 “direction ratios” — one clarifying sentence**
+Careful with the words: for a line $a x+b y+c=0$ the pair $(l_1,l_2)=(a,b)$ is really the line’s **normal** direction, not its along-the-line direction. That still works, because the angle between two lines equals the angle between their normals — so the normalized dot product $l_1m_1+l_2m_2$ returns the true inter-line angle either way. (The professor calls $(l_1,l_2)$ the “direction ratios”; read it as the two numbers that fix the line’s orientation.)
+
+Here is the beautiful re-write: those three pieces are exactly what $C_\infty^{*}=\mathrm{diag}(1,1,0)$ produces. Indeed $\mathbf{l}^{\!\top}C_\infty^{*}\mathbf{m}=l_1m_1+l_2m_2$. So:
+
+angle via the dual conic at infinity
+
+$$ \cos\theta=\frac{\mathbf{l}^{\!\top} C_\infty^{*}\,\mathbf{m}}{\sqrt{\big(\mathbf{l}^{\!\top} C_\infty^{*}\mathbf{l}\big)\big(\mathbf{m}^{\!\top} C_\infty^{*}\mathbf{m}\big)}} $$
+
+**read it as:** “the numerator $\mathbf{l}^{\!\top}C_\infty^{*}\mathbf{m}$ is the dot product $l_1m_1+l_2m_2$; the two square-root terms are the lengths $l_1^2+l_2^2$ and $m_1^2+m_2^2$.” It is the same cosine — just written with the matrix $C_\infty^{*}$ doing the bookkeeping.
+
+### why this survives the homography
+
+Feed the transformed line $\mathbf{l}'=H^{-\top}\mathbf{l}$ and transformed dual conic $C_\infty^{*\prime}=H\,C_\infty^{*}H^{\top}$ into the numerator and watch $H$ annihilate itself:
+
+**invariance — the H’s cancel**
+
+1. $\mathbf{l}'^{\top} C_\infty^{*\prime}\,\mathbf{m}' =\big(H^{-\top}\mathbf{l}\big)^{\!\top}\big(H\,C_\infty^{*}H^{\top}\big)\big(H^{-\top}\mathbf{m}\big)$
+
+2. $=\mathbf{l}^{\!\top}\,\underbrace{H^{-1}H}_{=\,\mathbf{I}}\,C_\infty^{*}\,\underbrace{H^{\top}H^{-\top}}_{=\,\mathbf{I}}\,\mathbf{m}$
+
+3. $=\mathbf{l}^{\!\top} C_\infty^{*}\,\mathbf{m}\quad$ — **unchanged.**
+
+So $\cos\theta$ computed in the warped image (using warped lines and the warped $C_\infty^{*\prime}$) equals $\cos\theta$ in the original. The angle is an invariant.
+
+**📏 orthogonality is the workhorse**
+Two lines are perpendicular $\Rightarrow \cos\theta=0 \Rightarrow$ the numerator vanishes. In the transformed image that reads:
+
+$$ \mathbf{l}'^{\top} C_\infty^{*\prime}\,\mathbf{m}'=0\quad(\text{whenever }\mathbf{l}\perp\mathbf{m}) $$
+
+Perpendicular things in the world stop looking perpendicular in a slanted photo — but this equation still holds. Each known right angle in the scene hands us one linear constraint on the unknown $C_\infty^{*\prime}$.
+
+## 7.  application — recovering shape (metric rectification)
+
+Goal: from a slanted photo of a flat surface, recover the **fronto-parallel** view where angles and length-ratios are correct again. Strategy: **estimate $C_\infty^{*\prime}$ from known right angles, then undo the homography.**
+
+### step 1 — set up the equations
+
+Treat the unknown transformed dual conic as a general symmetric conic $C$ with parameters $(a,b,c,d,e,f)$. Each orthogonal pair of image lines $\mathbf{l},\mathbf{m}$ gives one homogeneous equation $\mathbf{l}^{\!\top}C\,\mathbf{m}=0$. Expanded, it is linear in the six parameters, so one pair contributes one **row** of a matrix $A$:
+
+$$ \big[\,l_1m_1,\ \tfrac{1}{2}(l_1m_2{+}l_2m_1),\ l_2m_2,\ \tfrac{1}{2}(l_1m_3{+}l_3m_1),\ \tfrac{1}{2}(l_2m_3{+}l_3m_2),\ l_3m_3\,\big]\,\mathbf{c}=0 $$
+
+where $\mathbf{c}=(a,b,c,d,e,f)^{\!\top}$ is the conic written as a column vector. A conic has 5 DOF, so we need at least 5 orthogonal line-pairs → 5 rows. More pairs = an over-determined, noise-robust system.
+
+### step 2 — solve the homogeneous system (DLT)
+
+Stack the rows into $A$ and solve the least-squares problem — the same **Direct Linear Transform** pattern used for estimating $H$ itself:
+
+constrained least squares
+
+$$ \min_{\mathbf{c}}\ \lVert A\mathbf{c}\rVert^{2}\quad\text{subject to}\quad \lVert\mathbf{c}\rVert^{2}=1 $$
+
+**solution:** take the **eigenvector of $A^{\!\top}A$ with the smallest eigenvalue** — that unit vector minimizes $\lVert A\mathbf{c}\rVert$. (Alternatively, if you insist on exactly 5 equations, fix $f=1$ and solve the resulting non-homogeneous system by inversion — but that breaks if the true $f=0$.)
+
+### step 3 — force it to be rank 2
+
+The true $C_\infty^{*\prime}$ is **rank-deficient** (it must have rank 2, $\det=0$), but noise makes our estimate full rank. Fix it with an **SVD clean-up**:
+
+**rank-2 projection via SVD**
+
+1. Decompose the estimate: $\;C=U D V^{\!\top}$, with singular values $D=\mathrm{diag}(\sigma_1,\sigma_2,\sigma_3)$ ordered $\sigma_1\ge\sigma_2\ge\sigma_3$.
+
+2. Kill the smallest one: set $\sigma_3=0$, giving $\tilde D=\mathrm{diag}(\sigma_1,\sigma_2,0)$.
+
+3. Rebuild: $\;\hat C=U\,\tilde D\,V^{\!\top}$ — now exactly rank 2, the nearest valid dual conic at infinity.
+
+### step 4 — pull the homography out and warp
+
+Because $C_\infty^{*}$ is preserved by any similarity, we can only recover $H$ **up to a similarity** — meaning we get correct angles and **ratios of distances** between edges, but not absolute size. Decompose the estimated matrix into the canonical form (an SVD whose two non-zero singular values are set to $1$):
+
+$$ C_\infty^{*\prime}=U\begin{bmatrix}1&0&0\\ 0&1&0\\ 0&0&0\end{bmatrix}U^{\!\top} $$
+
+**the key subtlety — adjust the singular values to 1**
+
+1. A plain SVD of the estimate gives $\;C_\infty^{*\prime}=U\,\mathrm{diag}(\sigma_1,\sigma_2,0)\,U^{\!\top}$, but the two non-zero singular values $\sigma_1,\sigma_2$ are generally **not** $1$ — so the middle factor is not yet $C_\infty^{*}=\mathrm{diag}(1,1,0)$.
+
+2. **Rescale the diagonal to** $\mathrm{diag}(1,1,0)$ by absorbing $\sqrt{\sigma_1},\sqrt{\sigma_2}$ into the matching columns of $U$: set $\;u_k\!\to\!\sqrt{\sigma_k}\,u_k$ for $k=1,2$. Then $\;\sigma_1 u_1u_1^{\!\top}+\sigma_2 u_2u_2^{\!\top}=U'\,\mathrm{diag}(1,1,0)\,U'^{\top}$, so the middle factor is now exactly $C_\infty^{*}$.
+
+3. That rescaled $U'$ is the rectifying homography.
+
+With the singular values normalized, the middle matrix is exactly $C_\infty^{*}$ in its home frame, so the outer factor $U$ (i.e. the rescaled $U'$) is a valid rectifying homography. Apply **$U^{-1}$** to the image and the slanted plane snaps back to a proper metric view.
+
+**before** — a rectangular signboard shot obliquely: right angles look skewed, the rectangle looks like a quadrilateral.
+**after** — the recovered homography warps it to a fronto-parallel view: angles and length-ratios are correct again. ✅
+
+## 8.  the transformation hierarchy & where homography is used
+
+Wrapping the whole homography topic together — a point maps by a non-singular $3\times3$ matrix $H$ (projective transform): it **preserves collinearity**, is **invertible**, sends lines to lines via $\mathbf{l}'=H^{-\top}\mathbf{l}$, and sends conics to conics via $C'=H^{-\top}C H^{-1}$. These transforms form nested **groups**, each stricter subgroup keeping more structure:
+| Group (lecture’s name) | DOF | keeps invariant |
+| **Projective** (projective linear group) | 8 | collinearity, incidence, cross-ratio |
+| **Affine** | 6 | + parallelism, line at infinity, ratio of lengths on a line |
+| **“Euclidean” = Similarity** | 4 | + angles, ratios of lengths, circular points $I,J$ |
+| **“Oriented Euclidean” = Isometry** | 3 | + absolute lengths & areas (rigid motion) |
+
+The professor’s naming: his “Euclidean group” is the **similarity** transform (4 DOF), and “oriented Euclidean” is the **isometric** (rigid) transform (3 DOF). Going down the table you add invariants; going up you add freedom.
+
+**🛠️ what we actually build with all this**
+
+- **Image rectification** — remove projective distortion from a plane. Two flavours the lecture names: affine rectification (first recover the line at infinity → restore parallelism) and stratification / metric rectification (then use $C_\infty^{*}$ from right angles → restore angles & proportionate distances). That is the fronto-parallel view above. (the lecture names both types; the “how” given for affine rectification is standard background, not spelled out in this lecture.)
+
+- **Image mosaicing / panorama stitching** (enrichment — a related application, not covered in this lecture) — a natural companion of the same math: when a camera only rotates about its centre, the overlapping photos of the scene are related to one another by pure homographies $H$. Estimate each $H$ (DLT again) and **warp all frames into one reference plane** → a single seamless panorama. 🏞️
+
+### a conic stays a conic under $H$ — and the degenerate dual conic $C_\infty^{*}=\mathrm{diag}(1,1,0)$ smuggles real angles through the distortion.
+
+estimate $C_\infty^{*\prime}$ from known right angles → rank-2 SVD → normalize the two singular values to 1 → decompose → warp back = metric rectification (the same $H$-warping also stitches panoramas — a related application beyond this lecture).
+
+### Self-check quiz
+
+1. Under a homography $H$, how does a point-conic $C$ transform, and how does its dual $C^{*}$ transform?
+
+→ Answer: $C'=H^{-\top}CH^{-1}$; the dual $C'^{*}=H\,C^{*}H^{\top}$ (since $C^{*}=C^{-1}$)
+
+2. What is special about the circular points $I=(1,i,0)^{\!\top}$, $J=(1,-i,0)^{\!\top}$?
+
+→ Answer: they lie on the line at infinity and are fixed by $H$ iff $H$ is a similarity; every circle passes through both
+
+3. Write the conic dual to the circular points and name two of its properties.
+
+→ Answer: $C_\infty^{*}=\mathrm{diag}(1,1,0)$; rank 2 (so $\det=0$), 4 DOF, fixed under similarity, and $\mathbf{l}_\infty$ is its null vector
+
+4. For metric rectification, why do we need at least 5 orthogonal line-pairs, and how is the resulting homogeneous system solved?
+
+→ Answer: the conic has 5 DOF → 5 constraints; solve $\min\lVert A\mathbf{c}\rVert$ s.t. $\lVert\mathbf{c}\rVert=1$ by taking the min-eigenvalue eigenvector of $A^{\!\top}A$, then force rank 2 via SVD
+
+— end of Lecture 10 notes ✏️

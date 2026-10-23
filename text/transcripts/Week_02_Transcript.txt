@@ -1,0 +1,928 @@
+# Week 2 — Projective Geometry — lecture transcript
+(source: NPTEL, 114 PDF pages; [p.N] marks the page in the PDF)
+
+## Lecture 5 — Projective Geometry – Part I  (transcript PDF page 5)
+
+[p.5] Computer Vision Prof. Jayanta Mukhopadhyay
+
+Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur
+
+Module – 05 Projective Geometry
+
+In this lecture we will discuss about Projective Geometry and its application for the analysis
+
+of images in Computer Vision.
+
+(Refer Slide Time: 00:27)
+
+As earlier during the discussion of fundamentals of image processing, we have seen how
+
+images are formed in a camera. So, here you can see the rules of projection is that given a
+
+same point, then from that point you can draw a ray which passes through the center of the
+
+lens and then that ray when it intersects image plane, then that particular point is the image
+
+point of the three dimensional scene. And this perspective projection rule is applied for any scene point for getting the image point
+
+of any scene point you take another scene point here and once again let me draw a line
+
+passing through this center and when it is intersecting the plane of projection, that makes the
+
+image point of the other scene point. So, in this way the projections are formed. So, we can
+
+see that this particular geometry can be well understood or well studied in the case of using
+
+79
+[p.6] projective geometry. So, let us understand what is a projective geometry. So, these are the
+
+things for same point.
+
+(Refer Slide Time: 02:00)
+
+So, there are usually in the mathematics, we study our geometry in the real space you know
+
+school book geometry or later on in the analytical geometry. Consider it two dimensional
+
+space where any point in the two dimensional space is denoted by a particular pair of
+
+coordinates, x and y pair of coordinates and since this is the Cartesian product of real axis, we
+
+denote these two dimensional space also as and this point belongs to the two dimensional
+
+R2
+
+coordinate space. And following these coordinate convention, there is a origin and there are
+
+x axis and y axis based on which these coordinates are correspondingly defined. Now, when we are considering a projective space once again a projective space in two
+
+dimension, but implicitly there is a three dimensional space behind that definition. it is like an
+
+image. When you look at an image; all the points in an image, they are in a two dimensional
+
+plane, but finally those points are related to three dimensional points in the scene. So, if we apply the rule of perspective projections, we can consider that in this three
+
+dimensional space, there is a point which is the origin and if there is a ray passing through
+
+this particular point p, then that ray itself is representative as if this point is representing this
+
+80
+[p.7] ray itself. For any point on this ray is equivalently represented by particularly this
+
+representative point of two dimensional point. So, this is what we say a point in a projective space and we call this space as a two
+
+dimensional projective space. So, you should note that if I take any other point in this space;
+
+then once again if I draw a line passing through the origin and extending this ray. So, the
+
+whole line itself is represented by the point in this plane. So, this is what is the two
+
+dimensional projected point and every point in this particular plane is represented in this
+
+form. So, every point in this plane is actually representing a ray that is the basic
+
+representation of a projective space. So, in this case a point (x, y, 1), it is a canonical representation of the projective space where
+
+you have a three dimensional coordinate system. As you can see implicitly this three
+
+dimensional coordinate system as if this plane is at a distance of one along the z direction and
+
+all the coordinate axis in this plane is also parallel to the corresponding coordinates of the
+
+implicit coordinate system of the three dimensional plane. If I consider any point in this plane
+
+in this straight ray, so that is also represented by the proportional factor of k. Any point can
+
+be represented by (kx,ky,k) where k is a parameter. So, finally, a point (x, y) in a two dimensional real space is in a equivalently represented in
+
+the two dimensional projective space as a set of points (kx, ky, k) where k varies which is
+
+actually representing this ray. So, this is the relationship when we consider an image as a two
+
+dimensional real space . On the other hand when the image is considered as a two
+
+dimensional projective space under the imaging perspective of projection. So, this coordinate system is called homogeneous coordinate system and you have an
+
+additional dimension which is denoting the scale of this coordinate system. So, if all other
+
+coordinates are divided by this scale, you will get the non-homogeneous representation which
+
+has direct relationship with the two dimensional. 81
+[p.8]
+(Refer Slide Time: 06:46)
+
+So, let us understand bit more about this homogeneous representation. So, let us consider a
+
+point in which is a real space, the ordinary space which we are used to understand in our
+
+R2
+
+geometry. So, let us consider a point x. In this case I am using this notation vector to denote
+
+that it is a tuple in this case, it is a two tuple coordinate systems. So, it is a vector. you can
+
+also represent this as a column vector of coordinates and this is a representation I will follow
+
+throughout in this lecture. let this point with this. If the corresponding point in the projective space is denoted in this
+
+form
+
+and here also you can see that it is a three vectorial representation where you have an
+
+additional dimension which is denoting the scale and which is multiplied with all other
+
+coordinate system . So, these two are equivalent representations in our perspective. Either I
+
+can denote a point as a point in a two dimensional real space or a point in a two dimensional
+
+projective space with three coordinate dimensions. 82
+[p.9] One of the interesting facts in this projective space is that the origin of that space is not
+
+included.
+
+So, it is the singular point you cannot form a projection ray between two at that point itself.
+
+So, it is a singular point in this space which is not included as a set of points in the projective
+
+space. So, I can consider that any point in their space of three dimensional real space excluding the
+
+origin, can be represented as a point in the projective space, however you should understand
+
+the elements in the projective space are not points. They are all rays passing through the
+
+origin and each ray can be mapped to a point in a particular plane in that space.
+
+(Refer Slide Time: 09:21)
+
+83
+[p.10] So, this is another example what we would like to understand once again. consider a point in
+
+the projective space given in the above form say
+
+So, what should be the corresponding point in the real space? So, in this case how do you
+
+convert it? As I mentioned that there is a additional dimension which  represents the scale. So, to convert into the real space what I need to do? I need to simply divide this coordinates
+
+by this scale and then we can get the corresponding you know real space point. So, this is
+
+how these points will look that know you can divide 25, by 5. So, it should be 5 and 30 divide
+
+by 5 which is 6. So, this point is equivalently represented by coordinates in the real
+
+space. Let us also consider another tricky situation. Suppose I am considering a point
+
+in the projective space, what should be the real point in the real space? But as we
+
+have discussed that this is not included, so this question is not valid because this is not the
+
+point in a projective space. So, I cannot convert these points as you can see that 0 by 0 is also
+
+undefined mathematically. So, it is consistent with mathematical notations and operations.
+
+So, this is not a point in the projective space. So, I cannot consider any equivalence point of
+
+this in the real space. So, it does not belong to the projective space. 84
+[p.11]
+(Refer Slide Time: 11:05)
+
+Let us understand another fact that is homogeneous representation of a line in a plane and let
+
+us see how the lines are represented here. Say once again you consider a two dimensional real
+
+space and p is a point and consider a line between these point which is represented by our
+
+familiar equation of straight line equation , where are the parameters
+
+x y a + b + c = 0
+
+, b, c a
+
+of the straight lines. Now, this representation itself what I can consider that are the parameters that itself
+
+, b, c a
+
+is representing the straight line and we know two parameters are sufficient instead of three
+
+parameters,because this is the proportional ratios of that is uniquely identifying a
+
+, b, c a
+
+particular straight line. If there is a projective space, which is representing only lines in this
+
+case. So, a line in this two dimensional space is represented by a point in this projective space
+
+and follow the same representation. So, you have a three dimensional implicit, three dimensional coordinate system. It is a two
+
+dimensional projective space once again and if I consider any element of this space that
+
+should be a ray passing through the origin and incidentally if it passes through this particular
+
+point that is a representation of this straight line. So, a straight line is
+
+a/c, b/c, 1) (
+
+represented like a point in this space. So, it is an element as I mentioned and any point,
+
+85
+[p.12] whether it is or , all are straight lines. So, as you can see the third
+
+a, , ) ( b c ka, kb, kc) (
+
+dimension is again representing a scale for representing this element straight line. . In fact we can denote this relationship of straight line into this form which is a dot product of
+
+the two vectors or we can say it is a matrix multiplication, where this is represented as the
+
+transpose of the column vectors of the projective point and this is a straight line vector. In a
+
+simple form I can represent it represent in this way that this is a point containment
+
+relationship and this representation in a simple form we can represented in this way, it is a
+
+transpose of the column vector of the point x.
+
+Also, this line multiplied with the column vector of point, represent this line and that is equal
+
+to 0 which is essentially representing the straight line equation. I can write this equation
+
+because this mathematical operations can be also equivalently represented as :
+
+So, in this way you can see that whether it is point containment or that equation can be
+
+represented in this way. 86
+[p.13]
+(Refer Slide Time: 14:38)
+
+So, points and lines in the projective space have nice complimentary relationships, we call as
+
+a kind of duality relationships. So, what we are looking at in this particular case, we will
+
+explain the dual relationships. So, any point in the real space or any line in the real space can
+
+be defined by two points. we know that two points define uniquely a line. This line can be
+
+computed as a cross product of these two-3 vectors. So, is representing the
+
+(x , ) x1 ! y1
+
+corresponding projective homogeneous representation of point and is the
+
+X1
+
+(x , ) x2 2 y2
+
+homogeneous representation of point . So, there are three vectors, so if I take the cross
+
+X2
+
+product, you will get this straight line. In the real space itself any point is also defined as intersection of two straight lines which has
+
+a relationship in the projective space is in the following form l P = l1 2
+
+here it is a cross product of these two lines which are represented in the projective form. And
+
+then, we are getting the corresponding point of the corresponding intersection point that is
+
+also represented in the homogeneous coordinate system or as an element of the projective
+
+space. Here, you should note that how the cross product of two vectors are defined this is a
+
+usual mathematics that we have learnt in our school book. 87
+[p.14] So, you should see that corresponds to its coordinates and are the
+
+X1
+
+x , , ] [ 1 y1 1 x , , ] [ 2 y2 1
+
+coordinates corresponding to point and once we define the cross product of 3-vectors, in
+
+X2
+
+the following form
+
+if I get the determinant, then I can always compute to this point if we expand this particular
+
+determinant. So, this is the summary exactly one line that passes through two points and exactly one point
+
+at the intersection of two lines and their relationships in projective space, they are quite
+
+similar. A straight line can be expressed as cross product of these two points in the projective
+
+space and a point can be expressed as cross product of these two straight lines in again all
+
+representations are in the projective space.
+
+(Refer Slide Time: 17:32)
+
+So, one of the interesting applications would be, we would be to find out to the straight line
+
+passing through two points by applying this method. We have learnt these method from
+
+88
+[p.15] simple coordinate geometry, but we can see that these computations can be very briefly
+
+summarized using this operation of cross product in using the concept of projective geometry. So, let us consider this particular problem that we need to find out a line passing through the
+
+points (3, 5) and (5, 0) in a plane. So, naturally it is understood that (3, 5) and (5, 0 ) are the
+
+points in a two dimensional array space. We will be taking the cross product of the
+
+corresponding projective points in the projective space of (3, 5) in the homogeneous
+
+representation and the vector which is represented from (5, 0) in the projective space. Which
+
+means the vectors say (3, 5, 1) and cross product of (5, 0, 1), ok. So, that is what is the
+
+straight line representation. So, if I expand this ,let me do this sum. So, as I have written earlier, so we have this
+
+particular components and you are representing . So, these are the unit vector directions and
+
+represent with the corresponding vector components. So, if I expand this determinant what I
+
+need to do? I need to consider this sub determinant in to e which means say plus,
+
+5 )i ( −0
+
+then you suppress this and then you take the determinant and you have to take the negative of
+
+that. So, (3-5), so I should write here this is should be minus, then it is and then you
+
+3 )j ( −5
+
+suppress you consider this part of the sub determinant for the kth component and you take the
+
+determinant which is . 0 5)k ( −2
+
+So, this should be then . I hope my computation is correct, let me see with the
+
+i j 5k 5 + 2 −2
+
+result and you should also verify it. So, finally this line is represented by a vector as you can
+
+see I will take from from 2 and this is . So, if I write the equation of the straight
+
+5 5
+
+5 −2
+
+line, what should be the equation? 5 is that , 2 is that and is that So, the equation
+
+a b
+
+5 −2
+
+.c
+
+of the straight line can be represented as So, that is what is your equation,
+
+x y 5 5 + 2 −2 = 0
+
+ok. 89
+[p.16]
+(Refer Slide Time: 21:35)
+
+So, let us see that how this result is . So, this is a summary of the result, so as you can see we
+
+will get these equation , that is the equation of the straight line in our
+
+x y 5 5 + 2 −2 = 0
+
+understanding of coordinate geometry. Let us do another example consider this. So, we have
+
+computed the line from two points. Now, let us consider there are two lines and you would
+
+like to compute the point of intersection of these two lines and these two lines are given by
+
+these two equations. So, once again let us work out. So, from this line, so now what is the rule or what kind of
+
+operations we have to do? If I consider the intersection point is say p. So, that would be a
+
+cross product of these two vectors and . l1 l2
+
+Let us see how we will do it and the above line will represent and . So, we know that
+
+l1 l2
+
+l1 can be represented by and is represented by So, we need to take
+
+x y 5 −2 + 4 l2
+
+x y 6 −7 −3
+
+cross product of these two operations. Once again I will consider the same determinant 90
+[p.17]
+then if I expand it, what would be the expansion? So, let me rub some areas, ok. So, if I
+
+expand it let us consider it I will be expanding in this way say this coordinate this sub
+
+determinant. That means, they send this it is plus 6 and then plus 28, ok. So, I am doing it mentally , then or I should put it as Then this middle
+
+6 8)i ( + 2
+
++
+
+−
+
+determinant suppressing the middle column it is and then we consider the third you
+
+5 4 −1 −2
+
+know component which is . So, it should be So, the full you
+
+−5 −2)) ( 3 −( 1
+
+−5 2)k ( 3 + 1
+
+know. Now, this coordinate can be represented as this expansion can be . So, what
+
+4i 9j 3k 3 −3 −2
+
+is p? P is represented as this vector which is
+
+I hope my calculation is correct and let us see. So, as you can see this is the homogeneous
+
+representation of a point, actual point. What you need to do? You need to divide this scale
+
+value. You need to divide all the coordinates values with this scale value (-23). 91
+[p.18]
+(Refer Slide Time: 26:13)
+
+So, let us find out that you know what is the result of this operation. So, you can see that is
+
+what we are getting 34, 35 minus 23. I am not sure whether you know I just rubbed it, but as I
+
+mentioned this scale value has to be correspondingly divided by -23. So, this is the coordinate
+
+that we will get. You have to check my computations once again, there could be some error
+
+there.
+
+(Refer Slide Time: 26:36)
+
+92
+[p.19] Let us complete this lecture by explaining the duality principle as we can see the point and
+
+line, they are represented in the projective space and their relationships. They can be nicely
+
+complemented by each other. For example, if I get the containment relationship and
+
+l xT = 0
+
+then . so if I interchange l and x, still this relationship holds, that is the duality
+
+x lT = 0
+
+principle. Not only this point containment if I consider the cross product if I point in line intersection
+
+and point intersections which are expressed by the cross product operations of three vectors.
+
+So, in this case the cross product of two lines gives you the corresponding point and
+
+l l ′
+
+cross product of two points and gives me the corresponding line. x x′
+
+So, once again the places of lines and points if you interchange, still you get the same
+
+principle. So, that is what, is the duality principle. So, to any theorem of two dimensional
+
+projective geometry, they corresponds a dual theorem. So, this is any theorem and then there
+
+is a dual theorem which may be derived by interchanging the role of points and lines in an
+
+original theorem. So, with this understanding of duality principle let me stop here at this
+
+point. We will continue this lecture in the next video lecture session. Thank you very much for listening to my lecture.
+
+93
+
+## Lecture 6 — Projective Geometry – Part II  (transcript PDF page 20)
+
+[p.20] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture – 06 Projective Geometry Part - II
+
+(Refer Slide Time: 00:20)
+
+We will continue our discussion on Projective Geometry. We have seen how points and lines are represented in a two-dimensional projective space. We have seen that  a point in the projective space can be represented by an additional dimension, because there is a implicit three-dimensional representation involving the two-dimensional projective space. So, in this case, any point that represents a particular element, i.e, a ray passing through the origin connecting to that point, and every point in this space is being represented by this element. Similarly, a line in the plane of projection which is given by the corresponding equation, say, ax+by+c=0 which is also represented as an element of a projective space, which is a different projective space representing a line. There also a point in that projective space is representing a line and which is also representing an element that is a ray passing through the origin connecting to these point and extending it to towards infinity. And as you can see that the parameter of this equations are now used to represent this line in the two-dimensional projective space. Also we have learned the relationships between points 94
+[p.21] and lines, there is a duality in expressing these relationships. For example, if you have point contentment relationship, then this can be expressed in this form, this is a point is represented that say transposition of the column vector of point representation in a canonical form, and this is the line representation of the line what we have shown here. So, if I take this matrix product that should be equal to 0, as if this is a dot product of these two vectors. So, this could be expressed as in this form that I can write it as x transpose l equals 0. So, this transportation is represented here and symmetrics multiplication. And we can see in this relationship that if we interchange the position of point and line same relationship holds, so that is the dual principal. Similarly, there is another example of this kind of dual representation that is if you would like to compute a line, given two points in this space, suppose you have another point in this line and you would like to represent it. And then ah how do you get that relationship? That is a point is a intersection of two line. So, we consider there is another line which is l prime. And this representation this l cross l prime will be the operation that would give you the corresponding intersection intersecting point. Similarly, if we consider a line is defined by two points say this is x and this is x prime. So, you get x cross x prime as line l. So, this is the duality what I was talking about you interchange the point and line into this relationship, and still that relationship holds. So, now, we will continue this discussion and we will further see what are the properties are there in the projective geometry. 95
+[p.22]
+(Refer Slide Time: 04:55)
+
+So, one of the interesting property in this space that how do you express the intersection of parallel lines? We know in normal two-dimensional real space which we studied in our school geometry, two parallel lines they intersect at infinity, but there we could not qualify the nature of infinite point, nature of point of intersection at infinity. We will see in the two- dimensional projective space this could be qualified. Let us see how, let us compute this intersection. So, here we are going to compute, here you can see that there is an there are examples of two parallel lines this is given by this equation. Suppose, this is this parallel line and take another parallel another line which is parallel to it by this equation. You can observe that the coefficients a and b they remain same; they remain the same, so that is why this parallelism is established. So, to compute the intersection of these two parallel lines, we can apply the cross product operations of three vectorial representation of these lines. So, we will perform that competition say line l 1 represented by this three vectorial form, and l 2 is also represented by another three vectorial form. And we would like to take the cross product of these two to compute the point of intersection. So, as we did this exercise in the previous lecture, we will carry out the same computations in the similar fashion we will be computing it. So, we are computing the cross product. So, let me consider the components of these vectors arrange them in rows, and then expand the determinant. So, let me do it as you understand 96
+[p.23] that this is the sub determinant which unit to compute as a component of i. So, this would be b c 2 minus b c 1 i. The middle part, so we will write it as minus of these two which is a c 2 minus a c 1 j. And finally, the third component by suppressing the third column, it would be ab minus ab k. So, if I write it in the vectorial form, I can write this the resultant vector as b into c 2 minus c 1, then a into I can write it as c 1 minus c 2. You note the change of sign because of this negative sign here, and then 0 that is the third component. So, this is the intersection point. In fact, this is equivalently I can write these vector as b minus a 0 by taking the scale factor c 2 minus c 1, no outside. So, this equivalent representation itself it is sufficient to say that this is the point of intersection of these two parallel lines. So, now, you can see that this point if you notice that the scale value is 0. So, if I divide the scale value, divide the other coordinates by the scale value, those coordinates will become infinite. But the nature of infinity is captured here, because it is qualified by these two values b and minus a. Let us try to understand the significance of this representation.
+
+(Refer Slide Time: 10:18)
+
+So, if I rub this you know computations, so you can see that we have the point of intersections in this form. And how this line is represented here, this line this particular point of intersection, how it is represented? So, we will say that in the two-dimensional projective space this point b minus a 0 it is represented as a point in a plane which is parallel to the 97
+[p.24] projection plane. And this plane is called principal plane, because it contains the access x and y. And not only this point b minus a b minus a 0, but also the ray passing through this point connecting to the center O, the whole ray itself is representing this point because that is how the elements in the projective space is represent and this is the point of intersection in this representation. This point is called ideal point that is a technical term will be using it more often. And the plane where all these points are line for all of them the third coordinate is 0 that plane is also called ideal plane which is incidentally is the principal plane of this representation. This form of representation is called canonical form of representation.
+
+(Refer Slide Time: 12:12)
+
+So, let us understand the meaning of an ideal point. So, we consider a two-dimensional plane, where you have these two parallel lines, and these are the x axis, and this is the y axis. So, this is x axis; this is y axis; say this is the origin of this representation. So, a straight line given this equation ax plus by plus c equals 0, one of the straight lines in this representation, and you know the other straight line which is parallel to it should can be represented as ax plus by plus some value c 1 which is not equal to c in this case that should be equal to 0. So, this straight line particularly if we notice that this can be represented also in another form very well known analytical geometric form. I can represent as y equals minus a by b x plus c by b, where you see that this is a slope of this representation, and the relationship between the 98
+[p.25] slope and the angle of this line which it makes with x axis that is also known to us. So tan of this angle that would give you the slope. So, we can see how a and b they are related with this representation. So, intersection point is given by this b, minus a, 0 that you have computed and this point is related with this slope. So, what is a point, ideal point? In that case it is simply representing a direction, a direction in this two-dimensional plane. So, a point ordinary point in the two-dimensional perspective projection space or two-dimensional projection space is representing a ordinary point, there is an one to one correspondence with the ordinary point of a two-dimensional real space also. Whereas for the ideal point, it corresponds to a direction in that plane, and that direction is given by this angle theta which makes an angle with respect to x axis that is the implication of an ideal point.
+
+(Refer Slide Time: 15:09)
+
+So, just to summarize this fact, ideal points are points on the x y plane or principal plane parallel to projection plane. And for canonical coordinate system, they are of the form x y 0. So, the third dimension which represent the scale that would be 0. An ideal point denotes a direction toward infinity that is the implication of an ideal point. 99
+[p.26]
+(Refer Slide Time: 15:52)
+
+There is another interesting concept in this projective space in this representation, this concept is called line at infinity. So, let us try to understand what is a line at infinity. You notice this particular axis which is extended towards the direction of parameter c that is represented by this particular representation 0 0 1, this is the column vector. This is also representing an element in the two-dimensional projective space which are which is representing all the lines. So, this is a representation of a spatial line. Let us see what is the property of this spatial line. Let us consider this particular operation. It says multiplication of the transpose of a point incidentally which is an ideal point. So, this is an ideal point and this is the line, what I was referring at. If I perform this multiplication, you can say that this is giving you 0, it is very simple to check this computation. So, what does it signify? You choose any ideal point and you perform this operation you will get 0. This is the relationship between a point and a line that is a point contentment relationship, which means all the ideal points they lie on this particular line and this line is called line at infinity. So, to summarize their definition of line at infinity, it is a line containing every ideal point and in canonical system it is given by 0 0 1. 100
+[p.27]
+(Refer Slide Time: 17:58)
+
+So, what should be a model for the projective plane? In this case, we can represent all the points in the projective plane using this geometric concepts, this is a geometric model. So, you can observe that this is a plane of projection, this is a plane of projection which is represented by the symbol pi. So, all the points which are in the real space and which corresponds to a point in the projective space directly, they lie on this particular plane of projection. And every point corresponds to a ray passing through this point connecting the origin. So, any point is related with a ray connecting to origin passing through that point. Similarly, if I have considered a point in the principal plane or ideal plane that is also an element of the projective space. So, all this point which are lying in this plane there was a part of the projective space. And they are representing all ideal points and as I mentioned they are representing a direction with respect to this plan of observation. And any straight line on this plane you can see it is geometric interpretation is that it is a intersection of a plane containing the origin and intersection with the plane of projection. So, this is what is your a geometric model by which we can understand the two-dimensional projective space, so that is what a straight line passing through the origin, that is how a point is represented in a projective space. And a plane passing through the origin intersection of that plane with respect to the projection plane that intersection represents a line in that on that plane, or any line is actually representing a plane passing through the origin. 101
+[p.28] So, mathematically we can say the set of all points in a projective space is also related or they are equivalent to set of all points in the three-dimensional real space excluding the origin, as I mentioned earlier origin is a singular point of the projective space. Similarly, I can consider also a real space two-dimensional, real space every point in that real space representing some point in the projective space. In addition to that, there is another plane parallel to the real space that is the canonical in the canonical representation or ideal plane, all points in that ideal plane is also represented. So, instead of writing it as a plane containing all points, simply I can write all those points, they lie on a particular line which is called line at infinity. And this line at infinity is given by this particular you know structure. So, these itself represents all the points in the ideal plane. So, this is a summary of this representation.
+
+(Refer Slide Time: 22:02)
+
+Let us try to understand another particular feature in the two-dimensional projective space that is called projection of parallel lines that feature we would like to check from any arbitrary plane how this projection appears in the projective space. Let us consider a projective space given by this representation, that means, there is an implicit three- dimensional representation. You have this ideal plane, you have those access a plane of projection, and any point in this projection plane is represented through this plane of projection. 102
+[p.29] And let us consider a plane in a arbitrary plane, and a parallel line two parallel lines in that plane. So, a plane is denoted here by the symbol pi. And if you would like to project this parallel line on the canonical plane, let me draw these two rays passing through any points lying on this plane. So, these rays they intersect the plane of projection, and the intersection would be given by a straight line lying on that plane of projection. Similarly, consider the other line which is parallel to the parallel to this line. And if I consider the other line and perform the same representation, same projection, and projection of that line on the canonical plane which means I have to get the intersection of rays connecting two points lying on that straight line, and those intersecting points they will form a line. What do you observe that though the lines are parallel in plane pi, but in the canonical projection plane these lines they are meeting to a particular point. And this line this point is called vanishing point. So, vanishing point is a point of intersection of parallel lines which are projected on the canonical plane.
+
+(Refer Slide Time: 24:33)
+
+We try to understand a bit more about this vanishing points; the their implications would be more clear here. You consider parallel lines on plane pi in various directions. Suppose, you take two directions and there are two representative lines which parallel lines which are denoting those directions. And if I take the projections of those lines in the canonical projection plane or in the plane of projection, as we can see that these two lines they would appear like meeting at some point which is a vanishing point. 103
+[p.30] Similarly, say other two lines, it would appear also meeting at some point which is a another different vanishing point. So, all parallel lines in that direction, so if I take another parallel line in this direction, that would also meet at the same vanishing point. If I take another parallel line see in this direction, that would also met in the same vanishing point here for this group of lines. Interestingly if I connect these two vanishing points, then we get a line, and this line is called vanishing line, because any parallel lines set of parallel lines in any directions they are vanishing points in the plane of projection will lie on this particular line which is called vanishing line. For example, if I consider a parallel lines see in this say if I consider this is another set of parallel lines, and if I take the plane of their projection on the plane of projection. So, what I will get? I will also observe that we will observe that those two lines they are meeting at a point which would be the vanishing point. And that point will also lie on the line on the same straight line connecting to the vanishing points earlier we have seen, that means, that point is lying on the vanishing line. So, this is a summary that vanishing points corresponding to parallel lines of a plane lie on a line and that is called vanishing line.
+
+(Refer Slide Time: 27:21)
+
+Let me draw a real life example to show that how vanishing points do exist. You take this particular image and you can see that the edges in the horizontal direction as we understand from that notice board and edges in the vertical directions, they are meeting at some point. 104
+[p.31] For example, in the horizontal direction, if these two edges this particular two edges they are meeting here and in the vertical direction. So, here what is shown here that even you take another parallel line, another line parallel to same direction like this text; text are also in the horizontal direction. So, this line also will be meeting at the same vanishing point, because as I mentioned all lines parallel to a given direction will meet on a single point that is the vanishing point. And similarly the vertical edges also they will also meet some vanishing point, and connecting these two vanishing point we will give you a vanishing line.
+
+(Refer Slide Time: 28:49)
+
+This is a visual demonstration of vanishing point that we can see that this is an image of a road, and which is captured from the front of a car. And you can see that how the edges of that road is meeting at a point at infinity, but this point we can sense, but it remained ever (Refer Time: 29:18) let say. So, our journey is to our infinity, we can say it from our perspective projections point of view, but really cannot touch it that is how a vanishing point could be also interpreted. 105
+[p.32]
+(Refer Slide Time: 29:35)
+
+There are there is another element in the two-dimensional projective space which is called conics, which are conics. And we will be considering their representation also in a projective space. So, how conics are represented? They are curves described by secondary equation. And this is the form of the equation which has been shown here. So, and if we consider this representation translate this representation in the homogeneous coordinate, each point instead of represented by 2D real coordinate of x and y, so in a 2 d real coordinate a point is represented by x and y. So, there in the homogeneous coordinate we know how this coordinates are represented by using this scale factor. So, x is equated with x 1 by x 2; and y is equated with x 2 by x 3. And if I replace this in this equation, then we will get a representation of conics in the homogeneous coordinate representation, and this is how this representation looks like. 106
+[p.33]
+(Refer Slide Time: 30:58)
+
+So, to make this representation brief once again we will be using the matrix form of representations using vectors for representing a point. And we can see a two-dimensional matrix represents a conics, this is how it is represented. So, this is the general form of representation of a conics. And we can see that this coefficients a, b, c, d, e, f, they are representing a conics. And these equation can be simply represented by this particular form. So, if you are wondering how I could get it, I can consider the homogeneous coordinate representation say let me write it as x 1, x 2, x 3, that is what x transpose, then C is given by this matrix. And then we have the column vector representation x 1, x 2, and x 3. So, if I perform this matrix multiplication, you can check you will simply get this expression. So, finally, a conics is represented by this , you can observe that this is a symmetric matrix, its dimension is 3 cross 3. And you have how many parameters are there? there are six parameters a, b, c, d, e, f. But as you know in this equation if I multiply this C with k, still it remains the same conics. So, it is an element of projective space. So, one of them can be treated as a scale factor. So, ultimately the degree of freedom in this representation is 5 though there are 6 parameters. So, I can represent a conic by this 6 elements, but one of them is a scale. So, degree of freedom is 5. 107
+[p.34]
+(Refer Slide Time: 33:09)
+
+So, naturally to define a conic uniquely I need at least five points in the two-dimensional projective space and I can write those equations using that five points. So, this is the equation, they should satisfy this equation, and this is a representation of a conic also in a vectorial form.
+
+(Refer Slide Time: 33:42)
+
+And if I get the five points, I can write five equations and then I can solve this equations because there is a 5 degree of freedom by taking one of the parameter by fixing it at some value, I can solve it. There could be rank deficiency in this representation rank deficiency in 108
+[p.35] C. And in that case here is degree of freedom is less than 5, and the there are special cases those are called degenerated conic, like there could be two lines of rank 2. And a repeated line of rank 1 those are the rank deficient representation of C. We will also check how this representations could be done, could be expressed analytically.
+
+(Refer Slide Time: 34:34)
+
+For a conic, its tangent lines are well related very in a convenient from it is related with the point which is lying on that conic, and this is a relationship that is given by simple linear relationships. If I multiply the point with the matrix C, then we will get the corresponding tangent line l. 109
+[p.36]
+(Refer Slide Time: 35:07)
+
+Now, this gives an interesting relationship of a conic representation, we have a dual representation of a conic. In this case a conic can be represented by all tangential lines which is enveloping which forms an envelope of the conic. And you can see that the expression is also in the similar form in the previous case it was x transpose C l, now it is l transpose another representation of conic C star it is a different matrix 3 cross 3 matrix, and l transpose C star l equals 0. So, the relationship between the original conic representation with the dual conic representations can be found from this particular case. See if I have l equals C x, then I can get x equals C inverse l, then x transpose C x equals 0 that is the original representation. From there I can derive the representations involving only line l, and this is how the algebraic manipulations, every x is represent is replaced by C inverse l. And if I take the transpose operations of those matrices that property, finally we see that we get l transpose, then all the composite matrices involving C involving constants and another l that is equal to 0. Now, the this whole thing can be considered as a representation of another conical form, another form of conics which is the dual representation. We can simplify these expression further by using matrix algebra, and we can represented as l transpose C minus, that means, transpose of C inverse because you know that that C into C inverse this is this is equal to the identity matrix ok. 110
+[p.37] So, this is the identity matrix and so we can just simply you know ignore it from this term, and then we gets you know this is what is C star incidentally, since C is a symmetric matrix. So, transpose of its inverse, this transpose is same as the original matrix, that means, this is equal to C inverse itself. So, finally, the dual conic representation of C is nothing but its inverse there is a interesting and very beautiful relationship involving the conics. So, a nice you know picture from the book from Hartley and Zisserman. You can see this is the original representation of conics in the point space, and these are representation of conics with the lines these are the two dual representation.
+
+(Refer Slide Time: 38:11)
+
+And degenerate conics we mentioned earlier if the rank of matrix C itself is less than 3, then we have some degenerate conditions of representation. Like with rank 2, a conic is defined by only two lines or two points, which are contained in a conic and they are defined only that lines and points. For example, a rank 1 it is the repeated lines and points. For example, in a degenerate point conic, we have to we have to specify it using two lines, say a line given by parameter l or vector l and m. So, l dot m transpose plus m dot l transpose that itself we will give you the conic representation. You note that the vectorial form of l, it is a 3 vector. So, if I perform this computation, it is 3 cross 1, and this is 1 cross 3. So, the dimension could be 3 cross 3, and which is a conic representations, but its rank is 2. There are only two you know directions, it will involves only two parameters. 111
+[p.38] So, if I take any two line l and another line m this itself these operation the pair of these lines is representing a conic, because there are there is a point of intersection of this line which lies on both this point, and that is what is representing a very generate degenerate conditions. Similarly, degenerate dual conic is represented by two lines, two points x y transpose plus y x transpose. So, this is what is the degenerate representation of conics.
+
+(Refer Slide Time: 40:09)
+
+So, we can summarize our discussion on this projective geometry is two-dimensional projective space that a point in a 2-D projective space it is represented by a ray passing through origin of an implicit 3D space. It requires an additional dimension for representation. And we call that representation as the homogenous coordinate representation. Then a straight lines in 2D real space those are also can be represented as an elements of a 2D projective space that is the space representing for lines of 2D real space. So, points and lines they hold duality theorem. So, these are the duality theorem which we have learned that is x transpose l equals 0 that is a point contentment relationship which can be expressed in the dual form also l transpose x equals 0, x equals l cross l prime that is the intersection of two lines keeps a point. A dual form is intersection of two points gives a line which is also in the same kind of operations. Then there are conics in 2D projective space which are represented by a 3 cross 3 symmetric matrix. And every conic has a dual conic or line conic as an envelope of its tangents. So, here we come to the end of this particular lecture. 112
+[p.39] Thank you very much for listening. 113
+
+## Lecture 7 — Projective Transformation  (transcript PDF page 40)
+
+[p.40] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture – 07 Projective Transformation In this lecture, we will discuss about Transformation in Projective Space.
+
+(Refer Slide Time: 00:23)
+
+So, let us define what is meant by a Projective Transformation. Firstly, this property says that a projective transformation is the transformation of a point in a projective space to a point in another projective space. This transformation should be invertible and it should preserve the collinearity of every 3 point. For example, you have three points say 3 2 1 , , x x x which lie on the same line, then if you transform those points they should also lie on the same line; on a line. And that property has to be satisfied for any pair of three points, and then any triple of three points, and then this transformation is called projective transformation. There is a figurative explanation that we can provide here. You consider this particular configuration. Here we have shown there are three points, they are lying on a particular line and they are shown by different colors. You consider a transformation, again their color shows the corresponding transformation in another space and they are mapping, 114
+[p.41] they are shown by these arrows, they are one to one mapping, they are invertible. And also since those lines were collinear they should be also collinear in the transform space. When these properties are satisfied for every configuration of points then this is a projective transformation.
+
+(Refer Slide Time: 02:24)
+
+There are various examples of this transformation. For example, change of coordinate convention. You consider this particular case where a point explained in a plane which is shown here as ' plane and that is mapped with a point x in another plane. So, these two points, every point, for every point in this plane there is a corresponding point in this '  plane and they are related by this geometric rule. If I draw a ray connecting that point to the center of the coordinate which is a center of projections in this case then you will find, I mean you will get the corresponding transformed point. So, you can see that with this particular configuration every point in this space is mapped to another point in this space which is also a two dimensional projective space. There could be coordinate convention. So, coordinate axis could be in different orientations. They need not be parallel to the same coordinate axis of the implicit three-dimensional space, representing this particular phenomena of projection. They could have different coordinate definitions in their particular plane. And so, if I use a representation of this 115
+[p.42] point as say           1 ' ' y x again a canonical representation and these representation as           1 y x , so we can see that they are related we can observe that they are related by a transformation this is called a projective transformation. We will see that what is the form of this transformation subsequently. So, this is one example because if I consider any line, so this line will be also projected as a line which means all the points lying on that line after transformation they are also lying on a straight line. So, they satisfy all the three conditions of the projective transformation that is why it is a case of projective transformation.
+
+(Refer Slide Time: 05:08)
+
+So, there could be several other examples of this projective transformation like rotation of axes, change of scale, translation of origin in planar coordinate system. So, every operation will give you a different set of coordinates for the transform points, but geometrically you can see that they preserve the properties of collinearity, the properties of invertibility of the transformation one to one mapping of the transformation and finally, those are points in 2D projection projective space. 116
+[p.43]
+(Refer Slide Time: 05:41)
+
+There could be more examples. Like this is another example, where you are rotating your plane of projections about an axis and you consider any two plane of two planes which are related by this rotation and consider a ray passing through the center of, a center origin of this particular plane and the intersection points in this plane they are giving you the corresponding transfer point. Similarly, some other examples are also given here. In this case, this point x and this point 'x they are related by this rule that they are formed, they have two different center of projections, but they are formed by the rays connecting the same point on a particular planar surface. So, here also any straight line, any line in this planar surface they will projected as lying here, which means all collinear points will be also mapped to another set of collinear points in the transform space satisfying the conditions of projective transformation. In this case, also you can see the shadow formation that is also a case of projective transformation because the same set of properties those are true here. 117
+[p.44]
+(Refer Slide Time: 07:18)
+
+So, let us discuss what would be the form of this transformation and interestingly only one form is possible and that to a very simple linear from, that is what we will be finding out here. And it is as I mentioned, it is linear, it would be invertible that is from the property of the projective transformation and the form is given here, in the linear form as shown below                                3 2 1 33 32 31 23 22 21 13 12 11 ' 3 ' 2 ' 1 x x x h h h h h h h h h x x x . You can see it is a 3 3 matrix which should be an invertible matrix and it maps uniquely a point           3 2 1 x x x to another set of another point which is represented by a 3 vector           ' 3 ' 2 ' 1 x x x . In short, we represent this transformation matrix by the symbol H mostly in our lecture. We will see that this representation will be there which is representing a 3 3 matrix. These are the column vectors by bold letter that we are representing here so, the 118
+[p.45] transformation matrix H that is equivalent to kH which is a scalar value. The same relationship can be denoted by this multiplication of a scalar value because a point ' X and ' kX it is the same point in the projective space. So, I can also multiply by any scalar constant, the transformation matrix I can multiply it with any scalar constant that would give me also the same transformation matrix, which means the transformation matrix itself is an element of the projective space. So, this particular matrix has 8 degree of freedom due to this fact, because as I mentioned one of them can be treated as a scale and you can express all other elements in proportion to this scale. So, there are 9 elements effectively in the 3 3 matrix, but out of which one of them will denote scale factor, so there are 8 independent parameters or the degree of freedom of this matrix is 8. This matrix is also called homography and this transformation is also called homography, and this matrix is called homography matrix.
+
+(Refer Slide Time: 10:04)
+
+So, Hx preserves collinearity, that property we can very easily verify. Let us consider a line in this space two dimensional projective space. A point x on this line it satisfies this point contentment relationship which is given by this 0  x lT . And these itself I can write it as 0 1  Hx H lT . You can see that, that is a trick we are using here. We can consider this( H H 1  ) is as an identity matrix. 119
+[p.46] So, this identity matrix can be replaced by this H H 1  , and then what we can do that by using the matrix transformational rule 1  H lT can be written as T Tl H ) (  . So, this quantity itself can be considered as a new line. It is 0 ) (   Hx l H T T . So, that is what I was referring at. These itself represents as if a line; on this line this transformed points are lying. So, this line in the transformed space where the all the points of on line l they are lying now.
+
+(Refer Slide Time: 12:24)
+
+So, this is a summary. So, ) ( l H T  is a transformed line of l . And so, that shows how Hx preserves collinearity, but it is difficult to show that H is the only form of homography and this is not in the scope of this particular course. So, we will accept this fact that H is the only form of homography and this has certain advantages in computing H if we accept these particular fact. This is also true, as I mentioned that you can prove it, but that proof is not discussed here because it requires a complex arguments. 120
+[p.47]
+(Refer Slide Time: 13:15)
+
+So, the implications of this fact is that, if there is a homography, there exists a unique H and it is a 3 3 invertible matrix. Since, its functional form is known, because we know that is a matrix those are the elements and we can expand the relationships in an algebraic form, so it is easier to estimate. As I mentioned also that H and any scalar multiplication of H which is say kH, they are equivalent. Number of unknowns in H is 8.
+
+(Refer Slide Time: 14:04)
+
+So, now we will be considering how this homography matrix could be computed. Consider, we have a set of point correspondences, and a typical point correspondence 121
+[p.48] can be specified in this form that you have a point ix in the original space and its corresponding transformed point ix prime in the transform space, and their relationship is given by this fact i i Hx x  ' or i i kHx x  ' you should note that in the projective transformation relationship. Now, we need to estimate H that is the computational problem. As I mentioned there are 8 unknowns, since there are 8 unknowns and given a particular point correspondence you can get only two independent equations. Let us see how we can get these two independent equations. Let us consider this particular fact. You can see that in the two- dimensional real coordinate space can be expressed as a ratio of ' 3 ' 1 x x . This is a division by the scale factor. 'x So, 'x is a representation in the homogeneous coordinate of 'x is given here as           ' 3 ' 2 ' 1 x x x and this from this representation a 'x is given by this form. And since you have the corresponding matrix multiplication. So, if I write the matrix multiplication relationship that means,           ' 3 ' 2 ' 1 x x x this is the transformed coordinate space which is multiplied by the homography matrix whose elements are given by           33 32 31 23 22 21 13 12 11 h h h h h h h h h and then you have the original space points are represented in the original space in this problem. So, you can see that 13 12 11 ' 1 h y h x h x    and which is given here in this numerator. So, in this particular representation it is considered as           1 ' ' y x . This representation we are considering this 'x , 'y and this is considered as say 'x , 'y let me take is at 3x or and this is considered as x, y, and say this is say 3x and this is say ' 3x , ok. So, say this is the 122
+[p.49] representation we are using here. So, it is 13 12 11 h y h x h   . So, we are taking 3x as 1 and this is also we are considering this is, this could be ' 3x , but this is we are taking as 1 because this is a scale factor that would be representing here.
+
+(Refer Slide Time: 18:18)
+
+So, let me rub this to make it more concrete. let me write the equation once again. So, this is 'x , this is 'y , and this is say ' 3x , and this is the matrix           33 32 31 23 22 21 13 12 11 h h h h h h h h h and this is           1 y x ok. So, from there we can get this equation you can see that numerator is coming from here and the denominator; that means, ' 3x is coming from here 33 32 31 h y h x h   and even if this coordinate 'x or ' 1x is divided by ' 3x then you get actually the coordinate in the real space which is observed here. 123
+[p.50]
+(Refer Slide Time: 19:28)
+
+Similarly, we can get also for the y coordinate; that means, 'y also can be expressed in this form. So, we get these two equations from this particular relationships. So, there are 8 unknowns. So, you require 4 points, at least 4 points to get 8 equations, but one of the parameters we can set it as equal to some known value and then you can solve this problem. So, minimum 4 point correspondences are needed to solve this problem.
+
+(Refer Slide Time: 19:54)
+
+Let us take this particular example consider this image and as you this is the same image what we displayed in a previous lecture and you can see that the horizontal lines they are 124
+[p.51] not remaining horizontal in the projective space because of the projection they look like oblique and meeting at a finite point, that is the vanishing point. If you would like to remove the projective distortion which means let the horizontal line looks like horizontal and vertical lines looks like vertical then we can see how we can apply the concept of homography here. So, we select 4 points in a plane with known coordinates. So, consider this selection. Here I have shown by drawing a particular contour, but we can select any 4 points, the endpoints of this edges say we have selected this point, this point here, this one and this one. So, these are the points which are selected. And then in the transform space we would like to straighten this lines, so that they look like parallel. So, in the transform space we want this rectangle, this quadrilateral should look like a rectangle; that means, we will be mapping this points to a corner point of this rectangle, the respective corner points of these rectangles. So, this is a kind of mapping you would like to have. And we know the coordinate point. So, we know these coordinates and we can also define the coordinates of this space and we can define the coordinates of these corner points. So, we know the corresponding pair of corresponding points. So, from there you can form equations because if the coordinates each pair of correspondents will give you two equations, so we will get 8 equations. Like this, this is one example of a pair of equations, similarly we can form another 4 pair of equations and you will get 8 equations and since they are all linear in this with respect to the parameters of transformation matrix; that means, the elements of H matrix. And as I mentioned you can set one of them to a value 1 and in proportion to that value it express others. Because there are 9 elements, but one of them is a scale element, so let us consider say 33 h is the scale element, we can set this 33 h at 1 and then you can solve them. If you do that then you can say that this particular image in the transform space will look like this where the straight lines they still remain parallel. But there is a caution when you apply this method that 33 h if it is a non-zero value then this method will work, but suppose 33 h itself is a 0 so then it cannot act like act as a scale factor. And for that you need to choose another element, and we will see actually there is a method which can remove this particular constraint and in generally can be applicable for any kind of homography matrix. And another interesting part here you can see that you do not 125
+[p.52] require any calibration of the cameras here, it is your coordinate definition that is doing the trick to remove this projective distortion.
+
+(Refer Slide Time: 24:04)
+
+So, this computations let me elaborate a little further. Say take this typical case these are the point correspondences, I have defined these coordinate and these are the points in the in the original image, this is the points in the original image and this is a point in the transforms which is a point of the rectangle. And using this set of point correspondences I can form these 8 equations and then these equation can be conveniently represented in the matrix form in this particular form. 126
+[p.53]
+(Refer Slide Time: 24:42)
+
+As I set 1 33  h , I can rearrange the elements in such a way that all the unknown parameters remain in the left hand side and the constant terms they form the column vector in the right hand side. So, the inversion of this matrix and multiplying that inverted matrix with this column vector will give you the solution. And you will get a homography matrix like this.
+
+(Refer Slide Time: 25:21)
+
+127
+[p.54] And if I apply the homography then you can see this is the image which I am showing here in an enlarged form. And you can see the utility of this technique, the text is now conveniently being read by applying this homography.
+
+(Refer Slide Time: 25:38)
+
+So, the other method by which this homography could be computed is called direct linear transformation method. It is a general method, because yours working with only 4 point correspondences, but you may get more number of observations and you may that would make your method more robust because there could be noisy observations, and if you just use only 4 points to compute homography that noise will heavily affect the quality of your result. So, let us consider a method where you have more number of observations, more than 4 points. So, in general I would like to represent my transformation coordinate space by this particular representation and consider your homography matrix is represented in this form, a vectorial form where you can you are representing by this particular symbol 1h it represents a row of H, 2 h represents a row of second row 3 h and transposition of this that represents third row. See this is a matrix representation, all these are row vectors, these are the row vectors. So, if I multiply this matrix H with the vector ix , I can also represent in this particular sub matrix form with my multiplication. So, you can see that all row vectors are 128
+[p.55] multiplied by column vectors and each one will give you this particular form. So, you should note that each element is a scalar element. So, this is a 3 vectorial, i Hx is a 3 vectorial representation that is a transformed point. 0 1 ' 2 ' 3 ' 1 ' 2 ' 3 ' '                 i T i i T i i T i i T i i T i i T i i x h y x h x x h x x h w x h w x h y Hx x So, since the scale is involved it is difficult to work with this equality sign. You consider ' ix is a vector and i Hx , is a 3 vectors and they are related with this scale factor. So, they should have the same direction. So, instead of enforcing equality what we can do? We can take the cross product of these two vectors because they have the same directions, so they are parallel vectors. So, their cross product should give you 0 vector. So, this is a 0 vector you should note that this is a 3 vectorial representation this is a 0 vector. So, if I perform the cross product, the computations can be expanded in this form. So, you can see that these are the 3 components of this cross product. And this should be equal to 0, and this 0 is not a simple 0, its a 0 column vector of dimension 1 3 which means this element should be equated with 0, this second row this is equated with second 0, third row is equated with this 0. And this can be shown that there is a redundancy in this representation because if I multiply say ' ix prime with this equation, and if I multiply ' iy with this equation. And if I take the addition of this two, so let us see say the first equation if I multiply it would be 0 2 ' ' 3 ' '   i T i i i T i i x h w x x h y x Multiply these second equation with ' iy . So, it should be 0 3 ' '  i T i i x h w y . If I add them, these two quantity will be cancelled and you can take ' iw as a common and we will find this will give you this particular equation i T i i T i x h y x h x 1 ' 2 '  . So, that is equal to 0. 129
+[p.56]
+(Refer Slide Time: 30:54)
+
+So, this equation is redundant and you get only this two equation. So, that is the summary of this particular exercise. So, this is a redundant equation.
+
+(Refer Slide Time: 31:00)
+
+So, in the direct linear transformation we can consider only these two, first two rows of this matrix that is giving you the two equations. So, I can represent this particularform as this equation 0  h Ai , where is given by this form          T i i T T i i T i i T i i T i x x x w x y x w A ' ' ' ' 0 0 . So, you can note that the dimension of A iA is 9 2 , because you know there are two rows 130
+[p.57] and each one is a transpose of 3 vectors. So, T 0 it is a 3 vectors, this is 0 0 0 minus w i prime x i transpose, x i transpose is a point x i, so which is if I write say )1, , ( 2 1 i i x x into ' iw This is my original space points. Similarly, T i ix y' is also another point. So, you see that this is also 3 vector. So, if I arrange them there are 9 such columns, there would be 9 such columns. So, it should be 9 2 , this matrix is 9 2 . So, a single point correspondence will give you; two equations 0  h Ai
+
+(Refer Slide Time: 32:26)
+
+So, this set of equations can be solved by solving a set of non-homogeneous equations and you can see that this is the expanded form what I described earlier. And we can consider that there are more number of points and stack of these two rows for each point correspondence will give you a composite matrix A which is of higher dimension. So, if there are n point correspondences, so dimension of A would be 8 2  n because if we set the parameter 33 h equals 1, so the representation of h would be       1 ~h . So, you understand in this representation. So, h~ consist of the column vector representation of each rows of matrix h. Only the last element that is 33 h that is set 1 and then rearranging this equation you will get this equation. So, finally, dimension of iA~ is 8 2 and if I get the stack of all endpoints it will be 8 2  n . So, since there are more number of equations and only there are 8 unknowns. So, 131
+[p.58] we can use the least square error estimate method. So, all objective is to minimize b h A  ~ , where dimension of h is 1 8 and dimension of b is 1 2  n . So, solution of this equation can be obtained in this form. You can see that this is by solving least square, we can multiply the b with this this is called pseudo inverse of the these operation. The whole thing is called pseudo inverse operation. If I multiply with the pseudo inverse matrix then you will get this vector. I can give show you one simple way to obtain this pseudo inverse by using the matrix operations itself. Say, approximately we want h A~ should be equal to b. So, what we can do. Let us post multiply each side by T A , ok. So, now you take the inverse of A transpose and multiply with the resulting operation that would give you the corresponding equations that is what exactly you are getting here. So, if you use these particular solutions, you will get the elements of matrix H in this form and append it with the element 33 h as 1 then you will get a transformation matrix. But here also the problem is that, that your assumption of 33 h equals 1 may not hold because if 33 h is 0, then you simply cannot put it as 1 and you cannot apply this method in that case.
+
+(Refer Slide Time: 36:03)
+
+So, there is a method which is more generally applicable and that is called you know solving solution of homogeneous equations. In this case we are not making any 132
+[p.59] assumptions, we are not setting any value to a particular constant to a particular value, any parameter. We consider to solve the whole problem as equals 0. So, this side is the corresponding this specification is 0. So, you would like to get that values of Ah which will minimize this particular equations. So, the error of error from is your objective functions would be a bit different in this case. You have dimension of A is 9 2  n now, because you have not shifted one of the parameters at the right hand side and setting it value to 1, we considered the whole vector as a 9 dimensional vector, forming the elements of transformation matrix and each point will give you a pair of equations A 1 A 2 A 3, those are the rows corresponding to equations. So, dimension of A would be 9 2  n , dimension of h is 1 9, so dimension of Ah is 1 2  n , the whole thing is 1 2  n . So, the dimension of 0 is 1 2  n . So, our objective is that we would like to minimize the norm of Ah, such that the norm of h equals 1 because there is a scale factor involved, so we have to put a constraint on h to minimize this value, and this constraint; it is a constant optimization problem where we have to keep the norm of h equals 1. So, if you were wondering what is meant by norm of a vector it is simply the magnitude of that vector. So, consider a 3 vectorial form representation say you have T h h h ) , , ( 3 2 1 . Say, this is a three dimensional representation I am using the row vector representation. So, norm would be simply the sum of h squares and you take the square root of this; that means, the magnitude of that vector. So, we are minimizing, also will give you a vector of dimension 1 2  n . So, we are minimizing the norm of this subject to this. 133
+[p.60]
+(Refer Slide Time: 38:50)
+
+So, there is a solution for this equation, it is a well-known solution. This is the unit Eigen vector of the smallest Eigen value of A AT . So, using this result, so I am not going to discuss this particular theory by which you get this solution. We will be using this particular fact that if I can compute the Eigen vector correspond to smallest Eigen value that Eigen vector is a solution of this equation.
+
+(Refer Slide Time: 39:20)
+
+So, this is one way of solving this problem that you can solve using least square error estimate for homogeneous, set of homogeneous equations or set of non homogeneous 134
+[p.61] equations as we have discussed earlier. But there could be different other error criteria. Like the error term what we used in the previous methods which is known as direct linear transform methods, those errors are known as algebraic errors, those are the least square errors that is how we have defined, that sum of square errors, its square of deviations. There could be geometric error, like you can find out the distance between the transformed point, true observed point in the transformation space and the estimated transformation; transform point and square of all these distances can give you an error. So, the idea is something like this. Say you have the original space x and you are transforming it to the transformation space 'x . So, when you perform H operation. Now, this may be your true observation points, true and after estimation your point may be estimated at this point. So, the distance between these two will give you a component of error. And you are going to minimize some of all these distances. So, this is one form of geometric error. And this is the Euclidean distance we use. Geometric error with re-projection where we will be using also the same estimation; that means, here what we will be considering, we will be also applying 1  H on the transformed points. We will be also applying 1  H on the observed transform points and get the estimated point in the original space say 'x . Say, this is the point and say this is your observed point and get the distance between them. So, that would give you the component from this inverse mapping. So, this is a geometric error with re-projection. 135
+[p.62]
+(Refer Slide Time: 42:01)
+
+And there are different methods like non-linear iterative optimization techniques, such as Newton iteration, Levenberg-Marquardt method, etc those methods could be used for solving this problem.
+
+(Refer Slide Time: 42:16)
+
+There is another interesting fact, that should be noted. we can apply even transformation on these points, on the point set of points which are observed in the two spaces and even we can estimate the homography even after transformation. So, let us understand this particular fact. 136
+[p.63] Say, consider i i Tx y  and ' ' ' i i i x T y  . So, these are the transformations T and ' T which are applied in two spaces, both in the original and the transformed spaces. So, now you compute the estimate the transformation matrix between these transformed, set of transform points. So, we can see that even from there you can estimate H. So, this is a relationship that is related with these point x by Hx. So, you apply the transformation relationships with 'x T and ' T with a corresponding set of points. So, you can see that, so 'x is ' 1 ' y T  . x is y T 1  . So, 'y is y HT T 1 '  . So, this thing can be considered as the transformation matrix. This is what is the transformation G. So, if I use and iy can estimate G and from there I can estimate H, but one thing is that if you are using least square estimate then of course, you know you may not get a; the you can get a close estimate of H, but it is not equivalent. So, if I estimate H without transformation and if I estimate G with transformation and convert get back the H from there the results will not be equivalent because of this constant optimization issues.
+
+(Refer Slide Time: 44:21)
+
+So, one of the example of this transformation which is very often used is that we can transform the point set, so that its center becomes origin in the plane and average distance from it is 2 . So, we can transform the coordinates, we can scale down or we can scale up, so that finally, the all the spread of the points say if we have the original 137
+[p.64] point like this after transformation, T all these points should be within 2 distance of the center of the points.
+
+(Refer Slide Time: 45:09)
+
+So, this is the idea and there is a particular type of transformation which can perform this job easily. So, take this, that I subtract each point from its center and then divide it by its standard deviation x . With this transformation you can preserve this particular fact, and now you apply the direct linear transformation on this transform point. So, it can recover the homography and this computation is robust because it can take care of the big values that we will be getting at different you know coefficients. 138
+[p.65]
+(Refer Slide Time: 45:39)
+
+So, just to summarize this particular lecture on computation of homography; what we have seen that a projective transformation, has these properties that it is invertible, it preserves collinearity, and it is always in a linear form. And that information gives you a convenient techniques for estimating projective transformation because you can apply the linear model there. So, these are the fact with the projective transformation that it is defined as a transformation of a point to another space, another projective space, as another point in the projective space. So the line in a particular original space that is also transformed, and with the transformation H it is related with this particular property, T H  . If I multiply with the original line, line in the original space you will get the corresponding transform space. And there is a computational problem for estimation of homography in this particular, in this respect which we discussed that is if you have a set of point correspondences then you can compute the homography. And there we require minimum 4 point correspondences to solve it, but if you have more number of observations then you can make it robust and you can apply least square error techniques, like direct linear transformation technique for solving them. So, it makes your computation robust. Thank you for listening. 139
+
+## Lecture 8 — Homography:Properties – Part I  (transcript PDF page 66)
+
+[p.66] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture – 08 Homography: Properties Part – I In this lecture, we will talk about different Properties of Homography.
+
+(Refer Slide Time: 00:21)
+
+So, let us summarize what are the features of a projective transformation. We know that a transformation is projective first it has to be a mapping from a two-dimensional projective space to another two-dimensional projective space. Then, it should be invertible and collinearity of every three points to be preserved that is three points for example, which lie on a straight line, then after transformation transform points also should lie on a straight line. And also we have discussed that there is only one form of this kind of transformation and that is in the form of a non-singular 3 cross 3 matrix. 140
+[p.67]
+(Refer Slide Time: 01:19)
+
+So, let us consider a typical case of this projective transformation a kind of a schematic diagram by which we can explain these properties. So, you consider a projective space two-dimensional projective space and you can see that O is the center of projection and a projection plane which is in the canonical form is placed at a distance 1 along the z axis of this particular projective space. And let us consider another projective space in the same representation, similar representation, but it has a different coordinates of the center of projection, it has different orientations of the coordinate axis and also accordingly with respect to that its canonical projection plane is also defined. So, a point in this case ' O is the center of projection of the other projective space. So, a point in the projective space which has been shown earlier that is represented in this form. We know that any point in the canonical space is represented by a ray connecting to the center of projection and whereas a point in the transform space that is also represented in this form and here we are showing that there is a mapping between the point p and 'p . So, there is a mapping, and that mapping is defined by a 3 3 transformation matrix as we have discussed earlier. And this is how we denote a projective transformation. We can visualize the projective transformation, for every point in the space there will be another unique point, every point in the space there will be another point in the transformed space, where it will map to that particular point uniquely. 141
+[p.68] So, to summarize this property also we can say that , if there is a straight line and if the point lies on that straight line, , so if we map all the points in that straight line , they will also form another straight line and in that straight line all the mapped points will lie. So, we can say there is a mapping from straight line l to 'l under this transformation. And we have also discussed how this transformation is related, how we can derive the transformed points or transformed straight lines from the points or straight lines of the original projective space. So, the relationship is that for straight line you have to apply the transformation matrix which is transpose of the inverse of the transformation matrix for point transformation. So, the relationship can be summarized in this form that for a point if I multiply the point x in the projective space representation which is an homogenous coordinate representation, if I multiply with a 3 3 transformation matrix H, then we will get the corresponding transformed point also in the homogenous coordinate representation. Similarly, for a line if we multiply it with the T H  matrix which is transpose of inverse of H, then also we will get the corresponding transformed line.
+
+(Refer Slide Time: 05:47)
+
+So, let us discuss again that how vanishing points they are related in the transformation, in the transformed space. So, in this case we have drawn a pair of parallel lines and one of them is denoted by l . Consider l is transformed in the transformed space by a line 'l and we know how l and 'l is related. So, you multiply l , represent it in a two- 142
+[p.69] dimensional projective space by transpose of inverse of this matrix H and then you can get the corresponding transformation of 'l . That means, you have to multiplel with T H . Similarly, if I transform the other point of that parallel line we will get another straight line and this straight line incidentally we observe though they are parallel in the original projective space, but in the transformed space they will be appearing as a converging straight lines or actually they will intersect at certain points. Now, this point is called the vanishing point of this straight lines. So, the interpretation of this vanishing point in the transformed space can be very easily given, if we understand that what is a intersection between this parallel lines in the original space. We know that we have already discussed that when two lines are parallel in a projective space they intersect at a point which is at infinity, but there is a finite representation of that infinite point. And in this case for example, if we represent the straight line by this equation 0    c by ax and then the all lines parallel to this straight line will intersect at a point in the projective space which can be represented by the coordinate ) 0, , ( a b  it is a homogenous coordinate representation. So, the ray connecting this point and passing through the origin that same ray is representing this element. And we know that this point is also called ideal point. Now, the vanishing point of these parallel lines in the transformed space is nothing, but the transformation of this ideal point into this space, which means if I apply transformation matrix, if I multiply transformation matrix with this point then I will get the vanishing point. So, what we can get is that, we have to represent the intersection point of the parallel lines in the original space which incidentally is ) 0, , ( a b  this column vector represent represents the intersection point for a line for all parallel lines which are parallel to the line 0    c by ax . So, if I multiply it with H then I will get the vanishing point, corresponding vanishing point, now that means, the corresponding coordinates of this point in the projective space with this computation. So, this is a simple interpretations of a vanishing point and that is what we have represented here. Now, another interesting part is that, we know that if I take any other parallel line in the original space any of the set of parallel line in the original space, suppose you take another set of parallel lines in the original space and then if I transform these lines in the 143
+[p.70] projective space they will also meet at some vanishing point and all these vanishing points they lie on a particular line which is called vanishing line. So, how do you get this vanishing line also in the transformed space? What is the representation? So, there we know that all the vanishing points in the original space they lie on a particular line which is called line at infinity and that is given by the; that is given by this representation           1 0 0 in the let us say that is an element in the projective space representing the all the straight lines. So, these vanishing line is nothing, but the transformation of this line at infinity into this transformation space. So, which means that if I perform transformation of line at infinity by following the same rule of line transformation then I will get the corresponding vanishing line. So, let me find out this particular equation to which is hidden here. So, let me write it here. So, what we can do we have to multiply the line at infinity represented by this from           1 0 0 , then we will get the corresponding vanishing line which is this line here. So, this is a interpretation of a vanishing point and vanishing line in the transformation space.
+
+(Refer Slide Time: 11:59)
+
+144
+[p.71] So, just to summarize all these properties in the transformation space or all the properties of this projective transformation homography. So, we have these are the transformations, those we have studied that is point transformation which means that we have to multiply a point in the projective space by the corresponding transformation matrix, then you get the corresponding transformation point in the transformed space. You should remember that all the representations are in the homogeneous coordinate form. Then line transformation, where a line has to be multiplied by the matrix T H which is a transpose of inverse of transformation matrix, then you will get the corresponding transformed line in the transform space. Similarly, for vanishing point, for lines parallel to say represented by this form T c b a ) , , ( that is a form of a line then the vanishing points can be derived by multiplying the intersection point of those parallel lines in the original space with the transformation matrix which would ) 0, , ( a b  That is a typical representation of the intersection point of lines which are parallel to the line given by parameters a, b, c. And vanishing line would be the transformation of line at infinity of the original projective space which is given by T)1,0,0 ( , and that has to be multiplied once again with T H  which is transpose of inverse of transformation matrix and that would give us the vanishing line.
+
+(Refer Slide Time: 14:01)
+
+So, let us consider an example by which we can show all this computations. You consider a homography matrix which means this is a transformation matrix which is 145
+[p.72] given in this form you can say this is a 3 3 matrix and which should be incidentally non-singular you can verify that. So, the computational problem is that you have to compute the transformation of the line formed by two points given by (2, 4, 2) and (6, 9, 3) both the points in the two-dimensional projective space. So, let us see how we can compute this.
+
+(Refer Slide Time: 14:43)
+
+So, there are few methods by which you can do it, I will discuss two of them. So, the first method, in this method what we can do that first you compute the transformed points of (2, 4, 2) and (6, 9, 3). So, you get the corresponding transformation point in the projective space. So, it is figuratively I can show you. So, you have a projective space where you have this points say p and q, and p is given by the point (2, 4, 2) and q is says (6, 9, 3). So, you find out the corresponding transformation in the transformed space. Suppose, this point is 'p and this point is 'q . So, what you need to do? You have to perform the multiplication of transformation matrix H with p and multiplication of transformation matrix H with q, then you get this point 'p and 'q those are the transformation point. Now, you compute the straight line in the transformed space, which means if I perform ' ' q p I will get the corresponding transformation matrix. So, let me see this computations once again. 146
+[p.73]
+(Refer Slide Time: 16:17)
+
+So, first let me reduce the representation of this points. Since, there is a scalar quantity 2, I can divide all the coordinates to make it more simple representations of (1, 2, 1) and similarly (6, 9, 3) I can simpler representation of (2, 3, 1), you could have performed using (2, 4, 2) and (6, 9, 3) also. So, it is just for the convenience of the computations I have taken these two. Now, you transform (1, 2, 1) and (2, 3, 1). So, if I transform (1, 2, 1) by multiplying this matrix then you will get this point (5, -1, 11). You need to check when you multiply it. And if I multiply (2, 3, 1), then you will get the coordinate (12, 3, 16). 147
+[p.74]
+(Refer Slide Time: 17:17)
+
+Now, what you should do that you have to take the their cross product to compute the transformed line. So, you perform the cross product of this two and you can find out that the result would be           27 52 49 . So, that is the representation of the straight line which means the straight line in our conventional coordinate form should be represented as 0 27 52 49     y x . So, this one of the method by which we have carried out this computations.
+
+(Refer Slide Time: 18:07)
+
+148
+[p.75] Let me discuss the other method. So, in this case what we will do. Rather, first we will perform the computation of line in the transformed space. So, let us consider your original projective space and once again two points, p and q. So, you have to compute this transformation or you have to compute line between p and q by performing the cross product of this two points in the homogeneous coordinate representation. Now, you perform the transformation of this line. And in this case what you should do? You should multiply with transpose of inverse of this transformation matrix H which is represented as T H . So, if I perform this operation, then I will get the corresponding transformed line in the transformed space. So, 'l should be equal to l H T  . So, this is the computation we will be carrying out. So, let me detailed out this computation.
+
+(Refer Slide Time: 19:27)
+
+So, first we will be computing the cross product of this two points and the line would be (-1,1,-1), you can verify this computations by computing cross product of this two lines. And then, we will be transforming this line by multiplying this line with transpose of H inverse ( T H ) and you get the corresponding transformed line 'l . And 1  H in this case is given by this particular matrix. So, you know how to compute the inverse of a homography matrix or inverse of a 3 3 matrix and there you need to compute the determinant and you need to compute the co-factors, take the transpose of the co-factors and then you have to divide the corresponding matrix by the determinant you will get the corresponding inverse matrix. 149
+[p.76] So, please go through a standard text book of matrix operations, you will find out the steps of doing inverse and you should be familiarized to this computations. Particularly, since it is a 3 3 matrix, it should not take that much of time to get an inversion. So, after performing the inversion of a matrix, transformation matrix, then you have to take the transpose of this matrix and perform the computations. So, if you do this computations your line will come in this form. So, you can ignore the scale factor here. So, this scale factor you can ignore you know that. This, it is same as representation of (-49, 52, 27) column matrix itself, and it will give you the similar equation of straight line what you have derived earlier also by the method one which we discussed in the previous slides. So, this is the equation of the straight line that you will get. We will continue this example by computing the vanishing line of the in the transformed space.
+
+(Refer Slide Time: 21:37)
+
+So, here as we discussed that vanishing line could be computed by transforming the line at infinity of the original projective space which is incidentally           1 0 0 . So, we will be computing, we will be performing this computation and if I multiply the corresponding transpose of this inverse with           1 0 0 , then you will get the corresponding vanishing line as 150
+[p.77]            5 15 5 . And in the conventional coordinate representation this could be equivalent to the straight line 0 5 15 5    y x
+
+(Refer Slide Time: 22:39)
+
+So, now, we will study another interesting property of projective space. And we will see that projective transformations they form a group, we call it a linear transformation and this is a linear transformation and we call that group as projective linear group. So, the essence of this property is that if I consider a transformation of a spaceto the points in the another space by the transformation 1 H , subsequently another transformation from this space to the third projective space by 2 H Now, this is equivalent to transformation of the first to the third space directly by a matrix H which can be derived by composing this two matrices 1 H and 2 H , simplify multiplying these two matrices. This property holds because of this; this property of projective linear group, so which means that a cascade of transformation can be replaced by a single transformation that is one of the implications of this property. 2 1H H H  151
+[p.78]
+(Refer Slide Time: 24:03)
+
+The other implication is that, if I consider a series of transformation, suppose we are transforming first those points by 1 H , next the transformed points to another transformation space by 2 H , and from the third transformed space to a fourth transformed space by 3 H , then by applying cascade we can simply multiply all these matrices 1 H , 2 H , 3 H and we can get the single transformation we can equivalently represent it by a single transformation from the first to fourth space. But the interesting part is that as you know the matrix multiplications they are all associative. So, it does not matter in which order you compute this multiplications; that means, we can compute this multi this operations by first taking multiplications of 2 H and 3 H and then multiplying with 1 H or first multiplying with 1 H and 2 H and then multiplying this matrix before 3 H . So, this will give me the composite matrix H. So, this is another property we can, it can you can perform this computations with different compositions and this is possible because of that group property. 152
+[p.79]
+(Refer Slide Time: 25:27)
+
+So, there are some interesting structure in this particular groups and we will see that there are subgroups and there is a hierarchy among the subgroups. So, our parent group is a projective linear group. So, all projective transformation they fall under this category which is in general which is a projective linear group. We have discussed all those properties. Those properties are hold for this kind of transformations. Now, there is a special case of projective transformation, and they are called affine projective transformations, and they form affine group. One of the key property of this particular transformation is that their last row should be (0, 0, 1), you can multiply with any scale factor of (0, 0, 1), also. So, it is very easily distinguishable. We can easily determine that whether the transformation is an affine transformation or not. Then a special class of affine group is called Euclidean group when the upper left 2 2 . So, this is the upper left sub matrix this should be orthogonal. As you, as I have told you the bottom most row or the last row it should be (0, 0, 1), it they should have the value of (0, 0, 1), or a scaled multiplication of this vector (0, 0, 1). So, that forms the affine group and a special class of a affine group becomes Euclidean when this sub matrix is an orthogonal sub matrix. And finally, another sub group which is also a special class of Euclidean group which is called oriented Euclidean group, if the determinant of this sub matrix is equal to 1; that means, upper left 2 2 sub matrix is equal to 1. So, we call that group as oriented Euclidean group. 153
+[p.80] So, as I mentioned as that oriented Euclidean group is a sub class of Euclidean group. Euclidean group is a sub group of affine group, and affine group is a sub group of projective linear group. So, we have this hierarchy in the transformation space. With this let me stop for this lecture, and we will continue this topic in next lecture. Thank you for listening. 154
+
+## Lecture 9 — Homography:Properties – Part II  (transcript PDF page 81)
+
+[p.81] Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture – 09 Homography: Properties Part - II So, we will continue our discussion on the properties of projective transformation and we are discussing about the existence of different subgroups in the projective transformations group of projective transformations.
+
+(Refer Slide Time: 00:27)
+
+And, we have seen that in general projective transformations they belong to a group call projective linear group and a subgroup of projective linear group is affine group. The characterization is that the last row of the transformation matrix should be (0, 0, 1) or a scalar multiplication of (0, 0, 1) row vector. Then a subgroup of a affine group is Euclidean group, where the upper left transformation sub matrix 2 2 transformation sub matrix it should be orthogonal; which means if you take dot products of rows between 2 different rows it should be 0 and the self dot products should be non-zero. And then the bottom most subgroup; that means, which is also a special category of Euclidean group is called oriented Euclidean group, when the determinant of these orthogonal sub matrix should be equal to 1. So, these are the different kinds of groups or subgroups those are present in the projective transformations, in the group of projective 155
+[p.82] transformations. Let us discuss that what different kinds of properties are there for each group.
+
+(Refer Slide Time: 02:09)
+
+So, the parent group which is a projective group that is represented in this form. You can see that it is a 3 3 matrix, but we are representing it by their sub matrices where A is a sub matrix of 2 2 sub matrix. So, this is a 2 2 sub matrix. And t is 1 2 column vector, V transpose we have already shown how V should be represented its a column vector of T v v ) , ( 2 1 So, T V itself it would be 2 1 and this v which is just a scalar quantity. So, this is the representation of any general projective transformation matrix that we have already discussed. Representation we have seen that some typical examples of this transformation of a rectangle or a parallelogram has been shown here, some of the shapes you can see that these shapes they do not preserve the parallelism in this particular transformation in general not necessarily they preserves parallelism. So, the degree of freedom; that means, a number of independent parameters in the transformation matrix is 8, there are 2 scales, 2 rotations, 2 translations, and 2 parameters are meant for line at infinity. So, when we decompose this matrix we will find out that we can decompose it into this parameters, it will be clear later on when I will be discussing the matrix decomposition of this projective transformation. So, let us take it 156
+[p.83] for the time being that its degree of freedom is 8, 8 which means there are 8 independent parameters by which you can describe this transformation matrix.                                 2 2 1 1 2 1 2 1 0 x v x v x x A x x v v t A T And this is another interesting property which has been shown here; that means, if you transform any ideal point you can note that the third coordinate of the ideal point is 0 here. So, the transformation of ideal point is not going to give you always an ideal point because the third coordinate is 2 2 1 1 x v x v  which may be non-zero which means this point would be a finite point in the transformed projective space. And that is why line at infinity will be finite in the transformation space, it will be a vanishing line in the transformation space and it allows you to observe vanishing points or horizon after the transformation. So, what are the properties which are conserved even after transformation? Their concurrency; that means, if you find 3 straight lines which are concurrent; after transformation also you will find transformation of all those straight lines will be also concurrent. It preserves the co-linearity that is the best property of any projective transformation from definition itself co-linearity has to be preserved; it preserves order of contacts it preserves cross ratio which is ratio of ratio. Let me explain this cross ratio further. So how do you define a cross ratio-? 157
+[p.84]
+(Refer Slide Time: 06:07)
+
+Let us considered four points lying on a straight line; so, we can consider the ratio the cross ratio is defined in this way that is the ratio of ratios. So, you can see that ratio of length between | | 2 1X X and | | 4 2X X . So, this is the ratio first ratio this numerator of this ratio of ratio, the numerator ratio is defined in this way ratio of length between | | 2 1X X and | | 4 2X X and the other ratio is | | 3 1X X and | | 4 3X X . So, the ratio of these two ratios defines a cross ratio. And, if you even if you transform this points after applying projective transformation, first thing they will all be collinear as this is what is the property of a projective transformation and they all maintain the same order those are also preserved. And then this cross ratio is computedc there in the same fashion, you will find that cross ratio and this cross ratio they are the same. So, this is one of the invariants of this particular transformation. 158
+[p.85]
+(Refer Slide Time: 07:29)
+
+So, let us consider the properties of affine group. As we have already seen or we have already discussed that the third row of the affine transformation should be in the form of a vector (0 0 1) or you can multiply it using any scalar constant. So, let us for the sake of convenience we consider the representation of (0 0 1), one kind of representation. And here I have shown figuratively also how parallelograms when it is transformed in the affine applying affine transformation, still they remain parallelograms which means one of the invariants of this transformation should be the parallel lines. Parallel lines still remain parallel after affine transformation. And how many degree of freedom we have here? You have only you can count the number of elements there itself there is 6 and in fact, there are six independent parameters and further this matrix A can be decomposed into this operations. So, as if you are applying distortion in the deformation in the corresponding perpendicular to axis directions. So, you are applying deformation means, you have to apply a rotation first determine align it with respect to the axis where the deformation as to be applied and then you apply the deformation in two perpendicular directions that is given by this diagonal matrix      2 1 0 0   D . So, you are applying you are introducing deformation by using two different scales and your coordinate measurements at two oblique axis. So, as if your 159
+[p.86] coordinate convention instead of considering rectilinear, you know axis representation, we have this oblique axis representation let me draw it once again. So, you had a rectilinear coordinate representation, but in the transformed space you are following a non-rectilinear representation, but measurements should be all by the parallel lines of those two baselines. Now so, your unit scales they are scaled by different factors there and that is how the co-ordinate transformation is taking place while applying the affine transformation along with this you can rotate the co-ordinate axis that is another parameter  ) ( ) ( ) (    DR R R A   So, you can see here that there are four independent parameters in A one is this angle  then this two scale factors and then again you are rotating back and then after that you are applying rotation of the whole transformation points angel. So, this is in this way you can account for the coordinate transformations through A and the other thing what you are doing? You are translating the even you apply the translation of the origin so, another two independent parameters. So, there are 2 translation parameters 2 rotation parameters and 2 scale parameters. So, those are the two things those are the things what we discussed in the previous case also those are the parameters in this particular affine transformation.
+
+(Refer Slide Time: 11:21)
+
+160
+[p.87] So, just to summarize you have 6 independent parameters and once again if I apply affine transformation on ideal points, you can see that it still remains ideal because your scale factor still remains 0 which means that, your parallel lines they will be still remain parallel because after transformation the intersection points also are ideal points. So, line at infinity stays at infinity. So, line at infinity is the one of the invariants of this particular transformation. So, what are the invariants of affine group? Parallelism, then ratio of areas, ratio of lengths on parallel lines for example, midpoints, then linear combinations of vectors for example, centroids. So, they all remain invariant and the line at infinity that is one of the major property that line at infinity still remains the same. So, if you transform a line at infinity represented by the vector (0 0 1), then you will still get the corresponding transformation as (0 0 1). So, which means , if I perform this operation say this is the line at infinity and then multiplied by the matrix T A H  which is transpose of inverse of this particular transformation matrix, then you will get the corresponding representation of line at infinity, it may be multiplied by a scale factor, but still represents the line at infinity as (0 0 1). So, the implication is that it means that all vanishing points after transformation they still lie on (0 0 1) which means they are all ideal points and which means after transformation all parallel lines still remain parallel that is one of the very interesting properties in affine group. 161
+[p.88]
+(Refer Slide Time: 13:41)
+
+The Euclidean group what we discussed can be also rename that can be called also as a similarity group, because it maintains a similarity property of triangles say when in triangles when all the edges are parallel, then their ratios are preserved ratio of edges they are preserved. So, in this case ratios of distances are preserved. So, that is why it is called similarity group and its particular structure is given in this form you can see that the corresponding 2 2 sub matrix can be simply represented by this decomposition that is means it is a scalar multiplication of a orthonormal matrix R where R RT equal to identity matrix. This is identity matrix which means it should be     1 0 0 1 which means that R is an orthonormal matrix and T is once again it is a 1 2 column vector and so, this transformation matrix is a special case of affine transformation matrix, on top of that it has this constraints that it has to satisfy this particular property which makes the 2 2 sub matrix as orthogonal. So, in this case you have four independent parameters one is for scale. So, this is what is the scale, the other one is rotation, you can keep the axis rectilinear, but you can rotate the axis orientations of this axis and 2 parameters are for translation you can translate the origin. 162
+[p.89]
+(Refer Slide Time: 15:47)
+
+So, there is another interesting property. there are 2 special points which are given in this form that           0 1 i So, you consider instead of a real space you consider a space it is a projective space with complex coordinate systems. So, we have           0 1 i and            0 1 i that is the representation. So, one of the axis is considered as the imaginary axis and that is the representation that is how a two dimensional projective space can be also represented by simple complex numbers. And then this points are interesting because if you apply transformation on this points any similarity transformation, you will find that it still remains the same point; that means, if I apply transformation similarity transformation of this particular point           0 1 i Then you will find the transformation point is still a scaled factor of           0 1 i which means in the projective space in consideration, it is the same point, it is just multiplied by scale factor this is true for the other point J also. So, these are the invariants of this transformation we will see later that it has useful properties this is very useful for certain computations. 163
+[p.90] So, these are the things which are invariant under similarity transformation, they are ratios of lengths angles and the circular points I, J. Of course, you have to consider all other invariants which are there earlier for affine group and also projective transformation groups. Since it is a hierarchical relationships all those properties they are also true for a similarity transformations. So, which means the parallel lines they remain parallel even after this transformation, line at infinity after applying this transformation still remains at line at infinity at (0 0 1). So, those are invariants even after this transformation and finally, the oriented Euclidean group which is also called as isometry.
+
+(Refer Slide Time: 18:07)
+
+Because it preserves even the distances even the lengths between 2 points and you can see its particular structure, here we can see that the representation could be            1 0 0 cos sin sin cos y x t t       , where is 1  which means that if I take the determinant of this sub matrix then that should be equal to 1 that is one interesting property. So, the number of parameters as you can see it is and xt and yt . So, number of parameters in this case is only 3 and it is orientation preserving when value is 1. otherwise it is a orientation reversing directions like reflection. And so, there are 3 independent parameters- 1 rotation and 2 translation as I mentioned; and in this case you have special invariants they preserve the lengths. So, it is not just 164
+[p.91] ratios of lengths, ratios of lengths are preserved in the case of similarity transformation, it is also a lengths those are also preserved angles, preserved areas so, that is why this transformation is called isometry that is another type of transformation. And this transformation is a subgroup of similarity transformation and all the properties of projective transformation, affine transformation, similarity transformation all those properties are also true for a isometry transformation in addition to them you have this three other properties invariants length angle and area.
+
+(Refer Slide Time: 20:11)
+
+So, let us take an example that of decomposition of a projective transformations. So, any projective transformation can be decomposed as a cascade of all this special transformations like it is a cascade of similarity transformation affine transformation and general projective transformation. And, its forms are also given here you can find out that in this case, similarity transformation has this particular structure and then affine transformation this is affine transformation, the K is an upper triangular matrix and there is a particular form the 1 det  K . You should note that K does not form orthogonal matrix, but its determinant is one. So, that is why its an affine transformation and because you are its last row is once again (0 0 1).                    v v t A v v I K t sR H H H H T T T T P A S 0 1 0 0 1 0 165
+[p.92] And this is a projective transformation, I is a identity matrix it is a 2 2 identity matrix and its other parameters are Tv which is a 2 1 row vector and this is a scalar amount. So, the relationship between the original transformation matrix which has been decomposed; you can see this third row it defines the component of projective transformation where as the translation matrix t it is used in the similarity transformation. And, A has to be decomposed into this form T tv sRK A   and which is expressed as in this particular matrix multiplication form. So, you know t , you know Tv So, you have to perform decomposition of this matrix after subtracting T tv from A and then perform the matrix decomposition. one of them as you can see, R is orthonormal and K is upper triangular matrix. So, this matrix decomposition can be performed to any QR decomposition method where Q is orthogonal matrix R is a upper triangular matrix and that is a very standard method by in linear algebra that you can do and this decomposition is unique if s is positive, if s is kept positive as you know that projective transformation it is a scale factor which matters. So, we have put the restriction that s has to be positive. So, as I mentioned that through QR decomposition you can derive the corresponding components of R and K. And, this is how you can get all the transformation matrix we can decompose any projective transformation matrix as a cascade of similarity affine and a general projective transformation matrix in a special form.
+
+(Refer Slide Time: 23:33)
+
+166
+[p.93] So, let me give you an example consider a transformation matrix H this is given in this form and if I perform this decomposition it would look like this. So, here you can see that this is the projective transformation part, where this is the corresponding identity matrix that is 2 2 identity matrix, this [ 1 2 1 ] this is totally defined by the last row of this transformation matrix. Then the corresponding translation parameters they are used directly in the similarity transformation matrix. And using this after that you can perform the matrix decomposition of A and you can get the corresponding similarity matrix and affine matrix. So, this is one good example of how matrix decomposition can be carried out to make the transformation to show the transformation as a series of different transformations of certain structure.
+
+(Refer Slide Time: 24:55)
+
+So, this particular this properties could be used for rectifying the images, it is called rectification process. let me explain what is meant by rectification process you consider here you have the image which is observed in this form which has been given in the plane 2 . So, this is what you have observed you can see the edges . they do not appear as parallel because of transformation; that means, suppose actually in the original space you have a rectangle, you have a square in this particular example. And, there after applying the two dimensional projective transformation, they take the shape of quadrilateral where the parallel edges in the original space. appear like meeting at a vanishing point and you can get a vanishing line after this transformation. So, one of 167
+[p.94] the task could be that how to make those seemingly parallel lines from our experience we can identify which are parallels and how to make them parallel again, by applying another transformation say ' p H Which means after this transformation I should at least get this 2 lines parallel it is not really giving me the original square shape where the rectangular property of the straight lines of the corners they are not preserved, but still at least we can get the parallelisms of those edges in this particular transformation. So, this process is called rectification process. So, we are trying to compute a transformation from here to here so, that it gives corresponding edges. Now you should note that the transformation from the original space 1 to 3  that is an affine transformation. However, this transformation is a general projective transformation p H . Again ' p H is also a general projective transformation. So, the cascade of these 2 transformations can make it an affine transformation. So, you would like to see that how we can compute this p H , ' p H . suppose you get the vanishing line of this particular vanishing line in the transformed space and which is represented in this form by vector   T l l l 3 2 1 and then you can define a transformation in this form say           3 2 1 0 1 0 0 0 1 l l l So, you can see that this is a general projective transformation because last row is not [0 0 1], but A H is a affine transformation. So, its any affine transformation. So, if I multiply this matrix with any affine transformation, still we will get a general projective transformation. The property of this transformation is that if I transform this vanishing line then I will get line at infinity. that is very interesting. That means, whatever vanishing points you had here, now, they will all become ideal point after this transformation ' p H which means this lines now in the transformed space they will appear like a parallel line. So, this is one good method by which at least you can make the edges parallel and this is how we can carry out rectification. So, let me take some example of this process. 168
+[p.95]
+(Refer Slide Time: 28:51)
+
+So, first let me give you a figurative examples that how this computation can be proceeded.. See you consider a an input image where you can see here that edges they do not look like parallel in fact, seemingly parallel edges they are meeting in this particular image at some finite point. So, you choose two such parallel lines direct two such set of parallel lines, each one will be giving you two vanishing points. So, with these two vanishing points you can compute the vanishing line. So, you get the corresponding representation of vanishing line which is the transformation of the line at infinity and from there you can compute the corresponding projective transformation. So, the computation goes like this. So, you take the cross product of this lines 3l and 4l . So, that would give you 2v similarly cross product of line 1l and 2l that would give you 1v , and then 2 1 v v  will give you the corresponding line at infinity which is a finite line which is the vanishing line. And, from there if I apply the transformation then this is one example that you can find out edges have become parallel in the corresponding transformation. They have not become square or rectangle, but at least they have become parallelograms. So, we will continue with another example. 169
+[p.96]
+(Refer Slide Time: 30:39)
+
+So, take this particular example, you have an image here and you can see that the edges of the image, they are not really parallel though you know that they are not only parallel they form a rectangle. Now, you consider two parallel lines and then you compute their corresponding vanishing point or you compute this lines. So, you take in this case suppose you have taken this parallel line say this line you have considered this two points which defines this lines. So, 1l is defined by this line, similarly you are computing 2l which means you are taking this two points. So, these are the two points and from there you are getting 2l and you continuing this process you are taking another two lines by defining this two end points. So, in this case lines are define by two end points and from there you get 3l and 4l and then as we have computed we take the cross product of 1l and 2l which give you the vanishing line vanishing point of 2 1 l l  . That means, you get the vanishing point of ] ,-72128,64 [-10556416 2 1  l l big numbers are coming which means you see that if I consider multiplication with respect to with respect to 64 these are big numbers. So, we will see later on. So, this is the vanishing point and vanishing point of 3l and 4l is this number your vanishing line is given by this. So, there are big numbers do not bother about that, they are coming due to the computations, but finally, as there are scale factors associated you can see the vanishing line is given by this. 170
+[p.97]
+(Refer Slide Time: 32:49)
+
+So, the vanishing line as I was mentioning the essential component if I take out the scales can be considered only this vector and then I can represent equivalently by this form also. So, this is equivalent representation by making the scale of this third dimension as equal to 1. And so, actually it will be a vanishing line at a very large distance it is almost horizontal as you can see that this component is 0. So, equation becomes 6 104  Y . So, that is why these horizontal edges they look almost like horizontal because they are meeting at a point there are almost like parallel to the vanishing line also. And, the transformation matrix will be given            1 0006 . 0 0 1 0 0 0 1 . So, you can identify that ] , , [ 3 2 1 l l l those are the 2-3 components they look like this and you can see the affect. If I apply this transformation matrix on these points then you will get this images and where you can find out the edges they look parallel. So, with this let me stop here. Thank you very much for your listening. 171
+
+## Lecture 10 — Homography:Properties – Part III  (transcript PDF page 98)
+
+[p.98] 0 2 2       f ey dx cy bxy ax Computer Vision Prof. Jayanta Mukhopadhyay Department of Computer Science and Engineering Indian Institute of Technology, Kharagpur Lecture – 10 Homography: Properties – Part III We will continue our discussion on the Properties of Homography or projective transformation.
+
+(Refer Slide Time: 00:19)
+
+Now we will look at the properties of conics, how they appear in the transform space. Earlier we discussed about the general representation of a conics. In a non homogeneous coordinate representation the conics are represented in the following form 0 2 2       f ey dx cy bxy ax whereas, in a homogeneous coordinate representation we can represent it in a simple quadratic structure 0  CX X T Where, C is given by the following parameters 172
+[p.99] C=                 f e d e c b d b a 2 2 2 2 2 2 It is 3 3 symmetric matrix and as you can see that there are 5 independent parameters because C is also an element of the projective space. So, if I multiply C with a scale k still it will remain the same conics and another interesting property of this conics is that, there is a dual representation of the same conics. it is a representation by their line tangents. So, take any line tangent given by l that should satisfy also the following property 0 *  l C lT where * C is a dual conic representation and that is given as 1  C . We have discussed all this properties in our previous lectures.
+
+(Refer Slide Time: 02:11)
+
+So, let us see how a conic goes under transformation how a conics appear. So, let us consider a transformation H where a point X is transformed to ' X . So, all the points which are lying on a conics and which are given by the equation 0  CX X T . let us see what property they follow following the conics rule in the transform space . So, we can write this equation 0  CX X T in the following form 0 ) ( ) ( ' 1 ' 1    X H C X H T 173
+[p.100] because X is replaced by ' 1X H  this is coming from : ' 1 ' X H X HX X     . So, X equals ' 1X H  .So, if I replace it then I get this equivalent form 0 ) ( ) ( ' 1 ' 1    X H C X H T we expand this equation once again; that means, this transpose operations can be expanded on the matrix multiplications which is 0 ' 1 '    X CH H X T T . So, you can see here there is a quantity 1  CH H T . It’s a matrix multiplication and its a composite. It will provide you another matrix and say let me write this matrix as ' C now this is also a 3 3 matrix and you can find out that you have a 3 3 matrix even in the transform space. and which satisfies the equation: 0 ' '  CX X T . This is nothing, but again another conics representation.
+
+(Refer Slide Time: 04:25)
+
+So, we get this particular. So, that transform conics is given by this 1  CH H T . So, a conic remains a conic under homography that is the essence of this particular mathematical exercise. So, conics is an invariant after transformation. As the dual conics is nothing, but the inverse of the conics in its point representation, So, if I perform the inverse operation. I will get its corresponding dual conics and that is consistent (Refer Time: 05:08) with respect to this transformations. 174
+[p.101]
+(Refer Slide Time: 05:11)
+
+There is another interesting property of this transformation particularly in the conics. There is an interesting property of conics. So, there are two points which are known as circular points, We have already mentioned while discussing about the invariances of similarity transformation. You have seen that these points are invariant under similarity transformations. So, the definition of the circular points are given as “The circular points I, J are fixed points under the projective transformation H iff H is a similarioty. They are also on I ” I mentioned that you need to consider a two dimensional projective space with the complex representation in this representation, where one of the axis is imaginary axis other axis is real axis and there is a scale axis. So, these are the two points            0 1 i I             0 1 i J 175
+[p.102] and if I apply a transformation once again you get a representation in the complex space itself. We have already discussed that under similarity transformation these points still remain the same under conics. So, they are the fixed points of similarity transformation. And this is the summary of this particular property that the circular points are fixed points under the projective transformation H, if and only if H is a similarity. They are also on line at infinity because you note that their scale i,e, this third dimension is scale value which is 0. If I apply the point containment relationship with the line at infinity, it will satisfy that relationship which means the dot product of the column vector represented by circular points and line at infinities they should equals to 0. Just to elaborate this part. So, if I perform the following operation   0 1 0 0 0 1            i This is the point containment relationship.
+
+(Refer Slide Time: 07:37)
+
+So, every circle intersects line at infinity at I and J which is another property of every circle. So, let us elaborate this part, say you considered a representation of a circle in the homogeneous coordinate system. 176
+[p.103] 0 2 3 3 2 3 1 2 2 2 1      fx x ex x dx x x So, the above equation is the representation of a circle. you can see that 2 1x , 2 2x where the coefficients of 2 1x 2 2x remain, the same. In this case, we have normalized it with respect to those coefficients. We require only three parameters f e d , , and that is the representation of the circle. And here if I set 0 3  x which means that you are computing the line at intersection of line at infinity I because any point whose third coordinate is 0 that is lying on the line at infinity. So, if I set 0 3  x . the equation would be 0 2 2 2 1  x x And you can note that these two points I and J they satisfies this equation because if I take for I; that means, 0 1 1 1 2 2    i . i.e, the circular point I is lying on the circle and also it is lying on the line at infinity I . So, that is why the every circle intersects line at infinity I at I and J . So, this is also another interesting property of circular points.
+
+(Refer Slide Time: 09:51)
+
+So, since we have this two circular points, we can define also conic duals . Previously, we have discussed about this dual representation of conics by using two circular points. 177
+[p.104] Now, we can define a degenerate conic. So, we can define a degenerate conic in the following form, T T I J J I C . . *    you can see that this is 3 3 form and which will be eventually in a simplified representation which will look like this. So, you have            0 0 0 0 1 0 0 0 1 *  C This is a typical dual conic formed by the two circular points and this dual conic has a very interesting property since the circular points are fixed under similarity, this dual conics also remains fixed under similarity. So, this is another interesting feature. Earlier we mentioned that circular points are fixed under similarity, so, this dual conic representations using circular points is also fixed under similarity. And degree of freedom of this dual conic at infinity is 4 and its determinant is equal to 0 . This is another property of this dual conics and other thing is that the line at infinity is null vector of this dual conic at infinity. Because if I multiply the dual conic at infinity that is the way we are you can call it if I multiply with the line at line at infinity you will get a 0 here; that means,                      0 0 0 1 0 0 *  C let us discuss how an angle could be measured under homography. 178
+[p.105]
+(Refer Slide Time: 12:09)
+
+Suppose we have two straight lines l and m as shown in the figure which makes an angle and their directions of the straight line are given by 2 1,l l and 2 1,m m in the projective space we have this 3 vector representation, but we know that first two components of that 3 vector ,,they provide you the corresponding direction ratios. So, they could be used for measuring the angle between these two straight lines as shown in this expression that if you take the dot product of this vectors 2 1,l l and 2 1,m m and then if you normalize them basically dot product of unit vectors representing those two directions then you will get cosine of the angle that is ) cos(. ) )( ( ) cos( 2 2 2 1 2 2 2 1 2 2 1 1 m m l l m l m l      Interestingly, we can see that, this measurement can be also done even under homography. There is an in-variance which gives you this flexibility. So, let me discuss this property here you can see that even under homography. ) cos( can be expressed using the dual conic at infinity in the following form; ) )( ( ) cos( * * * m C m l C l m C l T T T     179
+[p.106] that means, if I take m C lT *  in the numerator, that expresses 2 2 1 1 m l m l  . Note here that *  C is that dual conic at infinity and it is given by           0 0 0 0 1 0 0 0 1   2 2 1 1 3 2 1 3 2 1 * 0 0 0 0 1 0 0 0 1 m l m l m m m l l l m C lT                         =. This computes the neumerator. Similarly, ) ( 2 2 2 1 l l  and ) ( 2 2 2 1 m m  can be computed as ) ( *l C lT  and ) ( *m C mT  respectively. Hence , ) )( ( ) cos( * * * m C m l C l m C l T T T     it is computing the same quantity . The interesting part is that, there is an invariance associated with this measure; particularly the product ) ( *m C lT  . If I perform homography corresponding lines and corresponding dual conic transform dual conic at infinity under homography. They also preserve the same quantity. So, let me explain that.
+
+(Refer Slide Time: 15:47)
+
+So, this is invariant under homography and we use this property where the relationship between dual conic at infinity under transformation of homography H and with the dual conic at infinity in the original space is given by T H HC C * *'   . And as you know that 180
+[p.107] the line after transformation also they are related transformed line and original line in the original space. They are related by l H l T   ' . So, if I replace this quantity. So, let me show you the derivation. So, in this derivation we can see that we are. So, this remains the invariant. So, 'l which is the transformed line under homography, it becomes now 1  H lT and then *'  C or dual conic under transformation becomes T H HC*  and then this is the transformed line, this part is transformed line and as you know that H H 1  would be identity matrix. m C l m H H HC H l m C l T T T T T * * 1 ' *' '        Similarly, T T H H  also form identity matrix. So, what you essentially gets is equal to m C lT *  . So, this is how it becomes an invariant. So, the measurement of ) cos(is the same expressions even if I use this in a transformed space; that means, if I use all the corresponding transformed lines transformation of dual conics transformation of corresponding lines, then also we will get the same measure ) cos( that is how it becomes invariant. So, once this is obtained. So, what you required to do that given a image under homography, you would like to compute the transformed dual conic at infinity dual line conic at infinity that *  C . And if you can obtain that then you can use this relationship to obtain the original angle formed by those two lines in the original space. Which means suppose there are two perpendicular lines in the original space and even after transformation under homography, they will not remain perpendicular, but this relationship will still remain and we as you know the cosine of the angle between this perpendicular lines that is equal to 0. So, we can always say this orthogonality property of two lines, they are preserved using this dual line conic at infinity in the transformed space. So, let us considered the following: If l and m are orthogonal then 181
+[p.108] 0 ' *' '  m C l  Note that 'l , ' m and *'  C , all the quantities are in the transformed space. Then actually ' * ' m C l  should be equal to 0. So, this could be used to for measuring angle and in fact, for recovering matrix properties as we can explain in the next slide.
+
+(Refer Slide Time: 19:41)
+
+So, first we need to estimate *'  C ; that means, the dual line conic under transformation at infinity dual line conic at infinity under transformation and we will be using this property of orthogonal lines which means I would consider that those lines are transformed lines. So, 0 ' *' '  m C l  . In this way that would give me an equation. Since there are there are five independent parameters in the conics. So, minimum 5 such orthogonal pairs are needed thatwould give five different equations to solve it. So, a typical equation will look like this. So, you consider a particular line say l and m we can consider l and m itself in that space. So, there is no problem in notation its a notational description only. So, you will be using this equation. So, l is represented as   3 2 1 l l l , m is represented as   3 2 1 m m m and you can observe that an equation 0 *  m lC where C is a general conic. I will be estimating this and I am replacing by them corresponding conic variable 182
+[p.109] C and which is represented by the parameters   T f e d c b a which means I can write C as a column vector                   f e d c b a ; you know these are the parameters and C can be represented as a symmetric matrix using those parameters we have discussed earlier how C can be represented using this parameters. So, you have to obtain this parameters using this equation. As you can see that there are six parameters and there are five equations and in fact, its a set of homogeneous equation.
+
+(Refer Slide Time: 22:25)
+
+So, you need to use the method what we have used earlier for solving set of homogeneous equations, we can apply the direct linear transform method to solve a set of homogeneous equations to get C and which means that if I express it in terms of matrix say, set of five equations. So, in the following way, 0 ) ( 2 1 ) ( 2 1 ) ( 2 1 3 3 2 3 3 2 1 3 3 1 2 2 1 2 2 1 1 1         C m l m l m l m l m l m l m l m l m l 183
+[p.110] I will I can represent the set of equations as a matrix multiplication where each row of A is formed by this particular row for every pair of orthogonal lines and if there are five there will be five such rows if there are more there would be more rows and you have to use an least square method. So, you have to minimize this norms 2 AC subject to 1 2  C So, that is a problem statement in this context. We know that solution of this particular set of equations would be that you have to take the corresponding eigenvector of A AT . So, the eigenvector of A AT which has minimum eigenvalue. So, that would be a solution of this matrix C . Otherwise you can also convert it into a non set of non homogeneous equations when you are working with exactly five equations. So, set 1  f once again the still that limitation is there suppose 0  f in the representation of conic then this will not work, but let us assume that we can work with some non zero f in your particular given problem. Then you can use non homogeneous equations and you can use inversion by putting the values of f at the right hand side of the equations, we have discussed all these methods. So, with using this kind of technique you can estimate the conics and also estimates the dual conic at infinity dual line conic at infinity.
+
+(Refer Slide Time: 24:57)
+
+And then we need to do this operation because as we know that dual line conic at infinity is a rank deficient matrix. So, it should be rank 2 matrix. So, what we do the trick what 184
+[p.111] we can you know perform here that we can do the singular value decomposition on C and set the minimum singular value as 0. So, let me explain this also suppose you get a C and you perform the singular value decomposition we know singular value decomposition sub C can be represented in this way. T UDV C  Where D is a diagonal matrix and its singular values are given as           3 2 1 0 0 0 0 0 0    and U is a 3 3 matrix and also T V is also 3 3 matrix. So, what we can do? We can set 0 3   And suppose 1 has been rearranged in a way such that 1is the maximum then 2  and then 3 . So, set 0 3   . then use that modified one as your estimate. So, use V D U ~ where D~ is a diagonal matrix were 3 set to 0. So, that is, how we can make it a rank 2 matrix. So, in this way you can estimate the dual conic at infinity or dual line conic at infinity in the transformed space. Now you can perform a metric rectification using this. that I was mentioning. So, let us discuss that part also. So, how we can recover the metric properties?
+
+(Refer Slide Time: 26:53)
+
+185
+[p.112] So, what we will equate to do now we need to estimate the homography from *  C and we have seen that under the similarity transform this dual line conic remains preserved. So, what were we can do? Homography can be multiplied by any similarity homography, it will still remain the same and the properties will also remain the same. So, let us consider up to similarity will be computing this matrix, which means the ratios of the distances between egdes those will be preserve not the exact distance that you can estimate in this way. So, we can use matrix decomposition method to compute the homography, which means I need the homography matrix in such a way that I should get the transformed dual line conic what we have estimated dual line conic at infinity and note here this *  C is the dual line conic at infinity and which is given by this particular matrix.           0 0 0 0 1 0 0 0 1 So, if I can decompose this matrix in such a way that we have this in this form and at the middle of this 3matrices. you have a matrix like this, then this could be an homography. So, one such example one such method could be like this; T U U C            0 0 0 0 1 0 0 0 1 *'  that means, since this is a symmetric matrix because conic is a symmetric matrix we can decompose in this way, we can adjust the singular values in such a way that two quantities would be 1 1 and accordingly the columns of U and T U would be adjusted. So, now you see that if you use this kind of decomposition its a singular value decomposition exactly what we did but the diagonal matrix as to be adjusted. In such a way that both the singular values becomes one accordingly columns of us should be adjusted. So, as you see the middle 1 satisfies the structure of *  C or dual line conic at infinity and then we can take U as the homography and we can apply the inverse of this 186
+[p.113] homography to the image to get the rectified image or to recover the metric properties as I mentioned you can get the ratios of the distances.
+
+(Refer Slide Time: 29:39)
+
+So, with this let me conclude this lecture and also this topic particularly with this summary that, we have studied various transformation under homography like we studied how a point could be transformed into another point with the transformation space in the transformed space how they related. They are related by a nonsingular 3 3 matrix and which is called the projective transformation it preserves the co linearity of the points in the transformed space, it is invertible and correspondingly a line is also transformed into another line in the transformed space and the relationship between the transformed line and the original line is given by this l H l T   ' which is transpose of inverse of the transformation matrix. Then, the conics they remain conic after transformation and their relationship have been summarized here. Similarly the dual conics representation also you know is valid in the transformation space and projective transformation they form various groups they form a group so, that is a projective linear group and there are different sub groups and their hierarchy that we have discussed like we have discussed about projective linear group having 8 degrees of freedom, then affine group having 6 degrees of freedom and in Euclidean group having 4 degrees of freedom and oriented Euclidean group having 3 degrees of freedom. 187
+[p.114] Incidentally Euclidean group is a similarity transformation what we discussed and oriented Euclidean group one of them is a isometric transformation as we discussed
+
+(Refer Slide Time: 31:27)
+
+Then we discussed about conic dual to the circular points and you have seen its various interesting properties like first thing it is invariant under similarity transformation, then line at infinity is a 0 vector of this particular conic dual, it preserves cosine of angle of two lines under transformation that is interesting. So, I should say it using the transformed dual conic, you can compute the cosine of this angles it implies that. So, this is the particular property how cosine of angle could be computed using the transformed dual conic and homography is used in various tasks some examples are given here like you can perform you can use homography for rectifying images there are two types of rectifications we discussed, one is affine rectification the other one is stratification which is which helps you recovering the metric properties particularly proportionate distances that you can compute that you can recover underperforming that corrections. So, with this let me stop my lecture here and thank you for listening to my lecture we will continue our discussions on other topics from next lecture. Thank you very much. 188
